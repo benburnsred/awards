@@ -493,6 +493,14 @@ body::after{mix-blend-mode:normal!important;opacity:.03!important}
 .hero-grid>div:first-child::after{filter:none!important;opacity:.85!important;will-change:transform}
 @media (prefers-reduced-motion:reduce){.smoke i,body>.smoke-page i{animation:none!important}}
 </style>
+
+<style>
+/* ===== Nothing waits for scrolling: content is always shown ===== */
+.rv,.in .rv,.rv.in{opacity:1!important;transform:none!important;filter:none!important;transition:none!important}
+.cat::after{transform:translate(-50%,-50%) scaleX(1)!important;transition:none!important}
+.cap.rv:not(.tba)::after{display:none!important}
+#embers{will-change:auto}
+</style>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -761,7 +769,10 @@ document.addEventListener('pointerout', e => {
 });
 
 // Top bar turns solid after the hero; nav highlights the category in view.
-addEventListener('scroll', () => {
+let navQueued = false;
+addEventListener('scroll', () => { if (!navQueued){ navQueued = true; requestAnimationFrame(navUpdate); } }, {passive:true});
+function navUpdate(){
+  navQueued = false;
   $('#top').classList.toggle('solid', scrollY > 40);
   let cur = '';
   document.querySelectorAll('#winners:not([hidden]), .cat').forEach(s => { if (s.getBoundingClientRect().top < 200) cur = s.id; });
@@ -771,7 +782,7 @@ addEventListener('scroll', () => {
     if (on && !a.classList.contains('on')){ const nav = a.parentNode; nav.scrollTo({left:nav.scrollLeft + a.getBoundingClientRect().left - nav.getBoundingClientRect().left - nav.clientWidth / 2 + a.clientWidth / 2}); }
     a.classList.toggle('on', on);
   });
-}, {passive:true});
+}
 
 // Laurel branch (used mirrored on both sides of the title): leaves along a curved stem, shrinking toward the tip.
 (function branch(){
@@ -904,20 +915,22 @@ if (REFRESH_SECONDS) setInterval(load, REFRESH_SECONDS * 1000);
     const max = root.scrollHeight - innerHeight;
     bar.style.transform = 'scaleX(' + (max > 0 ? (scrollY / max).toFixed(4) : 0) + ')';
     flush();
-    // Only awards near the screen keep their animations running.
-    for (const c of main.children){ const r = c.getBoundingClientRect(); c.classList.toggle('vis', r.bottom > -200 && r.top < innerHeight + 200); }
   }
   const ask = () => { if (!queued){ queued = true; requestAnimationFrame(upd); } };
   addEventListener('scroll', ask, {passive:true}); addEventListener('resize', ask);
   new MutationObserver(() => { flushed = false; ask(); }).observe(links, {childList:true});
-  new MutationObserver(ask).observe(main, {childList:true});
+  // Only awards near the screen keep their animations running.
+  const seen = window.IntersectionObserver ? new IntersectionObserver(es => es.forEach(e => e.target.classList.toggle('vis', e.isIntersecting)), {rootMargin:'200px 0px'}) : null;
+  const watch = () => { for (const c of main.children){ if (seen) seen.observe(c); else c.classList.add('vis'); } };
+  new MutationObserver(watch).observe(main, {childList:true}); watch();
   if (window.IntersectionObserver) new IntersectionObserver(([e]) => hero.classList.toggle('off', !e.isIntersecting)).observe(hero);
   upd(); setTimeout(upd, 1500);
 })();
 // Cosmic backdrop: twinkling stars with a little parallax, and the odd shooting star.
 (function(){
-  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const stillPref = matchMedia('(prefers-reduced-motion: reduce)').matches;
   function field(cv, count, fixed){
+    const still = fixed || stillPref;
     if (innerWidth < 700) count = Math.round(count * .5);
     const cx = cv.getContext('2d'); let W, H, D = Math.min(devicePixelRatio || 1, 2), on = true, running = true, shoot = null, nextShoot = performance.now() + 2500 + Math.random() * 4000;
     const S = Array.from({length: count}, () => {
@@ -926,10 +939,10 @@ if (REFRESH_SECONDS) setInterval(load, REFRESH_SECONDS * 1000);
         tint: Math.random() < .18 ? [150, 255, 205] : Math.random() < .3 ? [190, 240, 255] : [235, 255, 245]};
     });
     function size(){ const r = cv.getBoundingClientRect(); W = cv.width = Math.max(1, r.width * D); H = cv.height = Math.max(1, r.height * D); }
-    size(); addEventListener('resize', size);
+    size(); addEventListener('resize', () => { size(); if (still) requestAnimationFrame(frame); });
     function frame(now){
       cx.clearRect(0, 0, W, H);
-      const off = fixed ? scrollY * D : 0;
+      const off = 0;
       for (const st of S){
         const tw = still ? 1 : .55 + .45 * Math.sin(now / 1000 * st.sp + st.t);
         let y = (st.y * H - off * st.z * .25) % H; if (y < 0) y += H;
