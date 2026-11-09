@@ -272,12 +272,6 @@ body{background:var(--bg)}
 /* Energy bar under the menu showing how far down the page you are */
 .charge{position:fixed;left:0;top:64px;height:2px;width:100%;z-index:41;transform-origin:0 50%;transform:scaleX(var(--p,0));
   background:linear-gradient(90deg,#0e5a33,#3ee08a 70%,#e6fff1);box-shadow:0 0 12px rgba(62,224,138,.9)}
-/* A glowing spine down the middle of the page that fills up as you scroll */
-#categories{position:relative}
-#categories::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;transform:translateX(-50%);z-index:-2;
-  background:linear-gradient(rgba(62,224,138,.0),rgba(62,224,138,.18) 6%,rgba(62,224,138,.18) 94%,rgba(62,224,138,0))}
-#categories::after{content:"";position:absolute;left:50%;top:0;width:3px;height:calc(var(--p,0) * 100%);transform:translateX(-50%);z-index:-2;
-  background:linear-gradient(transparent,#3ee08a 85%,#e6fff1);box-shadow:0 0 14px #3ee08a;border-radius:2px;opacity:.45}
 /* Drifting green embers behind everything below the hero */
 #embers{position:fixed;inset:0;z-index:-3;pointer-events:none;width:100%;height:100%}
 /* Glows fade out before the section edges, so no seam shows between awards */
@@ -571,6 +565,9 @@ async function getCSV(u){
   return parseCSV(text);
 }
 
+// 1 → I, 4 → IV, 12 → XII …
+function roman(n){ let out = ''; for (const [v, r] of [[1000,'M'],[900,'CM'],[500,'D'],[400,'CD'],[100,'C'],[90,'XC'],[50,'L'],[40,'XL'],[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I']]) while (n >= v){ out += r; n -= v; } return out; }
+
 /* ===== Data ===== */
 function build(rows){
   const cats = [], byName = {};
@@ -670,9 +667,9 @@ function render(){
       : `<div class="grid">${c.noms.length ? c.noms.map(capHTML).join('')
         : Array.from({length:5}, () => '<div class="cap tba rv"><div class="mono">?</div><div class="info"><div class="name">To be announced</div></div></div>').join('')}</div>`;
     return `<section class="cat" id="${c.id}" style="--c:${c.color}"><div class="cat-head rv">
-      <div class="cat-num" aria-hidden="true">${String(i + 1).padStart(2, '0')}</div>
+      <div class="cat-num" aria-hidden="true">${roman(i + 1)}</div>
       ${c.trophy && !(hasWin && c.noms.filter(n => n.winner).length === 1) ? `<div class="cat-trophy"${bg(c.trophy)} role="img" aria-label="${esc(c.name)} trophy"></div>` : ''}
-      <div class="cat-kicker">Award ${String(i + 1).padStart(2, '0')}</div>
+      <div class="cat-kicker">Award ${roman(i + 1)}</div>
       <h2>${esc(c.name)}</h2>${c.desc ? `<p class="cat-desc">${esc(c.desc)}</p>` : ''}${state}</div>${body}</section>`;
   }).join('') : '<div class="note">Categories will be announced soon. Stay tuned.</div>';
   observe();
