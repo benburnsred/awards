@@ -1,0 +1,893 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#030806">
+<title>Anime X Angas Awards · Doomsday preview</title>
+<meta name="description" content="The community anime awards — categories, nominees and winners.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#06060b;--bg2:#0b0b14;--ink:#e8f5ec;--muted:#9a95a8;--dim:#6b6779;--line:rgba(255,255,255,.08);--line2:rgba(255,255,255,.14);
+  --gold:#67ec91;--gold-hi:#c1ffd6;--gold-lo:#199f3f;
+  --metal:linear-gradient(180deg,#d6ffe4 0%,#87f3aa 38%,#38cd65 62%,#98f5b6 82%,#1cab45 100%);
+  --serif:"Montserrat","Helvetica Neue",Arial,sans-serif;--sans:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --ease:cubic-bezier(.2,.7,.2,1)
+}
+*{box-sizing:border-box}[hidden]{display:none!important}
+html{scroll-behavior:smooth;scroll-padding-top:116px;overflow-x:clip}
+body{margin:0;font:15px/1.55 var(--sans);color:var(--ink);background:var(--bg);overflow-x:clip;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+/* Film grain over everything */
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:100;opacity:.07;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.wrap{max-width:1200px;margin:auto;padding:0 16px}
+.metal{background:var(--metal);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+/* ===== Top bar ===== */
+.top{position:fixed;inset:0 0 auto;z-index:40;transition:background .3s,border-color .3s;border-bottom:1px solid transparent}
+.top.solid{background:rgba(6,6,11,.78);backdrop-filter:blur(14px) saturate(1.3);-webkit-backdrop-filter:blur(14px) saturate(1.3);border-color:var(--line)}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;height:64px;gap:12px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-family:var(--serif);font-weight:800;letter-spacing:.16em;font-size:14px;text-transform:uppercase;min-width:0}
+.brand span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand svg{width:22px;height:22px;flex:none}
+.socials{display:flex;gap:8px;align-items:center}
+.soc{width:36px;height:36px;display:grid;place-items:center;border:1px solid var(--line2);color:var(--ink);transition:border-color .2s,color .2s,background .2s}
+.soc:hover{border-color:rgba(103,236,145,.7);color:var(--gold);background:rgba(103,236,145,.06)}
+.soc svg{width:18px;height:18px;fill:currentColor}
+.top-right{display:flex;gap:14px;align-items:center}
+@media (max-width:600px){#topSocials{display:none}}
+.btn{position:relative;display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line2);background:rgba(255,255,255,.04);color:var(--ink);padding:12px 22px;border-radius:0;font:700 13px/1 var(--sans);letter-spacing:.08em;text-transform:uppercase;text-decoration:none;cursor:pointer;white-space:nowrap;transition:transform .2s var(--ease),background .2s,border-color .2s;overflow:hidden}
+.btn:hover{transform:translateY(-1px);border-color:rgba(255,255,255,.3);background:rgba(255,255,255,.08)}
+.btn.gold{border-color:rgba(103,236,145,.45)}
+.btn.gold:hover{border-color:rgba(103,236,145,.8)}
+.btn.sm{padding:10px 16px;font-size:12px}
+
+/* ===== Hero ===== */
+.hero{position:relative;min-height:100svh;display:grid;place-items:center;text-align:center;overflow:hidden;isolation:isolate;padding:110px 0 90px}
+.hero-bg{position:absolute;inset:0;z-index:-2;background:
+  radial-gradient(55% 45% at 38% 45%,rgba(17,123,47,.28),transparent 70%),
+  radial-gradient(35% 40% at 80% 60%,rgba(36,204,77,.22),transparent 70%),
+  radial-gradient(60% 50% at 20% 100%,rgba(26,184,59,.22),transparent 70%),
+  linear-gradient(180deg,#050508 0%,#050b07 55%,var(--bg) 100%)}
+.bokeh{position:absolute;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
+.bokeh i{position:absolute;border-radius:50%;background:radial-gradient(circle,var(--b) 0,color-mix(in srgb,var(--b) 35%,transparent) 55%,transparent 70%);mix-blend-mode:screen;opacity:var(--o);
+  animation:float var(--d) ease-in-out var(--dl) infinite alternate,glow var(--g) ease-in-out var(--dl) infinite alternate}
+@keyframes float{from{transform:translate(0,0) scale(1)}to{transform:translate(var(--tx),var(--ty)) scale(var(--s))}}
+@keyframes glow{from{opacity:var(--o)}to{opacity:calc(var(--o) * .35)}}
+#dust{position:absolute;inset:0;z-index:-1;width:100%;height:100%}
+.hero::after{content:"";position:absolute;inset:auto 0 0;height:30%;background:linear-gradient(transparent,var(--bg));z-index:-1}
+.hero-grid{display:grid;grid-template-columns:1fr;align-items:center;justify-items:center;gap:20px}
+.lockup{display:grid;grid-template-columns:auto auto auto;align-items:center;gap:clamp(4px,1.5vw,18px)}
+.branch{height:clamp(210px,38vw,450px);width:auto;aspect-ratio:176/410;filter:drop-shadow(0 6px 22px rgba(103,236,145,.25))}
+.branch.r{transform:scaleX(-1)}
+.hero h1{margin:0;font-family:var(--serif);text-transform:uppercase;line-height:1;display:flex;flex-direction:column;align-items:center}
+.hero h1 span{filter:drop-shadow(0 2px 0 rgba(0,0,0,.45)) drop-shadow(0 14px 40px rgba(103,236,145,.22))}
+.t1{font-weight:500;font-size:clamp(14px,2.3vw,30px);letter-spacing:.32em;padding-left:.32em;white-space:nowrap}
+.t2{font-weight:900;font-size:clamp(44px,10vw,124px);letter-spacing:.06em;padding-left:.06em;margin:.12em 0 .08em;line-height:.95}
+.t3{font-weight:300;font-size:clamp(22px,4.2vw,52px);letter-spacing:.6em;padding-left:.6em}
+.rule{width:min(440px,62vw);height:2px;margin:14px auto 26px;background:linear-gradient(90deg,transparent,#38cd65 15%,#c1ffd6 50%,#38cd65 85%,transparent)}
+.cup{display:none;width:clamp(220px,24vw,360px);max-height:70vh;object-fit:contain;filter:drop-shadow(0 30px 50px rgba(0,0,0,.7)) drop-shadow(0 0 60px rgba(103,236,145,.2))}
+@media (min-width:1000px){.hero-grid.has-cup{grid-template-columns:minmax(0,1fr) auto;gap:clamp(20px,3vw,56px)}.has-cup .cup{display:block;width:clamp(200px,20vw,300px)}
+  .has-cup .t2{font-size:clamp(44px,7vw,108px)}.has-cup .t1{font-size:clamp(14px,1.8vw,26px)}.has-cup .t3{font-size:clamp(22px,3.1vw,46px)}.has-cup .branch{height:clamp(200px,27vw,390px)}}
+.tagline:empty{display:none}
+.tagline{color:#d4cfdc;font-size:clamp(15px,2vw,19px);max-width:620px;margin:0 auto;font-weight:500}
+.when{display:inline-flex;align-items:center;gap:14px;margin-top:26px;font:700 12px/1 var(--sans);letter-spacing:.24em;text-transform:uppercase;color:var(--muted)}
+.when::before,.when::after{content:"";width:40px;height:1px;background:linear-gradient(90deg,transparent,var(--gold))}
+.when::after{transform:scaleX(-1)}
+.count{display:flex;justify-content:center;gap:12px;margin:26px 0 0}
+.count div{width:86px;padding:14px 0 12px;border-radius:0;background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.02));border:1px solid var(--line2);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.count b{display:block;font:800 34px/1 var(--serif);font-variant-numeric:tabular-nums}
+.count span{display:block;margin-top:6px;font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.ctas{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:34px}
+
+/* ===== Category nav ===== */
+.catnav{position:sticky;top:64px;z-index:30;background:rgba(6,6,11,.78);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-block:1px solid var(--line)}
+/* Sideways only: without overflow-y hidden the strip also scrolls up and down a pixel when swiped on a phone. */
+.catnav .wrap{display:flex;gap:4px;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;padding:0 16px;scrollbar-width:none}
+.catnav .wrap::-webkit-scrollbar{display:none}
+/* Blank space at both ends so the first and last categories can also scroll to the centre. */
+.catnav .wrap::before,.catnav .wrap::after{content:"";flex:none;width:calc(50% - 60px)}
+.catnav a{position:relative;flex:none;text-decoration:none;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);padding:16px 12px;transition:color .2s}
+.catnav a::after{content:"";position:absolute;left:12px;right:12px;bottom:0;height:2px;background:var(--c,var(--gold));transform:scaleX(0);transition:transform .3s var(--ease)}
+.catnav a:hover{color:var(--ink)}
+.catnav a.on{color:var(--ink)}.catnav a.on::after{transform:scaleX(1)}
+.catnav a .dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--gold);margin-left:7px;vertical-align:2px;box-shadow:0 0 8px var(--gold)}
+
+/* ===== Category section ===== */
+.cat{position:relative;padding:110px 0 30px;isolation:isolate}
+.cat::before{content:"";position:absolute;top:0;bottom:0;left:50%;width:100vw;transform:translateX(-50%);z-index:-1;background:radial-gradient(45% 260px at 50% 200px,color-mix(in srgb,var(--c) 15%,transparent),transparent 100%);pointer-events:none}
+.cat-head{position:relative;text-align:center;margin-bottom:44px}
+.cat-num{position:absolute;left:50%;top:-78px;transform:translateX(-50%);font:900 clamp(110px,18vw,200px)/1 var(--serif);color:transparent;-webkit-text-stroke:1px color-mix(in srgb,var(--c) 22%,transparent);z-index:-1;user-select:none;pointer-events:none}
+.cat-trophy{width:clamp(110px,14vw,150px);aspect-ratio:1;margin:0 auto 22px;border-radius:50%;background:#14121c center/cover;box-shadow:0 0 0 3px #38cd65,0 0 0 5px rgba(193,255,214,.4),0 20px 50px -14px rgba(0,0,0,.9),0 0 60px -14px color-mix(in srgb,var(--c) 60%,transparent)}
+.win-trophy{width:clamp(110px,12vw,150px);margin-bottom:22px;aspect-ratio:1;border-radius:50%;background:#14121c center/cover;box-shadow:0 0 0 3px #38cd65,0 0 0 5px rgba(193,255,214,.4),0 20px 50px -14px rgba(0,0,0,.9),0 0 60px -10px rgba(103,236,145,.35)}
+.cat-kicker{display:inline-flex;align-items:center;gap:10px;font:700 11px/1 var(--sans);letter-spacing:.34em;text-transform:uppercase;color:var(--c)}
+.cat-kicker::before,.cat-kicker::after{content:"";width:28px;height:1px;background:var(--c);opacity:.6}
+.cat h2{font:900 clamp(28px,5vw,54px)/1.05 var(--serif);text-transform:uppercase;letter-spacing:.03em;margin:14px 0 10px;text-wrap:balance}
+.cat-desc{margin:0 auto;color:var(--muted);max-width:560px}
+.cat-state{display:inline-block;margin-top:16px;font-size:11px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);padding:7px 14px;border:1px solid var(--line2);border-radius:0}
+
+/* Nominee capsules */
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,214px));justify-content:center;gap:18px;perspective:1200px}
+.cap{--rx:0deg;--ry:0deg;--mx:50%;--my:50%;position:relative;display:block;text-decoration:none;border-radius:0;overflow:hidden;background:var(--bg2);aspect-ratio:3/4;transform:rotateX(var(--rx)) rotateY(var(--ry));transform-style:preserve-3d;transition:transform .5s var(--ease),box-shadow .4s;box-shadow:0 20px 40px -18px rgba(0,0,0,.8),0 0 0 1px var(--line)}
+.cap:hover{box-shadow:0 30px 60px -20px rgba(0,0,0,.9),0 0 0 1px color-mix(in srgb,var(--c) 70%,transparent),0 0 40px -6px color-mix(in srgb,var(--c) 45%,transparent)}
+.cap.tilting{transition:transform .08s linear,box-shadow .4s}
+.cap .art{position:absolute;inset:0;background:linear-gradient(150deg,color-mix(in srgb,var(--c) 40%,#1a1828),#0c0b14 75%);background-size:cover;background-position:center 20%;transition:transform .8s var(--ease)}
+.cap:hover .art{transform:scale(1.06)}
+.cap .mono{position:absolute;inset:0 0 30%;display:grid;place-items:center;font:900 54px/1 var(--serif);color:rgba(255,255,255,.14)}
+.cap .glare{position:absolute;inset:0;background:radial-gradient(circle at var(--mx) var(--my),rgba(255,255,255,.22),transparent 45%);opacity:0;transition:opacity .3s;mix-blend-mode:overlay;pointer-events:none}
+.cap:hover .glare{opacity:1}
+.cap .info{position:absolute;inset:auto 0 0;padding:60px 14px 14px;background:linear-gradient(transparent,rgba(6,6,11,.72) 35%,rgba(6,6,11,.96))}
+.cap .name{font-weight:800;font-size:15.5px;line-height:1.2}
+.cap .sub{font-size:12px;color:#bab5c6;margin-top:3px;line-height:1.35}
+.cap.tba{box-shadow:0 0 0 1px var(--line);background:linear-gradient(160deg,rgba(255,255,255,.035),rgba(255,255,255,.01))}
+.cap.tba .art{background:none}
+.cap.tba .mono{color:color-mix(in srgb,var(--c) 22%,transparent);font-size:64px}
+.cap.tba .name{color:var(--dim);font-weight:700;letter-spacing:.14em;text-transform:uppercase;font-size:11px}
+.cap.tba::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.045) 50%,transparent 65%);animation:shim 2.8s infinite}
+@keyframes shim{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+
+.winners{padding-top:110px;padding-bottom:20px;text-align:center}
+/* Hosts */
+.hosts{padding-top:110px;text-align:center}
+.hosts h2{font:900 clamp(30px,5.5vw,60px)/1.05 var(--serif);text-transform:uppercase;letter-spacing:.04em;margin:14px 0 44px}
+.host-list{display:flex;justify-content:center;gap:clamp(28px,7vw,110px);flex-wrap:wrap}
+.host{width:min(300px,80vw)}
+.host .pic{width:100%;aspect-ratio:1;border-radius:50%;background:#14121c center/cover;box-shadow:0 0 0 4px #38cd65,0 0 0 6px rgba(193,255,214,.5),0 30px 70px -20px rgba(0,0,0,.9),0 0 90px -20px rgba(103,236,145,.45)}
+.host .nick{margin-top:26px;font:600 13px/1 var(--sans);letter-spacing:.24em;text-transform:uppercase;color:var(--gold)}
+.host .hname{font:900 clamp(30px,4vw,44px)/1.1 var(--serif);text-transform:uppercase;letter-spacing:.05em;margin:10px 0 8px}
+.host .role{font-size:11px;font-weight:800;letter-spacing:.3em;text-transform:uppercase;color:var(--muted)}
+/* Round profile pictures inside poster cards */
+.cap .ava{position:absolute;left:50%;top:38%;width:64%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;background:center/cover;box-shadow:0 0 0 3px #38cd65,0 18px 40px -10px rgba(0,0,0,.8)}
+.cap .res{margin-top:6px;font-size:12px;font-weight:800;color:var(--gold)}
+.winners .grid{text-align:left}
+.winners h2{font:900 clamp(30px,5.5vw,60px)/1.05 var(--serif);text-transform:uppercase;letter-spacing:.04em;margin:14px 0 10px}
+.winners .cat-desc{margin-bottom:44px}
+.wcard .kick{position:absolute;top:0;left:0;right:0;padding:12px 14px 30px;text-align:left;font:800 10.5px/1.3 var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--c);background:linear-gradient(rgba(6,6,11,.85),transparent)}
+.wcard{box-shadow:0 20px 40px -18px rgba(0,0,0,.8),0 0 0 1px color-mix(in srgb,var(--c) 55%,transparent)}
+.wcard .res{margin-top:6px;font-size:12px;font-weight:800;color:var(--gold)}
+
+/* Winner spotlight */
+.stage{display:grid;grid-template-columns:minmax(0,960px);justify-content:center;gap:22px;align-items:stretch}
+.stage.solo{grid-template-columns:minmax(0,760px);justify-content:center}
+.stage.multi{grid-template-columns:repeat(var(--n),minmax(0,1fr));justify-content:stretch}.stage.multi .list{grid-column:1/-1;margin-top:18px}
+.stage.multi .win{min-height:0;flex-direction:column;align-items:stretch}.stage.multi .win .poster{position:relative;inset:auto;transform:none;width:72%;margin:24px auto 0;font-size:48px}
+.stage.multi .win .body{max-width:none;text-align:center;padding:18px 16px 22px}.stage.multi .win .name{font-size:clamp(20px,2.4vw,30px)}
+.win{position:relative;border-radius:0;overflow:hidden;min-height:440px;display:flex;align-items:flex-end;text-decoration:none;isolation:isolate;box-shadow:0 0 0 1px rgba(103,236,145,.55),0 40px 80px -30px rgba(0,0,0,.9),0 0 80px -20px rgba(103,236,145,.35)}
+.win .blur{position:absolute;inset:-40px;z-index:-2;background:linear-gradient(150deg,color-mix(in srgb,var(--c) 50%,#1a1828),#0c0b14);background-size:cover;background-position:center;filter:blur(36px) saturate(1.3) brightness(.55);transform:scale(1.1)}
+.win::before{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(70% 60% at 30% 100%,rgba(6,6,11,.2),rgba(6,6,11,.85))}
+.win .poster{position:absolute;right:30px;top:50%;transform:translateY(-50%) rotate(2deg);width:min(38%,300px);aspect-ratio:3/4;border-radius:0;background:linear-gradient(150deg,color-mix(in srgb,var(--c) 40%,#1a1828),#0c0b14);background-size:cover;background-position:center;box-shadow:0 30px 60px -10px rgba(0,0,0,.8),0 0 0 1px rgba(255,255,255,.12);display:grid;place-items:center;font:900 64px/1 var(--serif);color:rgba(255,255,255,.14)}
+.win .body{position:relative;padding:34px;max-width:58%}
+.win .badge{display:inline-flex;align-items:center;gap:10px;font:800 12px/1 var(--serif);letter-spacing:.34em;text-transform:uppercase}
+.win .badge svg{width:30px;height:30px}
+.win .name{font:900 clamp(28px,4vw,46px)/1.02 var(--serif);text-transform:uppercase;margin:16px 0 10px;letter-spacing:.02em;text-wrap:balance}
+.win .sub{color:#d6d1de;font-size:15px}
+.win .res{display:inline-block;margin-top:16px;font-weight:800;color:var(--gold);font-size:14px;letter-spacing:.06em;padding:7px 12px;border-radius:0;background:rgba(103,236,145,.1);border:1px solid rgba(103,236,145,.3)}
+.win::after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;background:linear-gradient(115deg,transparent 40%,rgba(200,255,218,.18) 50%,transparent 60%);transform:translateX(-100%);animation:sweep 6s 1s infinite}
+@keyframes sweep{0%,75%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+.list{display:flex;flex-direction:column;gap:8px;border-radius:0;padding:18px;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.015));border:1px solid var(--line)}
+.list h3{margin:0 0 18px;text-align:center;font:700 11px/1 var(--sans);letter-spacing:.3em;text-transform:uppercase;color:var(--dim)}
+
+/* Reveal on scroll */
+.rv{opacity:0;transform:translateY(28px);transition:opacity .9s var(--ease),transform .9s var(--ease)}
+.in .rv,.rv.in{opacity:1;transform:none}
+.grid .rv:nth-child(2){transition-delay:.06s}.grid .rv:nth-child(3){transition-delay:.12s}.grid .rv:nth-child(4){transition-delay:.18s}.grid .rv:nth-child(5){transition-delay:.24s}.grid .rv:nth-child(n+6){transition-delay:.3s}
+
+.note{color:var(--muted);text-align:center;padding:120px 16px}
+.err{color:#ffb4b4}
+footer{position:relative;margin-top:120px;padding:70px 0 60px;text-align:center;border-top:1px solid var(--line);background:radial-gradient(50% 100% at 50% 100%,rgba(103,236,145,.08),transparent 70%)}
+footer .rights{margin-top:26px;color:var(--dim);font-size:12px;letter-spacing:.06em}
+footer .big{font:900 clamp(22px,4vw,34px)/1.1 var(--serif);text-transform:uppercase;letter-spacing:.04em;margin:0 0 20px}
+
+@media (max-width:860px){
+  .win-trophy{width:100px;margin:0 auto 16px}
+  .stage.multi{grid-template-columns:1fr}.stage.multi .win .poster{width:58%}
+  .stage{grid-template-columns:1fr}
+  .win{min-height:0;flex-direction:column;align-items:stretch}
+  .win .poster{position:relative;inset:auto;transform:none;width:58%;margin:26px auto 0;font-size:48px}
+  .win .body{max-width:none;text-align:center;padding:22px 20px 26px}
+}
+@media (max-width:600px){
+  .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .count{gap:8px}.count div{width:68px}.count b{font-size:26px}
+  .cat{padding-top:80px}.cat-num{top:-52px}
+  .top .btn{padding:9px 14px;font-size:11px}.brand{font-size:12px;letter-spacing:.1em}
+  .btn{padding:12px 18px}
+  .cap .name{font-size:14px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  .rv{opacity:1;transform:none}html{scroll-behavior:auto}
+}
+</style>
+
+<style>
+/* ===== Doomsday draft: emerald + steel ===== */
+:root{
+  --bg:#030806;--bg2:#06110c;--muted:#8fa69a;--dim:#5f7468;
+  --gold:#3ee08a;--gold-hi:#d6ffe8;--gold-lo:#0e5a33;
+  --metal:linear-gradient(180deg,#f2fff7 0%,#b9f5d2 30%,#3fbf7a 52%,#0f5a35 64%,#9fe9c0 82%,#1c6e45 100%);
+}
+body{background:var(--bg)}
+.top.solid,.catnav{background:rgba(3,8,6,.8)}
+/* Hero: dark green void, energy rays from the centre, a pulsing core */
+.hero-bg{background:
+  radial-gradient(22% 18% at 50% 46%,rgba(170,255,210,.28),transparent 70%),
+  radial-gradient(45% 40% at 50% 46%,rgba(40,200,110,.22),transparent 72%),
+  radial-gradient(90% 80% at 50% 46%,rgba(1,6,4,.15),rgba(1,6,4,.75) 100%),
+  linear-gradient(180deg,rgba(1,6,4,.25),rgba(1,6,4,.55)),
+  radial-gradient(50% 40% at 25% 20%,rgba(30,140,95,.22),transparent 70%),
+  radial-gradient(45% 40% at 80% 70%,rgba(40,150,160,.16),transparent 70%),
+  radial-gradient(30% 25% at 78% 18%,rgba(120,90,200,.10),transparent 70%),
+  #010604!important;
+  -webkit-mask:radial-gradient(120% 100% at 50% 46%,#000 55%,transparent 100%);mask:radial-gradient(120% 100% at 50% 46%,#000 55%,transparent 100%)}
+.hero::before{content:"";position:absolute;left:50%;top:46%;width:min(70vw,720px);aspect-ratio:1;transform:translate(-50%,-50%);z-index:-1;border-radius:50%;
+  background:radial-gradient(circle,rgba(160,255,200,.22) 0,rgba(40,200,110,.10) 35%,transparent 65%);animation:core 5s ease-in-out infinite alternate;pointer-events:none}
+@keyframes core{from{opacity:.55;transform:translate(-50%,-50%) scale(.92)}to{opacity:1;transform:translate(-50%,-50%) scale(1.06)}}
+/* Steel-plate headline with a green edge glow */
+.hero h1 span{filter:drop-shadow(0 2px 0 rgba(0,0,0,.6)) drop-shadow(0 0 22px rgba(62,224,138,.35)) drop-shadow(0 14px 50px rgba(20,120,70,.5))}
+.t1,.t3{letter-spacing:.42em}
+.rule{background:linear-gradient(90deg,transparent,#1c8a52 15%,#d6ffe8 50%,#1c8a52 85%,transparent);box-shadow:0 0 18px rgba(62,224,138,.6)}
+.count div{border-color:rgba(62,224,138,.25);background:linear-gradient(180deg,rgba(62,224,138,.10),rgba(62,224,138,.02))}
+.btn.gold{border-color:rgba(62,224,138,.55);box-shadow:0 0 0 1px rgba(62,224,138,.15) inset,0 0 24px rgba(62,224,138,.15)}
+.btn.gold:hover{box-shadow:0 0 0 1px rgba(62,224,138,.35) inset,0 0 34px rgba(62,224,138,.35)}
+/* Gold trophy photo turned emerald steel */
+.cup{filter:hue-rotate(95deg) saturate(.85) brightness(.95) drop-shadow(0 30px 50px rgba(0,0,0,.7)) drop-shadow(0 0 60px rgba(62,224,138,.35))!important}
+</style>
+
+<style>
+/* ===== Doomsday touches ===== */
+.doom{position:absolute;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
+.doom .cracks{position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 1600 1000%22 preserveAspectRatio=%22xMidYMid slice%22%3E%3Cdefs%3E%3Cfilter id=%22g%22 x=%22-20%25%22 y=%22-20%25%22 width=%22140%25%22 height=%22140%25%22%3E%3CfeGaussianBlur stdDeviation=%224%22 result=%22b%22/%3E%3CfeMerge%3E%3CfeMergeNode in=%22b%22/%3E%3CfeMergeNode in=%22b%22/%3E%3CfeMergeNode in=%22SourceGraphic%22/%3E%3C/feMerge%3E%3C/filter%3E%3C/defs%3E%3Cg filter=%22url%28%23g%29%22%3E%3Cpolyline points=%221081,657 1056,661 1031,653 1010,638 985,633 960,623 936,614 917,596 901,576 895,551 893,525 889,499%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221.6%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%22779,631 789,607 808,590 823,568 837,546 842,521%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%22860,695 839,679 817,665 796,650 779,631 760,613 749,589 734,568 722,545 703,528 677,522 651,522%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221.6%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%22813,717 803,741 788,763 785,788 774,812 762,835 749,858 743,883 735,908 718,927 704,949 687,969%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221.6%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%22948,442 974,443 1000,444 1024,454 1047,467 1065,485 1084,503 1107,514 1126,532 1140,554 1145,580 1137,604 1123,626 1101,640 1081,657 1057,667 1038,685 1013,693 988,697 962,691 936,690 910,689 884,687 860,695 837,707 813,717 793,733%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%222.6%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%221046,624 1021,630 999,644 985,666%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%221046,650 1040,675 1041,701 1034,726%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%221032,699 1027,724 1024,750 1024,776%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%221056,599 1046,624 1046,650 1034,673 1032,699 1034,724 1039,750 1055,771%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221.6%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%221272,584 1273,558 1283,534 1302,516%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%221128,629 1148,613 1173,605 1199,609 1225,605 1249,597 1272,584 1296,575%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221.6%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%221198,813 1186,836 1168,855 1143,863%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%221164,666 1175,689 1173,715 1183,739 1180,765 1186,791 1198,813 1220,828%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221.6%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%221188,712 1213,705 1236,692 1260,681 1283,670 1301,651 1321,634 1343,621%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221.6%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%22926,520 941,541 963,555 986,567 1008,580 1033,586 1056,599 1079,610 1104,618 1128,629 1148,645 1164,666 1175,689 1188,712 1204,732 1222,751%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%222.6%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%22979,972 975,998 982,1023 989,1048 1004,1069%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%22942,906 962,923 972,947 979,972 987,997 997,1021 1004,1046 1005,1072 993,1095 976,1115%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221.6%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%22805,570 803,596 802,622 803,648 803,674 809,699 811,725 825,747 837,770 850,792 872,806 896,818 916,834 930,856 939,880 942,906 955,929 960,955 969,979 974,1005 976,1030 971,1056%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%222.6%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%22696,624 712,645 735,657 755,673 775,690 792,710%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%22675,724 688,746 704,767 726,781 751,787 773,801%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%22709,602 696,624 686,648 683,674 674,698 675,724 674,750 667,775 667,801 666,827 669,853 674,878 670,904%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221.6%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%22667,624 651,604 632,586 620,563 603,543 589,522%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%22467,649 453,627 441,604 436,579 437,553 434,527%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%22693,622 667,624 642,631 618,643 594,652 568,656 543,660 517,664 492,657 467,649 442,644 417,637 391,640%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221.6%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%22622,695 598,703 579,721 556,734 530,737 507,750%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%22652,653 640,676 622,695 602,711 578,722 558,738 534,749 508,753 484,761 458,764 432,767 406,764 380,764%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221.6%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%22384,544 402,526 413,503 415,477 410,451 399,428%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%22383,619 374,595 376,569 384,544 397,522 403,497 404,471 411,446 420,421 428,397 445,377 459,355 481,341%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221.6%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%22272,667 248,657 222,654 196,652 173,641 148,632%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%22358,613 339,631 320,648 295,654 272,667 247,673 221,669 196,674 170,676 147,689 130,709 107,720 89,739%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221.6%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%22738,560 719,578 709,602 693,622 670,634 652,653 631,668 606,676 580,675 555,669 531,659 506,650 480,650 457,638 432,635 406,633 383,619 358,613 334,603 315,585 291,576 267,566 241,569 217,579 191,582 169,596 148,610%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%222.6%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%22510,519 488,504 464,494 438,494%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%22576,483 559,503 535,513 510,519 484,518 459,508 441,489 425,469 415,445%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221.6%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%22331,509 306,515 281,523 255,525%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%22503,503 481,489 457,479 431,479 407,490 381,495 357,503 331,509 307,519%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221.6%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%22211,531 206,556 208,582 209,608 218,633 215,658 200,680 198,706 188,730%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221.6%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%22652,478 627,485 602,478 576,483 550,482 526,491 503,503 477,504 452,513 426,517 401,510 379,497 354,489 328,488 302,485 277,491 252,498 230,512 211,531%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%222.6%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%22633,419 623,395 619,369 617,343 604,320 585,303 574,280 555,262 530,255%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221.6%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%22659,423 633,419 607,418 581,420 555,420 529,422 504,416 485,398 470,376 466,351 465,325 455,301 436,283 412,275 386,270 360,272 337,285 313,292 289,302 270,321%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%222.6%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%22678,193 695,174 717,159 735,141 755,124 767,101%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%22553,113 538,92 529,67 515,46 506,21 498,-3%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%22530,101 504,102 480,91 454,93 430,102 408,115%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%22505,93 494,69 480,48 467,25 445,10 420,7%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%22685,244 684,218 678,193 663,172 648,150 626,137 603,124 579,115 553,113 530,101 505,93 486,76%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221.6%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%22580,17 574,-8 562,-31 560,-57 569,-81 576,-106 592,-127 611,-145 633,-158 653,-175 676,-185 694,-204%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221.6%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%22517,-93 502,-114 481,-130 464,-150 441,-160 421,-176%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%22439,-96 414,-102 391,-114 375,-135 356,-152 337,-170%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%22324,-130 318,-155 319,-181 328,-206 343,-227 352,-252%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%22593,-81 568,-86 542,-86 517,-93 491,-91 465,-92 439,-96 415,-87 389,-87 366,-99 343,-112 324,-130%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221.6%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%22592,-267 594,-293 597,-319 607,-343 610,-368 605,-394%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%22610,-286 635,-277 656,-262 673,-242 689,-222 703,-200%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%22557,-230 571,-252 592,-267 610,-286 628,-304 641,-327 658,-347 673,-368 688,-390 706,-408 717,-432 730,-454%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221.6%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%22746,357 739,332 726,310 712,288 703,263 685,244 668,225 661,200 647,178 643,153 632,129 617,108 596,92 586,68 578,43 580,17 594,-5 601,-30 597,-56 593,-81 589,-107 587,-133 573,-155 564,-179 565,-205 557,-230%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%222.6%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%22924,299 916,274 918,248 917,222 905,199%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%22858,335 884,329 907,319 924,299 936,276 956,259 971,238 987,218 1008,203 1034,197%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221.6%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%221173,52 1192,34 1203,10 1221,-8 1245,-19 1265,-36 1288,-49 1311,-59 1331,-76 1343,-99%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221.6%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%22840,354 858,335 882,325 908,325 933,316 952,298 965,276 985,259 1003,240 1025,227 1047,213 1063,193 1081,173 1088,148 1105,129 1122,109 1140,90 1161,74 1173,52 1184,28 1199,7 1215,-14%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%222.6%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%221024,326 1031,301 1025,275 1026,249%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%221001,336 1024,326 1050,321 1071,306 1093,293 1109,272 1122,249 1129,224 1126,198%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221.6%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%221172,22 1191,4 1204,-18 1211,-43 1220,-68 1226,-93 1242,-113 1260,-132 1277,-151%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%221.6%22 stroke-linejoin=%22bevel%22/%3E%3Cpolyline points=%22913,388 938,379 962,371 983,355 1001,336 1018,317 1032,295 1038,270 1037,244 1032,218 1028,193 1034,168 1040,142 1054,120 1075,106 1090,84 1112,71 1132,54 1149,34 1172,22%22 fill=%22none%22 stroke=%22%237dffb9%22 stroke-width=%222.6%22 stroke-linejoin=%22bevel%22/%3E%3C/g%3E%3C/svg%3E") center/cover no-repeat;mix-blend-mode:screen;opacity:.0;
+  -webkit-mask:radial-gradient(60% 60% at 50% 46%,#000 30%,transparent 85%);mask:radial-gradient(60% 60% at 50% 46%,#000 30%,transparent 85%);
+  animation:surge 7s ease-in-out infinite}
+@keyframes surge{0%,100%{opacity:.18}45%{opacity:.55}50%{opacity:.85}53%{opacity:.4}60%{opacity:.6}}
+/* Eclipsed planet rising at the bottom */
+.doom .orb{position:absolute;left:50%;bottom:-74vmin;width:96vmin;aspect-ratio:1;transform:translateX(-50%);border-radius:50%;
+  background:radial-gradient(circle at 50% 30%,#06140d 0,#020604 58%,#010302 70%);
+  box-shadow:0 -2px 0 1px rgba(160,255,205,.75),0 -10px 40px rgba(62,224,138,.55),0 -40px 140px rgba(40,200,110,.35),inset 0 18px 40px rgba(62,224,138,.25)}
+/* Rune ring turning slowly behind the title */
+#title{position:relative;isolation:isolate}
+.hero-grid>div:first-child{position:relative;isolation:isolate}
+.hero-grid>div:first-child::before{content:"";position:absolute;left:50%;top:50%;width:min(86vw,92svh,980px);aspect-ratio:1;transform:translate(-50%,-50%);z-index:-1;
+  background:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 1000 1000%22%3E%3Ccircle cx=%22500%22 cy=%22500%22 r=%22480%22 fill=%22none%22 stroke=%22%235dffa8%22 stroke-width=%222%22 opacity=%220.55%22/%3E%3Ccircle cx=%22500%22 cy=%22500%22 r=%22452%22 fill=%22none%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%220.35%22/%3E%3Ccircle cx=%22500%22 cy=%22500%22 r=%22360%22 fill=%22none%22 stroke=%22%235dffa8%22 stroke-width=%221.5%22 opacity=%220.5%22/%3E%3Ccircle cx=%22500%22 cy=%22500%22 r=%22330%22 fill=%22none%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%220.3%22/%3E%3Cline x1=%22952.0%22 y1=%22500.0%22 x2=%22968.0%22 y2=%22500.0%22 stroke=%22%235dffa8%22 stroke-width=%222%22 opacity=%22.6%22/%3E%3Cline x1=%22951.7%22 y1=%22515.8%22 x2=%22958.7%22 y2=%22516.0%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22950.9%22 y1=%22531.5%22 x2=%22957.9%22 y2=%22532.0%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22949.5%22 y1=%22547.2%22 x2=%22956.5%22 y2=%22548.0%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22947.6%22 y1=%22562.9%22 x2=%22954.5%22 y2=%22563.9%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22945.1%22 y1=%22578.5%22 x2=%22952.0%22 y2=%22579.7%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22942.1%22 y1=%22594.0%22 x2=%22949.0%22 y2=%22595.4%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22938.6%22 y1=%22609.3%22 x2=%22945.4%22 y2=%22611.0%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22934.5%22 y1=%22624.6%22 x2=%22941.2%22 y2=%22626.5%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22929.9%22 y1=%22639.7%22 x2=%22936.5%22 y2=%22641.8%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22924.7%22 y1=%22654.6%22 x2=%22931.3%22 y2=%22657.0%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22919.1%22 y1=%22669.3%22 x2=%22925.6%22 y2=%22671.9%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22912.9%22 y1=%22683.8%22 x2=%22919.3%22 y2=%22686.7%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22906.3%22 y1=%22698.1%22 x2=%22912.5%22 y2=%22701.2%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22899.1%22 y1=%22712.2%22 x2=%22905.3%22 y2=%22715.5%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22891.4%22 y1=%22726.0%22 x2=%22905.3%22 y2=%22734.0%22 stroke=%22%235dffa8%22 stroke-width=%222%22 opacity=%22.6%22/%3E%3Cline x1=%22883.3%22 y1=%22739.5%22 x2=%22889.3%22 y2=%22743.2%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22874.7%22 y1=%22752.8%22 x2=%22880.5%22 y2=%22756.7%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22865.7%22 y1=%22765.7%22 x2=%22871.3%22 y2=%22769.8%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22856.2%22 y1=%22778.3%22 x2=%22861.7%22 y2=%22782.6%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22846.3%22 y1=%22790.5%22 x2=%22851.6%22 y2=%22795.0%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22835.9%22 y1=%22802.4%22 x2=%22841.1%22 y2=%22807.1%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22825.1%22 y1=%22814.0%22 x2=%22830.2%22 y2=%22818.8%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22814.0%22 y1=%22825.1%22 x2=%22818.8%22 y2=%22830.2%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22802.4%22 y1=%22835.9%22 x2=%22807.1%22 y2=%22841.1%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22790.5%22 y1=%22846.3%22 x2=%22795.0%22 y2=%22851.6%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22778.3%22 y1=%22856.2%22 x2=%22782.6%22 y2=%22861.7%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22765.7%22 y1=%22865.7%22 x2=%22769.8%22 y2=%22871.3%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22752.8%22 y1=%22874.7%22 x2=%22756.7%22 y2=%22880.5%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22739.5%22 y1=%22883.3%22 x2=%22743.2%22 y2=%22889.3%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22726.0%22 y1=%22891.4%22 x2=%22734.0%22 y2=%22905.3%22 stroke=%22%235dffa8%22 stroke-width=%222%22 opacity=%22.6%22/%3E%3Cline x1=%22712.2%22 y1=%22899.1%22 x2=%22715.5%22 y2=%22905.3%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22698.1%22 y1=%22906.3%22 x2=%22701.2%22 y2=%22912.5%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22683.8%22 y1=%22912.9%22 x2=%22686.7%22 y2=%22919.3%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22669.3%22 y1=%22919.1%22 x2=%22671.9%22 y2=%22925.6%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22654.6%22 y1=%22924.7%22 x2=%22657.0%22 y2=%22931.3%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22639.7%22 y1=%22929.9%22 x2=%22641.8%22 y2=%22936.5%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22624.6%22 y1=%22934.5%22 x2=%22626.5%22 y2=%22941.2%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22609.3%22 y1=%22938.6%22 x2=%22611.0%22 y2=%22945.4%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22594.0%22 y1=%22942.1%22 x2=%22595.4%22 y2=%22949.0%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22578.5%22 y1=%22945.1%22 x2=%22579.7%22 y2=%22952.0%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22562.9%22 y1=%22947.6%22 x2=%22563.9%22 y2=%22954.5%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22547.2%22 y1=%22949.5%22 x2=%22548.0%22 y2=%22956.5%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22531.5%22 y1=%22950.9%22 x2=%22532.0%22 y2=%22957.9%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22515.8%22 y1=%22951.7%22 x2=%22516.0%22 y2=%22958.7%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22500.0%22 y1=%22952.0%22 x2=%22500.0%22 y2=%22968.0%22 stroke=%22%235dffa8%22 stroke-width=%222%22 opacity=%22.6%22/%3E%3Cline x1=%22484.2%22 y1=%22951.7%22 x2=%22484.0%22 y2=%22958.7%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22468.5%22 y1=%22950.9%22 x2=%22468.0%22 y2=%22957.9%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22452.8%22 y1=%22949.5%22 x2=%22452.0%22 y2=%22956.5%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22437.1%22 y1=%22947.6%22 x2=%22436.1%22 y2=%22954.5%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22421.5%22 y1=%22945.1%22 x2=%22420.3%22 y2=%22952.0%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22406.0%22 y1=%22942.1%22 x2=%22404.6%22 y2=%22949.0%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22390.7%22 y1=%22938.6%22 x2=%22389.0%22 y2=%22945.4%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22375.4%22 y1=%22934.5%22 x2=%22373.5%22 y2=%22941.2%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22360.3%22 y1=%22929.9%22 x2=%22358.2%22 y2=%22936.5%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22345.4%22 y1=%22924.7%22 x2=%22343.0%22 y2=%22931.3%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22330.7%22 y1=%22919.1%22 x2=%22328.1%22 y2=%22925.6%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22316.2%22 y1=%22912.9%22 x2=%22313.3%22 y2=%22919.3%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22301.9%22 y1=%22906.3%22 x2=%22298.8%22 y2=%22912.5%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22287.8%22 y1=%22899.1%22 x2=%22284.5%22 y2=%22905.3%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22274.0%22 y1=%22891.4%22 x2=%22266.0%22 y2=%22905.3%22 stroke=%22%235dffa8%22 stroke-width=%222%22 opacity=%22.6%22/%3E%3Cline x1=%22260.5%22 y1=%22883.3%22 x2=%22256.8%22 y2=%22889.3%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22247.2%22 y1=%22874.7%22 x2=%22243.3%22 y2=%22880.5%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22234.3%22 y1=%22865.7%22 x2=%22230.2%22 y2=%22871.3%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22221.7%22 y1=%22856.2%22 x2=%22217.4%22 y2=%22861.7%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22209.5%22 y1=%22846.3%22 x2=%22205.0%22 y2=%22851.6%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22197.6%22 y1=%22835.9%22 x2=%22192.9%22 y2=%22841.1%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22186.0%22 y1=%22825.1%22 x2=%22181.2%22 y2=%22830.2%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22174.9%22 y1=%22814.0%22 x2=%22169.8%22 y2=%22818.8%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22164.1%22 y1=%22802.4%22 x2=%22158.9%22 y2=%22807.1%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22153.7%22 y1=%22790.5%22 x2=%22148.4%22 y2=%22795.0%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22143.8%22 y1=%22778.3%22 x2=%22138.3%22 y2=%22782.6%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22134.3%22 y1=%22765.7%22 x2=%22128.7%22 y2=%22769.8%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22125.3%22 y1=%22752.8%22 x2=%22119.5%22 y2=%22756.7%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22116.7%22 y1=%22739.5%22 x2=%22110.7%22 y2=%22743.2%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22108.6%22 y1=%22726.0%22 x2=%2294.7%22 y2=%22734.0%22 stroke=%22%235dffa8%22 stroke-width=%222%22 opacity=%22.6%22/%3E%3Cline x1=%22100.9%22 y1=%22712.2%22 x2=%2294.7%22 y2=%22715.5%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%2293.7%22 y1=%22698.1%22 x2=%2287.5%22 y2=%22701.2%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%2287.1%22 y1=%22683.8%22 x2=%2280.7%22 y2=%22686.7%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%2280.9%22 y1=%22669.3%22 x2=%2274.4%22 y2=%22671.9%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%2275.3%22 y1=%22654.6%22 x2=%2268.7%22 y2=%22657.0%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%2270.1%22 y1=%22639.7%22 x2=%2263.5%22 y2=%22641.8%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%2265.5%22 y1=%22624.6%22 x2=%2258.8%22 y2=%22626.5%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%2261.4%22 y1=%22609.3%22 x2=%2254.6%22 y2=%22611.0%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%2257.9%22 y1=%22594.0%22 x2=%2251.0%22 y2=%22595.4%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%2254.9%22 y1=%22578.5%22 x2=%2248.0%22 y2=%22579.7%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%2252.4%22 y1=%22562.9%22 x2=%2245.5%22 y2=%22563.9%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%2250.5%22 y1=%22547.2%22 x2=%2243.5%22 y2=%22548.0%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%2249.1%22 y1=%22531.5%22 x2=%2242.1%22 y2=%22532.0%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%2248.3%22 y1=%22515.8%22 x2=%2241.3%22 y2=%22516.0%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%2248.0%22 y1=%22500.0%22 x2=%2232.0%22 y2=%22500.0%22 stroke=%22%235dffa8%22 stroke-width=%222%22 opacity=%22.6%22/%3E%3Cline x1=%2248.3%22 y1=%22484.2%22 x2=%2241.3%22 y2=%22484.0%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%2249.1%22 y1=%22468.5%22 x2=%2242.1%22 y2=%22468.0%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%2250.5%22 y1=%22452.8%22 x2=%2243.5%22 y2=%22452.0%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%2252.4%22 y1=%22437.1%22 x2=%2245.5%22 y2=%22436.1%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%2254.9%22 y1=%22421.5%22 x2=%2248.0%22 y2=%22420.3%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%2257.9%22 y1=%22406.0%22 x2=%2251.0%22 y2=%22404.6%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%2261.4%22 y1=%22390.7%22 x2=%2254.6%22 y2=%22389.0%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%2265.5%22 y1=%22375.4%22 x2=%2258.8%22 y2=%22373.5%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%2270.1%22 y1=%22360.3%22 x2=%2263.5%22 y2=%22358.2%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%2275.3%22 y1=%22345.4%22 x2=%2268.7%22 y2=%22343.0%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%2280.9%22 y1=%22330.7%22 x2=%2274.4%22 y2=%22328.1%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%2287.1%22 y1=%22316.2%22 x2=%2280.7%22 y2=%22313.3%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%2293.7%22 y1=%22301.9%22 x2=%2287.5%22 y2=%22298.8%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22100.9%22 y1=%22287.8%22 x2=%2294.7%22 y2=%22284.5%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22108.6%22 y1=%22274.0%22 x2=%2294.7%22 y2=%22266.0%22 stroke=%22%235dffa8%22 stroke-width=%222%22 opacity=%22.6%22/%3E%3Cline x1=%22116.7%22 y1=%22260.5%22 x2=%22110.7%22 y2=%22256.8%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22125.3%22 y1=%22247.2%22 x2=%22119.5%22 y2=%22243.3%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22134.3%22 y1=%22234.3%22 x2=%22128.7%22 y2=%22230.2%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22143.8%22 y1=%22221.7%22 x2=%22138.3%22 y2=%22217.4%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22153.7%22 y1=%22209.5%22 x2=%22148.4%22 y2=%22205.0%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22164.1%22 y1=%22197.6%22 x2=%22158.9%22 y2=%22192.9%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22174.9%22 y1=%22186.0%22 x2=%22169.8%22 y2=%22181.2%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22186.0%22 y1=%22174.9%22 x2=%22181.2%22 y2=%22169.8%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22197.6%22 y1=%22164.1%22 x2=%22192.9%22 y2=%22158.9%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22209.5%22 y1=%22153.7%22 x2=%22205.0%22 y2=%22148.4%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22221.7%22 y1=%22143.8%22 x2=%22217.4%22 y2=%22138.3%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22234.3%22 y1=%22134.3%22 x2=%22230.2%22 y2=%22128.7%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22247.2%22 y1=%22125.3%22 x2=%22243.3%22 y2=%22119.5%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22260.5%22 y1=%22116.7%22 x2=%22256.8%22 y2=%22110.7%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22274.0%22 y1=%22108.6%22 x2=%22266.0%22 y2=%2294.7%22 stroke=%22%235dffa8%22 stroke-width=%222%22 opacity=%22.6%22/%3E%3Cline x1=%22287.8%22 y1=%22100.9%22 x2=%22284.5%22 y2=%2294.7%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22301.9%22 y1=%2293.7%22 x2=%22298.8%22 y2=%2287.5%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22316.2%22 y1=%2287.1%22 x2=%22313.3%22 y2=%2280.7%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22330.7%22 y1=%2280.9%22 x2=%22328.1%22 y2=%2274.4%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22345.4%22 y1=%2275.3%22 x2=%22343.0%22 y2=%2268.7%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22360.3%22 y1=%2270.1%22 x2=%22358.2%22 y2=%2263.5%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22375.4%22 y1=%2265.5%22 x2=%22373.5%22 y2=%2258.8%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22390.7%22 y1=%2261.4%22 x2=%22389.0%22 y2=%2254.6%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22406.0%22 y1=%2257.9%22 x2=%22404.6%22 y2=%2251.0%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22421.5%22 y1=%2254.9%22 x2=%22420.3%22 y2=%2248.0%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22437.1%22 y1=%2252.4%22 x2=%22436.1%22 y2=%2245.5%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22452.8%22 y1=%2250.5%22 x2=%22452.0%22 y2=%2243.5%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22468.5%22 y1=%2249.1%22 x2=%22468.0%22 y2=%2242.1%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22484.2%22 y1=%2248.3%22 x2=%22484.0%22 y2=%2241.3%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22500.0%22 y1=%2248.0%22 x2=%22500.0%22 y2=%2232.0%22 stroke=%22%235dffa8%22 stroke-width=%222%22 opacity=%22.6%22/%3E%3Cline x1=%22515.8%22 y1=%2248.3%22 x2=%22516.0%22 y2=%2241.3%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22531.5%22 y1=%2249.1%22 x2=%22532.0%22 y2=%2242.1%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22547.2%22 y1=%2250.5%22 x2=%22548.0%22 y2=%2243.5%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22562.9%22 y1=%2252.4%22 x2=%22563.9%22 y2=%2245.5%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22578.5%22 y1=%2254.9%22 x2=%22579.7%22 y2=%2248.0%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22594.0%22 y1=%2257.9%22 x2=%22595.4%22 y2=%2251.0%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22609.3%22 y1=%2261.4%22 x2=%22611.0%22 y2=%2254.6%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22624.6%22 y1=%2265.5%22 x2=%22626.5%22 y2=%2258.8%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22639.7%22 y1=%2270.1%22 x2=%22641.8%22 y2=%2263.5%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22654.6%22 y1=%2275.3%22 x2=%22657.0%22 y2=%2268.7%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22669.3%22 y1=%2280.9%22 x2=%22671.9%22 y2=%2274.4%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22683.8%22 y1=%2287.1%22 x2=%22686.7%22 y2=%2280.7%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22698.1%22 y1=%2293.7%22 x2=%22701.2%22 y2=%2287.5%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22712.2%22 y1=%22100.9%22 x2=%22715.5%22 y2=%2294.7%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22726.0%22 y1=%22108.6%22 x2=%22734.0%22 y2=%2294.7%22 stroke=%22%235dffa8%22 stroke-width=%222%22 opacity=%22.6%22/%3E%3Cline x1=%22739.5%22 y1=%22116.7%22 x2=%22743.2%22 y2=%22110.7%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22752.8%22 y1=%22125.3%22 x2=%22756.7%22 y2=%22119.5%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22765.7%22 y1=%22134.3%22 x2=%22769.8%22 y2=%22128.7%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22778.3%22 y1=%22143.8%22 x2=%22782.6%22 y2=%22138.3%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22790.5%22 y1=%22153.7%22 x2=%22795.0%22 y2=%22148.4%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22802.4%22 y1=%22164.1%22 x2=%22807.1%22 y2=%22158.9%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22814.0%22 y1=%22174.9%22 x2=%22818.8%22 y2=%22169.8%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22825.1%22 y1=%22186.0%22 x2=%22830.2%22 y2=%22181.2%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22835.9%22 y1=%22197.6%22 x2=%22841.1%22 y2=%22192.9%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22846.3%22 y1=%22209.5%22 x2=%22851.6%22 y2=%22205.0%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22856.2%22 y1=%22221.7%22 x2=%22861.7%22 y2=%22217.4%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22865.7%22 y1=%22234.3%22 x2=%22871.3%22 y2=%22230.2%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22874.7%22 y1=%22247.2%22 x2=%22880.5%22 y2=%22243.3%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22883.3%22 y1=%22260.5%22 x2=%22889.3%22 y2=%22256.8%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22891.4%22 y1=%22274.0%22 x2=%22905.3%22 y2=%22266.0%22 stroke=%22%235dffa8%22 stroke-width=%222%22 opacity=%22.6%22/%3E%3Cline x1=%22899.1%22 y1=%22287.8%22 x2=%22905.3%22 y2=%22284.5%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22906.3%22 y1=%22301.9%22 x2=%22912.5%22 y2=%22298.8%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22912.9%22 y1=%22316.2%22 x2=%22919.3%22 y2=%22313.3%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22919.1%22 y1=%22330.7%22 x2=%22925.6%22 y2=%22328.1%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22924.7%22 y1=%22345.4%22 x2=%22931.3%22 y2=%22343.0%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22929.9%22 y1=%22360.3%22 x2=%22936.5%22 y2=%22358.2%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22934.5%22 y1=%22375.4%22 x2=%22941.2%22 y2=%22373.5%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22938.6%22 y1=%22390.7%22 x2=%22945.4%22 y2=%22389.0%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22942.1%22 y1=%22406.0%22 x2=%22949.0%22 y2=%22404.6%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22945.1%22 y1=%22421.5%22 x2=%22952.0%22 y2=%22420.3%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22947.6%22 y1=%22437.1%22 x2=%22954.5%22 y2=%22436.1%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22949.5%22 y1=%22452.8%22 x2=%22956.5%22 y2=%22452.0%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22950.9%22 y1=%22468.5%22 x2=%22957.9%22 y2=%22468.0%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cline x1=%22951.7%22 y1=%22484.2%22 x2=%22958.7%22 y2=%22484.0%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.6%22/%3E%3Cpath transform=%22rotate%280.0 500 500%29 translate%28500 94%29%22 d=%22M0 8L0 0 M8 8L-8 -8 M8 0L8 8%22 stroke=%22%239dffc8%22 stroke-width=%222.4%22 stroke-linecap=%22square%22 fill=%22none%22 opacity=%22.75%22/%3E%3Cpath transform=%22rotate%2810.0 500 500%29 translate%28500 94%29%22 d=%22M-8 -8L0 0 M-8 -8L8 8 M8 -8L8 0%22 stroke=%22%239dffc8%22 stroke-width=%222.4%22 stroke-linecap=%22square%22 fill=%22none%22 opacity=%22.75%22/%3E%3Cpath transform=%22rotate%2820.0 500 500%29 translate%28500 94%29%22 d=%22M0 8L8 8 M8 -8L8 -8 M8 -8L-8 -8%22 stroke=%22%239dffc8%22 stroke-width=%222.4%22 stroke-linecap=%22square%22 fill=%22none%22 opacity=%22.75%22/%3E%3Cpath transform=%22rotate%2830.0 500 500%29 translate%28500 94%29%22 d=%22M-8 -8L8 -8 M0 0L0 8 M-8 8L-8 8%22 stroke=%22%239dffc8%22 stroke-width=%222.4%22 stroke-linecap=%22square%22 fill=%22none%22 opacity=%22.75%22/%3E%3Cpath transform=%22rotate%2840.0 500 500%29 translate%28500 94%29%22 d=%22M0 0L-8 8 M-8 0L8 0 M0 8L-8 8%22 stroke=%22%239dffc8%22 stroke-width=%222.4%22 stroke-linecap=%22square%22 fill=%22none%22 opacity=%22.75%22/%3E%3Cpath transform=%22rotate%2850.0 500 500%29 translate%28500 94%29%22 d=%22M0 0L-8 8 M0 -8L-8 8 M-8 0L-8 0%22 stroke=%22%239dffc8%22 stroke-width=%222.4%22 stroke-linecap=%22square%22 fill=%22none%22 opacity=%22.75%22/%3E%3Cpath transform=%22rotate%2860.0 500 500%29 translate%28500 94%29%22 d=%22M0 -8L-8 8 M-8 -8L-8 -8 M0 0L8 0%22 stroke=%22%239dffc8%22 stroke-width=%222.4%22 stroke-linecap=%22square%22 fill=%22none%22 opacity=%22.75%22/%3E%3Cpath transform=%22rotate%2870.0 500 500%29 translate%28500 94%29%22 d=%22M0 -8L8 8 M-8 8L0 0 M-8 0L0 -8%22 stroke=%22%239dffc8%22 stroke-width=%222.4%22 stroke-linecap=%22square%22 fill=%22none%22 opacity=%22.75%22/%3E%3Cpath transform=%22rotate%2880.0 500 500%29 translate%28500 94%29%22 d=%22M0 -8L-8 -8 M8 -8L-8 -8 M0 0L-8 8%22 stroke=%22%239dffc8%22 stroke-width=%222.4%22 stroke-linecap=%22square%22 fill=%22none%22 opacity=%22.75%22/%3E%3Cpath transform=%22rotate%2890.0 500 500%29 translate%28500 94%29%22 d=%22M8 -8L0 8 M-8 8L-8 0 M8 0L-8 0%22 stroke=%22%239dffc8%22 stroke-width=%222.4%22 stroke-linecap=%22square%22 fill=%22none%22 opacity=%22.75%22/%3E%3Cpath transform=%22rotate%28100.0 500 500%29 translate%28500 94%29%22 d=%22M0 -8L-8 0 M8 0L-8 -8 M-8 0L8 8%22 stroke=%22%239dffc8%22 stroke-width=%222.4%22 stroke-linecap=%22square%22 fill=%22none%22 opacity=%22.75%22/%3E%3Cpath transform=%22rotate%28110.0 500 500%29 translate%28500 94%29%22 d=%22M8 -8L-8 -8 M-8 0L0 -8 M8 0L0 0%22 stroke=%22%239dffc8%22 stroke-width=%222.4%22 stroke-linecap=%22square%22 fill=%22none%22 opacity=%22.75%22/%3E%3Cpath transform=%22rotate%28120.0 500 500%29 translate%28500 94%29%22 d=%22M-8 -8L-8 -8 M8 8L-8 -8 M8 0L0 8%22 stroke=%22%239dffc8%22 stroke-width=%222.4%22 stroke-linecap=%22square%22 fill=%22none%22 opacity=%22.75%22/%3E%3Cpath transform=%22rotate%28130.0 500 500%29 translate%28500 94%29%22 d=%22M0 -8L8 0 M8 -8L0 -8 M8 -8L0 -8%22 stroke=%22%239dffc8%22 stroke-width=%222.4%22 stroke-linecap=%22square%22 fill=%22none%22 opacity=%22.75%22/%3E%3Cpath transform=%22rotate%28140.0 500 500%29 translate%28500 94%29%22 d=%22M8 -8L8 -8 M-8 8L8 8 M-8 8L0 0%22 stroke=%22%239dffc8%22 stroke-width=%222.4%22 stroke-linecap=%22square%22 fill=%22none%22 opacity=%22.75%22/%3E%3Cpath transform=%22rotate%28150.0 500 500%29 translate%28500 94%29%22 d=%22M8 -8L0 -8 M-8 -8L-8 8 M0 -8L8 8%22 stroke=%22%239dffc8%22 stroke-width=%222.4%22 stroke-linecap=%22square%22 fill=%22none%22 opacity=%22.75%22/%3E%3Cpath transform=%22rotate%28160.0 500 500%29 translate%28500 94%29%22 d=%22M0 0L0 8 M0 0L8 -8 M8 -8L-8 -8%22 stroke=%22%239dffc8%22 stroke-width=%222.4%22 stroke-linecap=%22square%22 fill=%22none%22 opacity=%22.75%22/%3E%3Cpath transform=%22rotate%28170.0 500 500%29 translate%28500 94%29%22 d=%22M0 8L8 8 M8 -8L0 -8 M-8 8L-8 -8%22 stroke=%22%239dffc8%22 stroke-width=%222.4%22 stroke-linecap=%22square%22 fill=%22none%22 opacity=%22.75%22/%3E%3Cpath transform=%22rotate%28180.0 500 500%29 translate%28500 94%29%22 d=%22M0 0L0 -8 M-8 -8L-8 0 M0 8L8 -8%22 stroke=%22%239dffc8%22 stroke-width=%222.4%22 stroke-linecap=%22square%22 fill=%22none%22 opacity=%22.75%22/%3E%3Cpath transform=%22rotate%28190.0 500 500%29 translate%28500 94%29%22 d=%22M-8 0L-8 0 M0 8L8 8 M8 8L-8 8%22 stroke=%22%239dffc8%22 stroke-width=%222.4%22 stroke-linecap=%22square%22 fill=%22none%22 opacity=%22.75%22/%3E%3Cpath transform=%22rotate%28200.0 500 500%29 translate%28500 94%29%22 d=%22M-8 -8L0 0 M8 0L-8 -8 M8 8L-8 0%22 stroke=%22%239dffc8%22 stroke-width=%222.4%22 stroke-linecap=%22square%22 fill=%22none%22 opacity=%22.75%22/%3E%3Cpath transform=%22rotate%28210.0 500 500%29 translate%28500 94%29%22 d=%22M-8 8L0 0 M-8 -8L-8 0 M8 0L8 -8%22 stroke=%22%239dffc8%22 stroke-width=%222.4%22 stroke-linecap=%22square%22 fill=%22none%22 opacity=%22.75%22/%3E%3Cpath transform=%22rotate%28220.0 500 500%29 translate%28500 94%29%22 d=%22M8 8L8 -8 M0 0L-8 8 M0 -8L0 -8%22 stroke=%22%239dffc8%22 stroke-width=%222.4%22 stroke-linecap=%22square%22 fill=%22none%22 opacity=%22.75%22/%3E%3Cpath transform=%22rotate%28230.0 500 500%29 translate%28500 94%29%22 d=%22M0 8L-8 8 M8 0L0 8 M-8 8L-8 -8%22 stroke=%22%239dffc8%22 stroke-width=%222.4%22 stroke-linecap=%22square%22 fill=%22none%22 opacity=%22.75%22/%3E%3Cpath transform=%22rotate%28240.0 500 500%29 translate%28500 94%29%22 d=%22M-8 8L-8 0 M0 8L0 0 M8 8L8 0%22 stroke=%22%239dffc8%22 stroke-width=%222.4%22 stroke-linecap=%22square%22 fill=%22none%22 opacity=%22.75%22/%3E%3Cpath transform=%22rotate%28250.0 500 500%29 translate%28500 94%29%22 d=%22M0 0L8 -8 M8 8L-8 0 M8 -8L0 -8%22 stroke=%22%239dffc8%22 stroke-width=%222.4%22 stroke-linecap=%22square%22 fill=%22none%22 opacity=%22.75%22/%3E%3Cpath transform=%22rotate%28260.0 500 500%29 translate%28500 94%29%22 d=%22M-8 8L-8 0 M8 8L0 0 M-8 0L0 -8%22 stroke=%22%239dffc8%22 stroke-width=%222.4%22 stroke-linecap=%22square%22 fill=%22none%22 opacity=%22.75%22/%3E%3Cpath transform=%22rotate%28270.0 500 500%29 translate%28500 94%29%22 d=%22M8 8L-8 8 M-8 0L8 0 M0 -8L0 0%22 stroke=%22%239dffc8%22 stroke-width=%222.4%22 stroke-linecap=%22square%22 fill=%22none%22 opacity=%22.75%22/%3E%3Cpath transform=%22rotate%28280.0 500 500%29 translate%28500 94%29%22 d=%22M8 0L-8 8 M0 -8L-8 0 M-8 8L0 -8%22 stroke=%22%239dffc8%22 stroke-width=%222.4%22 stroke-linecap=%22square%22 fill=%22none%22 opacity=%22.75%22/%3E%3Cpath transform=%22rotate%28290.0 500 500%29 translate%28500 94%29%22 d=%22M-8 -8L0 0 M-8 8L-8 0 M-8 -8L0 0%22 stroke=%22%239dffc8%22 stroke-width=%222.4%22 stroke-linecap=%22square%22 fill=%22none%22 opacity=%22.75%22/%3E%3Cpath transform=%22rotate%28300.0 500 500%29 translate%28500 94%29%22 d=%22M0 -8L0 0 M8 8L0 8 M0 8L8 0%22 stroke=%22%239dffc8%22 stroke-width=%222.4%22 stroke-linecap=%22square%22 fill=%22none%22 opacity=%22.75%22/%3E%3Cpath transform=%22rotate%28310.0 500 500%29 translate%28500 94%29%22 d=%22M0 -8L-8 0 M8 -8L8 8 M0 8L0 0%22 stroke=%22%239dffc8%22 stroke-width=%222.4%22 stroke-linecap=%22square%22 fill=%22none%22 opacity=%22.75%22/%3E%3Cpath transform=%22rotate%28320.0 500 500%29 translate%28500 94%29%22 d=%22M8 8L-8 8 M-8 0L0 -8 M-8 0L-8 -8%22 stroke=%22%239dffc8%22 stroke-width=%222.4%22 stroke-linecap=%22square%22 fill=%22none%22 opacity=%22.75%22/%3E%3Cpath transform=%22rotate%28330.0 500 500%29 translate%28500 94%29%22 d=%22M-8 8L-8 0 M-8 8L8 8 M8 0L-8 8%22 stroke=%22%239dffc8%22 stroke-width=%222.4%22 stroke-linecap=%22square%22 fill=%22none%22 opacity=%22.75%22/%3E%3Cpath transform=%22rotate%28340.0 500 500%29 translate%28500 94%29%22 d=%22M-8 -8L0 0 M-8 8L-8 0 M8 8L-8 -8%22 stroke=%22%239dffc8%22 stroke-width=%222.4%22 stroke-linecap=%22square%22 fill=%22none%22 opacity=%22.75%22/%3E%3Cpath transform=%22rotate%28350.0 500 500%29 translate%28500 94%29%22 d=%22M-8 0L0 8 M8 8L8 8 M-8 0L8 -8%22 stroke=%22%239dffc8%22 stroke-width=%222.4%22 stroke-linecap=%22square%22 fill=%22none%22 opacity=%22.75%22/%3E%3Ccircle cx=%22860.0%22 cy=%22500.0%22 r=%226%22 fill=%22%235dffa8%22 opacity=%22.8%22/%3E%3Ccircle cx=%22680.0%22 cy=%22811.8%22 r=%226%22 fill=%22%235dffa8%22 opacity=%22.8%22/%3E%3Ccircle cx=%22320.0%22 cy=%22811.8%22 r=%226%22 fill=%22%235dffa8%22 opacity=%22.8%22/%3E%3Ccircle cx=%22140.0%22 cy=%22500.0%22 r=%226%22 fill=%22%235dffa8%22 opacity=%22.8%22/%3E%3Ccircle cx=%22320.0%22 cy=%22188.2%22 r=%226%22 fill=%22%235dffa8%22 opacity=%22.8%22/%3E%3Ccircle cx=%22680.0%22 cy=%22188.2%22 r=%226%22 fill=%22%235dffa8%22 opacity=%22.8%22/%3E%3C/svg%3E") center/contain no-repeat;opacity:.55;filter:drop-shadow(0 0 10px rgba(62,224,138,.8));animation:spin 120s linear infinite}
+@keyframes spin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+/* Glitch flicker on the big word */
+.t2{position:relative;animation:glitch 6s steps(1) infinite}
+@keyframes glitch{
+  0%,91%,100%{transform:none;filter:none}
+  92%{transform:translate(-3px,1px) skewX(-6deg);filter:drop-shadow(3px 0 0 rgba(0,255,170,.7)) drop-shadow(-3px 0 0 rgba(160,255,60,.6))}
+  93%{transform:translate(4px,-1px);filter:drop-shadow(-4px 0 0 rgba(0,255,170,.7))}
+  94%{transform:translate(-1px,0) skewX(4deg);filter:drop-shadow(2px 0 0 rgba(160,255,60,.7))}
+  95%{transform:none;filter:none}}
+@media (prefers-reduced-motion:reduce){.doom .cracks,.doom .orb::after,#title::before,.t2{animation:none}}
+</style>
+
+<style>
+/* ===== Scrolling the page ===== */
+/* Energy bar under the menu showing how far down the page you are */
+.charge{position:fixed;left:0;top:64px;height:2px;width:100%;z-index:41;transform-origin:0 50%;transform:scaleX(var(--p,0));
+  background:linear-gradient(90deg,#0e5a33,#3ee08a 70%,#e6fff1);box-shadow:0 0 12px rgba(62,224,138,.9)}
+/* A glowing spine down the middle of the page that fills up as you scroll */
+#categories{position:relative}
+#categories::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;transform:translateX(-50%);z-index:-2;
+  background:linear-gradient(rgba(62,224,138,.0),rgba(62,224,138,.18) 6%,rgba(62,224,138,.18) 94%,rgba(62,224,138,0))}
+#categories::after{content:"";position:absolute;left:50%;top:0;width:3px;height:calc(var(--p,0) * 100%);transform:translateX(-50%);z-index:-2;
+  background:linear-gradient(transparent,#3ee08a 85%,#e6fff1);box-shadow:0 0 14px #3ee08a;border-radius:2px;opacity:.45}
+/* Drifting green embers behind everything below the hero */
+#embers{position:fixed;inset:0;z-index:-3;pointer-events:none;width:100%;height:100%}
+/* Each award: aurora glow, cracked energy divider, rune ring behind the trophy */
+.cat::before{background:
+  radial-gradient(40% 240px at 50% 210px,color-mix(in srgb,var(--c) 22%,transparent),transparent 100%),
+  radial-gradient(30% 50% at 0% 60%,color-mix(in srgb,var(--c) 7%,transparent),transparent 100%),
+  radial-gradient(30% 50% at 100% 40%,color-mix(in srgb,var(--c) 7%,transparent),transparent 100%)!important}
+.cat::after{content:"";position:absolute;left:50%;top:0;width:min(1100px,92vw);height:2px;transform:translate(-50%,-50%) scaleX(0);background:radial-gradient(closest-side,#e6fff1,#3ee08a 35%,rgba(62,224,138,.25) 70%,transparent);box-shadow:0 0 18px rgba(62,224,138,.6);transition:transform 1.4s var(--ease)}
+.cat.in::after,.cat:has(.in)::after{transform:translate(-50%,-50%) scaleX(1)}
+.cat:first-child::after{display:none}
+.cat-trophy{position:relative;box-shadow:0 0 0 3px #d9b25a,0 0 0 6px rgba(0,0,0,.6),0 0 0 7px rgba(217,178,90,.45),0 0 70px -6px #e9c46a!important;filter:hue-rotate(95deg) saturate(.85)}
+.cat-head{isolation:isolate}
+.cat-head::before{content:"";position:absolute;left:50%;top:clamp(55px,7vw,75px);width:clamp(210px,26vw,270px);aspect-ratio:1;transform:translate(-50%,-50%);z-index:-1;
+  background:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 400 400%22%3E%3Ccircle cx=%22200%22 cy=%22200%22 r=%22190%22 fill=%22none%22 stroke=%22%235dffa8%22 stroke-width=%221.5%22 opacity=%22.6%22/%3E%3Ccircle cx=%22200%22 cy=%22200%22 r=%22168%22 fill=%22none%22 stroke=%22%235dffa8%22 stroke-width=%221%22 opacity=%22.35%22 stroke-dasharray=%222 6%22/%3E%3Cpath transform=%22rotate%280.0 200 200%29 translate%28200 22%29%22 d=%22M-5 5L5 -5 M0 5L0 5%22 stroke=%22%239dffc8%22 stroke-width=%222%22 fill=%22none%22 opacity=%22.7%22/%3E%3Cpath transform=%22rotate%2815.0 200 200%29 translate%28200 22%29%22 d=%22M5 -5L5 -5 M0 0L5 -5%22 stroke=%22%239dffc8%22 stroke-width=%222%22 fill=%22none%22 opacity=%22.7%22/%3E%3Cpath transform=%22rotate%2830.0 200 200%29 translate%28200 22%29%22 d=%22M-5 5L0 5 M5 0L0 5%22 stroke=%22%239dffc8%22 stroke-width=%222%22 fill=%22none%22 opacity=%22.7%22/%3E%3Cpath transform=%22rotate%2845.0 200 200%29 translate%28200 22%29%22 d=%22M-5 -5L5 -5 M5 0L5 -5%22 stroke=%22%239dffc8%22 stroke-width=%222%22 fill=%22none%22 opacity=%22.7%22/%3E%3Cpath transform=%22rotate%2860.0 200 200%29 translate%28200 22%29%22 d=%22M5 -5L-5 5 M-5 0L-5 0%22 stroke=%22%239dffc8%22 stroke-width=%222%22 fill=%22none%22 opacity=%22.7%22/%3E%3Cpath transform=%22rotate%2875.0 200 200%29 translate%28200 22%29%22 d=%22M0 5L5 0 M5 0L0 5%22 stroke=%22%239dffc8%22 stroke-width=%222%22 fill=%22none%22 opacity=%22.7%22/%3E%3Cpath transform=%22rotate%2890.0 200 200%29 translate%28200 22%29%22 d=%22M5 0L-5 0 M-5 -5L-5 0%22 stroke=%22%239dffc8%22 stroke-width=%222%22 fill=%22none%22 opacity=%22.7%22/%3E%3Cpath transform=%22rotate%28105.0 200 200%29 translate%28200 22%29%22 d=%22M-5 0L5 0 M5 0L0 5%22 stroke=%22%239dffc8%22 stroke-width=%222%22 fill=%22none%22 opacity=%22.7%22/%3E%3Cpath transform=%22rotate%28120.0 200 200%29 translate%28200 22%29%22 d=%22M0 5L0 5 M5 0L5 -5%22 stroke=%22%239dffc8%22 stroke-width=%222%22 fill=%22none%22 opacity=%22.7%22/%3E%3Cpath transform=%22rotate%28135.0 200 200%29 translate%28200 22%29%22 d=%22M0 5L-5 0 M5 5L5 -5%22 stroke=%22%239dffc8%22 stroke-width=%222%22 fill=%22none%22 opacity=%22.7%22/%3E%3Cpath transform=%22rotate%28150.0 200 200%29 translate%28200 22%29%22 d=%22M5 0L5 5 M5 -5L5 5%22 stroke=%22%239dffc8%22 stroke-width=%222%22 fill=%22none%22 opacity=%22.7%22/%3E%3Cpath transform=%22rotate%28165.0 200 200%29 translate%28200 22%29%22 d=%22M-5 5L5 0 M0 -5L-5 0%22 stroke=%22%239dffc8%22 stroke-width=%222%22 fill=%22none%22 opacity=%22.7%22/%3E%3Cpath transform=%22rotate%28180.0 200 200%29 translate%28200 22%29%22 d=%22M5 0L-5 0 M-5 0L-5 -5%22 stroke=%22%239dffc8%22 stroke-width=%222%22 fill=%22none%22 opacity=%22.7%22/%3E%3Cpath transform=%22rotate%28195.0 200 200%29 translate%28200 22%29%22 d=%22M0 0L0 -5 M-5 5L5 -5%22 stroke=%22%239dffc8%22 stroke-width=%222%22 fill=%22none%22 opacity=%22.7%22/%3E%3Cpath transform=%22rotate%28210.0 200 200%29 translate%28200 22%29%22 d=%22M0 5L5 0 M5 0L5 -5%22 stroke=%22%239dffc8%22 stroke-width=%222%22 fill=%22none%22 opacity=%22.7%22/%3E%3Cpath transform=%22rotate%28225.0 200 200%29 translate%28200 22%29%22 d=%22M-5 0L-5 -5 M-5 5L5 -5%22 stroke=%22%239dffc8%22 stroke-width=%222%22 fill=%22none%22 opacity=%22.7%22/%3E%3Cpath transform=%22rotate%28240.0 200 200%29 translate%28200 22%29%22 d=%22M-5 0L0 5 M0 -5L5 -5%22 stroke=%22%239dffc8%22 stroke-width=%222%22 fill=%22none%22 opacity=%22.7%22/%3E%3Cpath transform=%22rotate%28255.0 200 200%29 translate%28200 22%29%22 d=%22M0 0L0 -5 M0 0L0 5%22 stroke=%22%239dffc8%22 stroke-width=%222%22 fill=%22none%22 opacity=%22.7%22/%3E%3Cpath transform=%22rotate%28270.0 200 200%29 translate%28200 22%29%22 d=%22M0 5L5 5 M5 -5L5 5%22 stroke=%22%239dffc8%22 stroke-width=%222%22 fill=%22none%22 opacity=%22.7%22/%3E%3Cpath transform=%22rotate%28285.0 200 200%29 translate%28200 22%29%22 d=%22M0 0L5 5 M5 -5L0 0%22 stroke=%22%239dffc8%22 stroke-width=%222%22 fill=%22none%22 opacity=%22.7%22/%3E%3Cpath transform=%22rotate%28300.0 200 200%29 translate%28200 22%29%22 d=%22M0 5L0 5 M0 -5L0 5%22 stroke=%22%239dffc8%22 stroke-width=%222%22 fill=%22none%22 opacity=%22.7%22/%3E%3Cpath transform=%22rotate%28315.0 200 200%29 translate%28200 22%29%22 d=%22M0 -5L0 5 M5 5L-5 -5%22 stroke=%22%239dffc8%22 stroke-width=%222%22 fill=%22none%22 opacity=%22.7%22/%3E%3Cpath transform=%22rotate%28330.0 200 200%29 translate%28200 22%29%22 d=%22M5 5L0 0 M0 5L0 5%22 stroke=%22%239dffc8%22 stroke-width=%222%22 fill=%22none%22 opacity=%22.7%22/%3E%3Cpath transform=%22rotate%28345.0 200 200%29 translate%28200 22%29%22 d=%22M5 0L5 0 M-5 5L-5 5%22 stroke=%22%239dffc8%22 stroke-width=%222%22 fill=%22none%22 opacity=%22.7%22/%3E%3C/svg%3E") center/contain no-repeat;filter:drop-shadow(0 0 6px var(--c));animation:spin2 60s linear infinite;opacity:.8}
+@keyframes spin2{to{transform:translate(-50%,-50%) rotate(360deg)}}
+.cat-num{-webkit-text-stroke:1px color-mix(in srgb,var(--c) 45%,transparent)!important;text-shadow:0 0 40px color-mix(in srgb,var(--c) 25%,transparent)}
+.cat h2{background:linear-gradient(180deg,#f2fff7 10%,#b9f5d2 55%,#5fcf92);-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 18px color-mix(in srgb,var(--c) 35%,transparent))}
+/* Cards: steel frame with glowing corner brackets, and a scan sweep as each one appears */
+.cap{box-shadow:0 0 0 1px color-mix(in srgb,var(--c) 30%,transparent),0 24px 50px -24px rgba(0,0,0,.9)}
+.cap::before{content:"";position:absolute;inset:6px;z-index:3;pointer-events:none;
+  background:
+   linear-gradient(var(--c),var(--c)) top left/16px 2px,linear-gradient(var(--c),var(--c)) top left/2px 16px,
+   linear-gradient(var(--c),var(--c)) top right/16px 2px,linear-gradient(var(--c),var(--c)) top right/2px 16px,
+   linear-gradient(var(--c),var(--c)) bottom left/16px 2px,linear-gradient(var(--c),var(--c)) bottom left/2px 16px,
+   linear-gradient(var(--c),var(--c)) bottom right/16px 2px,linear-gradient(var(--c),var(--c)) bottom right/2px 16px;
+  background-repeat:no-repeat;opacity:.75;filter:drop-shadow(0 0 4px var(--c));transition:inset .4s var(--ease),opacity .4s}
+.cap:hover::before{inset:3px;opacity:1}
+.cap.rv:not(.tba)::after{content:"";position:absolute;left:0;right:0;top:0;height:30%;z-index:4;pointer-events:none;opacity:0;
+  background:linear-gradient(transparent,color-mix(in srgb,var(--c) 45%,transparent) 85%,#e6fff1 100%)}
+.in .cap.rv:not(.tba)::after,.cap.rv.in:not(.tba)::after{animation:scan 1.1s var(--ease) both;animation-delay:inherit}
+@keyframes scan{0%{opacity:1;transform:translateY(-100%)}80%{opacity:1}100%{opacity:0;transform:translateY(340%)}}
+/* Sections rise in a little further and sharpen from a blur */
+.rv{transform:translateY(46px) scale(.97);filter:blur(6px);transition:opacity 1s var(--ease),transform 1s var(--ease),filter 1s var(--ease)}
+.in .rv,.rv.in{filter:none}
+footer{background:radial-gradient(50% 100% at 50% 100%,rgba(62,224,138,.14),transparent 70%)!important}
+@media (prefers-reduced-motion:reduce){.cat-head::before{animation:none}.rv{filter:none}#embers{display:none}}
+</style>
+
+<style>
+/* ===== Cosmic backdrop ===== */
+#bokeh,#dust{display:none!important}
+.doom .stars{position:absolute;inset:0;width:100%;height:100%;mix-blend-mode:screen;opacity:.9;
+  -webkit-mask:radial-gradient(70% 70% at 50% 45%,transparent 18%,#000 55%);mask:radial-gradient(70% 70% at 50% 45%,transparent 18%,#000 55%)}
+#embers{z-index:-3}
+/* Faint nebula clouds that stay put while the page scrolls over them */
+body{background:
+  radial-gradient(40% 35% at 12% 30%,rgba(30,140,95,.16),transparent 70%),
+  radial-gradient(35% 30% at 88% 62%,rgba(40,150,160,.13),transparent 70%),
+  radial-gradient(45% 30% at 55% 95%,rgba(20,110,70,.14),transparent 70%),
+  radial-gradient(25% 20% at 75% 15%,rgba(120,90,200,.07),transparent 70%),
+  var(--bg) fixed!important;background-attachment:fixed!important}
+</style>
+
+<style>
+/* ===== Incursion: another Earth descending into our sky ===== */
+.doom .orb2{position:absolute;left:50%;top:-96vmin;width:118vmin;aspect-ratio:1;transform:translateX(-50%);border-radius:50%;
+  background:radial-gradient(circle at 50% 72%,#0a1820 0,#040b10 55%,#020507 72%);opacity:.92;
+  box-shadow:0 2px 0 1px rgba(150,230,255,.55),0 10px 40px rgba(90,200,235,.35),0 40px 160px rgba(60,160,210,.22),inset 0 -22px 50px rgba(110,210,240,.18);
+  animation:descend 14s ease-in-out infinite alternate}
+@keyframes descend{from{transform:translateX(-50%) translateY(0)}to{transform:translateX(-50%) translateY(2.2vmin)}}
+.doom .orb{animation:rise 14s ease-in-out infinite alternate}
+@keyframes rise{from{transform:translateX(-50%) translateY(0)}to{transform:translateX(-50%) translateY(-1.6vmin)}}
+/* The pull between the two worlds: a soft column of light where they will meet */
+.doom .tether{position:absolute;left:50%;top:0;bottom:0;width:min(60vw,520px);transform:translateX(-50%);
+  background:radial-gradient(50% 50% at 50% 50%,rgba(140,255,200,.10),transparent 70%),
+    linear-gradient(90deg,transparent,rgba(110,220,230,.06) 40%,rgba(180,255,220,.12) 50%,rgba(110,220,230,.06) 60%,transparent);
+  animation:pull 5s ease-in-out infinite alternate;mix-blend-mode:screen}
+@keyframes pull{from{opacity:.5}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.doom .orb,.doom .orb2,.doom .tether{animation:none}}
+</style>
+
+<style>
+/* ===== Doom's armour: steel and gold over the green ===== */
+:root{
+  --au:linear-gradient(180deg,#fff6d6 0%,#f0d58a 38%,#c99a3c 62%,#f3dc9a 82%,#a8761f 100%);
+  --steel:linear-gradient(180deg,#ffffff 0%,#dfe6e3 28%,#8d9a95 50%,#5b6662 56%,#c9d3cf 78%,#7e8a86 100%);
+  --gold:#e9c46a;
+}
+/* Title: steel plate for AWARDS, gold for the lines around it */
+#t2.metal{background:var(--steel);-webkit-background-clip:text;background-clip:text}
+#t1.metal,#t3.metal{background:var(--au);-webkit-background-clip:text;background-clip:text}
+.hero h1 span{filter:drop-shadow(0 2px 0 rgba(0,0,0,.7)) drop-shadow(0 0 18px rgba(62,224,138,.35)) drop-shadow(0 14px 50px rgba(20,120,70,.5))}
+.rule{background:linear-gradient(90deg,transparent,#9c6b1c 15%,#fff1c1 50%,#9c6b1c 85%,transparent)!important;box-shadow:0 0 14px rgba(233,196,106,.45)!important}
+.when{color:#d8c9a0}.when::before,.when::after{background:linear-gradient(90deg,transparent,#e9c46a)!important}
+/* Gold ring turning the other way inside the rune ring */
+.hero-grid>div:first-child::after{content:"";position:absolute;left:50%;top:50%;width:min(86vw,92svh,980px);aspect-ratio:1;transform:translate(-50%,-50%) scale(.8);z-index:-1;
+  background:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 1000 1000%22%3E%3Cdefs%3E%3ClinearGradient id=%22au%22 x1=%220%22 y1=%220%22 x2=%221%22 y2=%221%22%3E%3Cstop offset=%220%22 stop-color=%22%23fff1c1%22/%3E%3Cstop offset=%22.35%22 stop-color=%22%23e9c46a%22/%3E%3Cstop offset=%22.6%22 stop-color=%22%239c6b1c%22/%3E%3Cstop offset=%22.85%22 stop-color=%22%23f3dc9a%22/%3E%3Cstop offset=%221%22 stop-color=%22%23a8761f%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx=%22500%22 cy=%22500%22 r=%22430%22 fill=%22none%22 stroke=%22url%28%23au%29%22 stroke-width=%223%22/%3E%3Ccircle cx=%22500%22 cy=%22500%22 r=%22418%22 fill=%22none%22 stroke=%22url%28%23au%29%22 stroke-width=%221%22 stroke-dasharray=%223 9%22 opacity=%22.8%22/%3E%3Crect x=%22890.3%22 y=%22657.6%22 width=%2214%22 height=%2214%22 transform=%22rotate%2867.5 897.3 664.6%29%22 fill=%22url%28%23au%29%22/%3E%3Crect x=%22657.6%22 y=%22890.3%22 width=%2214%22 height=%2214%22 transform=%22rotate%28112.5 664.6 897.3%29%22 fill=%22url%28%23au%29%22/%3E%3Crect x=%22328.4%22 y=%22890.3%22 width=%2214%22 height=%2214%22 transform=%22rotate%28157.5 335.4 897.3%29%22 fill=%22url%28%23au%29%22/%3E%3Crect x=%2295.7%22 y=%22657.6%22 width=%2214%22 height=%2214%22 transform=%22rotate%28202.5 102.7 664.6%29%22 fill=%22url%28%23au%29%22/%3E%3Crect x=%2295.7%22 y=%22328.4%22 width=%2214%22 height=%2214%22 transform=%22rotate%28247.5 102.7 335.4%29%22 fill=%22url%28%23au%29%22/%3E%3Crect x=%22328.4%22 y=%2295.7%22 width=%2214%22 height=%2214%22 transform=%22rotate%28292.5 335.4 102.7%29%22 fill=%22url%28%23au%29%22/%3E%3Crect x=%22657.6%22 y=%2295.7%22 width=%2214%22 height=%2214%22 transform=%22rotate%28337.5 664.6 102.7%29%22 fill=%22url%28%23au%29%22/%3E%3Crect x=%22890.3%22 y=%22328.4%22 width=%2214%22 height=%2214%22 transform=%22rotate%28382.5 897.3 335.4%29%22 fill=%22url%28%23au%29%22/%3E%3C/svg%3E") center/contain no-repeat;opacity:.7;filter:drop-shadow(0 0 6px rgba(233,196,106,.45));animation:spinBack 160s linear infinite;pointer-events:none}
+@keyframes spinBack{to{transform:translate(-50%,-50%) scale(.8) rotate(-360deg)}}
+/* Countdown: riveted steel plates with a gold top edge */
+.count div{position:relative;background:linear-gradient(180deg,#2b3330,#141a18 55%,#0b0f0e)!important;border:1px solid #4d5955!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.18),inset 0 -1px 0 rgba(0,0,0,.6),0 0 0 1px rgba(0,0,0,.5),0 10px 24px -10px rgba(0,0,0,.9);border-top:2px solid #c99a3c!important}
+.count div::before,.count div::after{content:"";position:absolute;top:6px;width:4px;height:4px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff,#8d9a95 60%,#3a4441)}
+.count div::before{left:6px}.count div::after{right:6px}
+.count b{background:var(--steel);-webkit-background-clip:text;background-clip:text;color:transparent}
+.count span{color:#c9a95a}
+/* Buttons: dark steel with gold trim */
+.btn{background:linear-gradient(180deg,#232a28,#121715)!important;border-color:#55625d!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}
+.btn.gold{border-color:#c99a3c!important;color:#f6e3ad;box-shadow:inset 0 1px 0 rgba(255,241,193,.25),0 0 22px rgba(62,224,138,.18)!important}
+.btn.gold:hover{border-color:#f0d58a!important;box-shadow:inset 0 1px 0 rgba(255,241,193,.4),0 0 30px rgba(233,196,106,.3)!important}
+.soc{border-color:#4d5955}.soc:hover{border-color:#c99a3c;color:#e9c46a;background:rgba(233,196,106,.06)}
+.brand svg{filter:hue-rotate(-95deg)}
+/* Trophy back to gold, with a green aura */
+.cup{filter:drop-shadow(0 30px 50px rgba(0,0,0,.7)) drop-shadow(0 0 50px rgba(62,224,138,.35))!important}
+/* Menu: gold underline on the active award */
+.catnav a.on::after{background:linear-gradient(90deg,#9c6b1c,#f3dc9a,#9c6b1c)!important}
+/* Awards: steel headings, gold kicker, gold-rimmed badges, gold corner brackets */
+.cat h2{background:var(--steel)!important;-webkit-background-clip:text!important;background-clip:text!important;filter:drop-shadow(0 2px 0 rgba(0,0,0,.6)) drop-shadow(0 0 16px rgba(62,224,138,.3))!important}
+.cat-kicker{color:#e9c46a}.cat-kicker::before,.cat-kicker::after{background:#c99a3c}
+.cat-trophy{filter:none!important;box-shadow:0 0 0 3px #c99a3c,0 0 0 5px #1a1f1d,0 0 0 6px #8d9a95,0 0 60px -8px rgba(62,224,138,.7),0 20px 50px -14px rgba(0,0,0,.9)!important}
+.cap::before{background:
+   linear-gradient(#e9c46a,#e9c46a) top left/16px 2px,linear-gradient(#e9c46a,#e9c46a) top left/2px 16px,
+   linear-gradient(#e9c46a,#e9c46a) top right/16px 2px,linear-gradient(#e9c46a,#e9c46a) top right/2px 16px,
+   linear-gradient(#e9c46a,#e9c46a) bottom left/16px 2px,linear-gradient(#e9c46a,#e9c46a) bottom left/2px 16px,
+   linear-gradient(#e9c46a,#e9c46a) bottom right/16px 2px,linear-gradient(#e9c46a,#e9c46a) bottom right/2px 16px!important;
+  background-repeat:no-repeat!important;filter:drop-shadow(0 0 3px rgba(233,196,106,.6))!important}
+.cap{box-shadow:0 0 0 1px #3c4743,0 0 0 2px rgba(0,0,0,.6),0 24px 50px -24px rgba(0,0,0,.9)!important}
+.cap:hover{box-shadow:0 0 0 1px #c99a3c,0 0 40px -6px rgba(62,224,138,.5),0 30px 60px -20px rgba(0,0,0,.9)!important}
+.cat-state{border-color:#4d5955;color:#a9b4b0}
+footer .big{background:var(--steel);-webkit-background-clip:text;background-clip:text;color:transparent}
+@media (prefers-reduced-motion:reduce){.hero-grid>div:first-child::after{animation:none}}
+</style>
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Michroma&display=swap" rel="stylesheet">
+<style>
+/* ===== Lettering: wide, slanted techno (in the spirit of the DOOMSDAY wordmark) ===== */
+:root{--tech:"Orbitron","Michroma",var(--serif);--wide:"Michroma",var(--sans)}
+.lockup{grid-template-columns:auto!important;justify-content:center}
+.hero h1{gap:.1em}
+#t1{font-family:var(--wide)!important;font-weight:400!important;font-size:clamp(12px,1.6vw,20px)!important;letter-spacing:.5em!important;padding-left:.5em!important}
+#t2{font-family:var(--tech)!important;font-weight:900!important;font-size:clamp(38px,7.2vw,92px)!important;letter-spacing:.12em!important;padding-left:.12em!important;
+  margin:.18em 0 .14em!important;line-height:1!important;transform:skewX(-10deg)}
+#t3{font-family:var(--wide)!important;font-weight:400!important;font-size:clamp(14px,2vw,24px)!important;letter-spacing:.9em!important;padding-left:.9em!important}
+/* The glitch flicker keeps the slant */
+@keyframes glitch{
+  0%,91%,100%{transform:skewX(-10deg);filter:none}
+  92%{transform:translate(-3px,1px) skewX(-16deg);filter:drop-shadow(3px 0 0 rgba(0,255,170,.7)) drop-shadow(-3px 0 0 rgba(160,255,60,.6))}
+  93%{transform:translate(4px,-1px) skewX(-10deg);filter:drop-shadow(-4px 0 0 rgba(0,255,170,.7))}
+  94%{transform:translate(-1px,0) skewX(-6deg);filter:drop-shadow(2px 0 0 rgba(160,255,60,.7))}
+  95%{transform:skewX(-10deg);filter:none}}
+.cat h2{font-family:var(--tech)!important;font-weight:800!important;letter-spacing:.06em!important;font-size:clamp(22px,3.6vw,40px)!important}
+.cat-kicker,.when,.count span,.catnav a,.btn,.cat-state{font-family:var(--wide)!important;font-weight:400!important}
+.count b{font-family:var(--tech)!important;font-weight:800!important}
+.cat-num{font-family:var(--tech)!important}
+</style>
+
+<style>
+/* ===== Soft smoke ===== */
+.smoke{position:absolute;inset:0;z-index:-1;pointer-events:none;overflow:hidden;
+  -webkit-mask:linear-gradient(transparent 10%,rgba(0,0,0,.5) 45%,#000 80%);mask:linear-gradient(transparent 10%,rgba(0,0,0,.5) 45%,#000 80%)}
+.smoke i{position:absolute;left:0;bottom:-10%;width:200%;height:80%;background-repeat:repeat-x;background-size:1200px 100%;filter:blur(6px)}
+.smoke i:nth-child(1){background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%221200%22 height=%22700%22%3E%3Cfilter id=%22f%22 x=%220%22 y=%220%22 width=%22100%25%22 height=%22100%25%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%22.0035 .006%22 numOctaves=%224%22 seed=%223%22 stitchTiles=%22stitch%22/%3E%3CfeColorMatrix values=%220 0 0 0 .62  0 0 0 0 .78  0 0 0 0 .70  0 0 0 1.6 -.55%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url%28%23f%29%22/%3E%3C/svg%3E");opacity:.3;animation:drift 70s linear infinite}
+.smoke i:nth-child(2){background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%221200%22 height=%22700%22%3E%3Cfilter id=%22f%22 x=%220%22 y=%220%22 width=%22100%25%22 height=%22100%25%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%22.005 .009%22 numOctaves=%224%22 seed=%229%22 stitchTiles=%22stitch%22/%3E%3CfeColorMatrix values=%220 0 0 0 .62  0 0 0 0 .78  0 0 0 0 .70  0 0 0 1.4 -.55%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url%28%23f%29%22/%3E%3C/svg%3E");opacity:.22;animation:drift 110s linear infinite reverse;bottom:-20%}
+.smoke i:nth-child(3){background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%221200%22 height=%22700%22%3E%3Cfilter id=%22f%22 x=%220%22 y=%220%22 width=%22100%25%22 height=%22100%25%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%22.008 .012%22 numOctaves=%224%22 seed=%2221%22 stitchTiles=%22stitch%22/%3E%3CfeColorMatrix values=%220 0 0 0 .62  0 0 0 0 .78  0 0 0 0 .70  0 0 0 1.3 -.55%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url%28%23f%29%22/%3E%3C/svg%3E");opacity:.16;animation:drift 50s linear infinite;height:60%;filter:blur(10px) hue-rotate(-10deg)}
+@keyframes drift{from{transform:translateX(0)}to{transform:translateX(-1200px)}}
+/* A thin haze that also hangs over the rest of the page */
+body>.smoke-page{position:fixed;inset:auto 0 0;height:45vh;z-index:-2;pointer-events:none;overflow:hidden;
+  -webkit-mask:linear-gradient(transparent,#000 70%);mask:linear-gradient(transparent,#000 70%);opacity:.25}
+body>.smoke-page i{position:absolute;inset:0 auto 0 0;width:200%;background:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%221200%22 height=%22700%22%3E%3Cfilter id=%22f%22 x=%220%22 y=%220%22 width=%22100%25%22 height=%22100%25%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%22.005 .009%22 numOctaves=%224%22 seed=%229%22 stitchTiles=%22stitch%22/%3E%3CfeColorMatrix values=%220 0 0 0 .62  0 0 0 0 .78  0 0 0 0 .70  0 0 0 1.4 -.55%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url%28%23f%29%22/%3E%3C/svg%3E") repeat-x 0 100%/1200px 100%;filter:blur(8px);animation:drift 140s linear infinite}
+@media (prefers-reduced-motion:reduce){.smoke i,body>.smoke-page i{animation:none}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d6ffe4"/><stop offset=".4" stop-color="#87f3aa"/><stop offset=".65" stop-color="#38cd65"/><stop offset="1" stop-color="#1cab45"/></linearGradient>
+    <symbol id="trophy" viewBox="0 0 64 64"><path fill="url(#gold)" d="M18 6h28v6h10v6c0 8-6 14-13 15-2 5-6 8-9 9v6h8l2 8H20l2-8h8v-6c-3-1-7-4-9-9C14 32 8 26 8 18v-6h10V6zm-6 10v2c0 5 3 9 7 10-1-3-1-6-1-9v-3h-6zm34 0v3c0 3 0 6-1 9 4-1 7-5 7-10v-2h-6z"/></symbol>
+    <linearGradient id="metalH" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#0a5c21"/><stop offset=".18" stop-color="#27bc53"/><stop offset=".34" stop-color="#c4ffd8"/><stop offset=".46" stop-color="#67ec91"/><stop offset=".7" stop-color="#199f3f"/><stop offset=".86" stop-color="#57dc80"/><stop offset="1" stop-color="#084c1b"/></linearGradient>
+    <linearGradient id="metalV" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c4ffd8"/><stop offset=".5" stop-color="#38cd65"/><stop offset="1" stop-color="#106d2b"/></linearGradient>
+  </defs>
+</svg>
+
+<header class="top" id="top"><div class="wrap">
+  <a class="brand" href="#"><svg><use href="#trophy"/></svg><span id="brandName">Anime X Angas Awards</span></a>
+  <div class="top-right"><div class="socials" id="topSocials"></div>
+  <a class="btn gold sm" id="topVote" href="../vote/" hidden>Vote now</a></div>
+</div></header>
+
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="doom" aria-hidden="true"><canvas class="stars" id="heroStars"></canvas></div>
+  <div class="smoke" aria-hidden="true"><i></i><i></i><i></i></div>
+  <div class="bokeh" id="bokeh" aria-hidden="true"></div>
+  <canvas id="dust" aria-hidden="true"></canvas>
+  <div class="wrap hero-grid">
+   <div>
+    <div class="lockup">
+      <h1 id="title" aria-label="Anime X Angas Awards"><span class="t1 metal" id="t1">Anime X Angas</span><span class="t2 metal" id="t2">Awards</span><span class="t3 metal" id="t3" hidden></span></h1>
+    </div>
+    <div class="rule"></div>
+    <p class="tagline" id="tagline"></p>
+    <div class="when" id="when"></div>
+    <div class="count" id="count" hidden></div>
+    <div class="ctas">
+      <a class="btn gold" id="heroVote" href="../vote/" hidden>Cast your vote</a>
+      <a class="btn" id="heroWatch" href="#" target="_blank" rel="noopener" hidden>▶&nbsp; Watch live</a>
+      <a class="btn" id="heroExplore" href="#categories">Explore the awards</a>
+    </div>
+   </div>
+    <img class="cup" id="cup" alt="" hidden>
+  </div>
+</section>
+
+<nav class="catnav" id="catnav" hidden><div class="wrap" id="catlinks"></div></nav>
+<section class="wrap hosts" id="hosts" hidden></section>
+<section class="wrap winners" id="winners" hidden></section>
+<main class="wrap" id="categories"><div class="note">Loading the nominees…</div></main>
+
+<footer>
+  <div class="wrap">
+    <p class="big"><span class="metal" id="footTitle">Anime X Angas Awards</span></p>
+    <a class="btn gold" id="footVote" href="../vote/" hidden>Cast your vote</a>
+    <div class="socials" id="footSocials" style="justify-content:center;margin-top:26px"></div>
+    <div class="rights" id="rights"></div>
+  </div>
+</footer>
+
+<script>
+/* ===== Config =====
+ * Where the awards content comes from. Use the bundled CSVs, or a Google Sheet tab published as CSV
+ * (File → Share → Publish to web → pick the tab → CSV). See README.md for the column layout. */
+// Published Site and Settings tabs of the 2026 Google Sheet (testing: agonoy.ben's account).
+const NOMINEES_CSV = 'mock-nominees.csv'; // DRAFT: sample awards (2025 nominees as stand-ins)
+const SETTINGS_CSV = 'mock-settings.csv'; // DRAFT
+const HOSTS_CSV = 'data/hosts.csv'; // optional: name, nickname, image, role
+const REFRESH_SECONDS = 60; // re-check the sheet so winners appear live during the ceremony
+
+const DEFAULTS = {title:'Anime X Angas Awards', tagline:'', date:'', venue:'', stream_url:'', vote_url:'../vote/',
+  vote_open:'TRUE', reveal_winners:'FALSE', show_results:'FALSE', trophy_image:'', facebook_url:'', youtube_url:'', discord_url:''};
+
+// Social links from settings (facebook_url, youtube_url, discord_url), shown in the top bar and footer.
+const SOCIAL_ICONS = {facebook:'<path d="M14 8h3V4h-3c-2.8 0-4 1.7-4 4.3V10H7v4h3v8h4v-8h3l.5-4H14V8.6c0-.4.2-.6.6-.6z"/>', youtube:'<path d="M3 7.5C3 6 4 5 5.5 5h13C20 5 21 6 21 7.5v9c0 1.5-1 2.5-2.5 2.5h-13C4 19 3 18 3 16.5zM10 9v6l5-3z"/>', discord:'<path d="M5 6.5C7 5.3 9 5 10 5l.5 1h3l.5-1c1 0 3 .3 5 1.5 1.3 2.4 2 5 2 8-1.5 1.3-3.2 2.2-5 2.5l-1-1.7c.8-.3 1.5-.7 2-1.1-3.2 1.6-8.8 1.6-12 0 .5.4 1.2.8 2 1.1L8 17c-1.8-.3-3.5-1.2-5-2.5 0-3 .7-5.6 2-8zM9 10.5a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm6 0a1.5 1.5 0 100 3 1.5 1.5 0 000-3z"/>'};
+function socialsHTML(){
+  return [['facebook', 'Facebook'], ['youtube', 'YouTube'], ['discord', 'Discord']].map(([k, label]) => {
+    const u = safeUrl(S[k + '_url']); if (!u) return '';
+    return `<a class="soc" href="${esc(u)}" target="_blank" rel="noopener" aria-label="${label}" title="${label}"><svg viewBox="0 0 24 24" aria-hidden="true">${SOCIAL_ICONS[k]}</svg></a>`;
+  }).join('');
+}
+
+
+// Accent colour per category, in order. A category_color column in the sheet overrides it.
+const PALETTE = ['#3ee08a', '#5fe3c0', '#a3f06b', '#2fd4a0', '#7dffb9', '#c8f07a', '#45d6d0', '#62f29a'];
+
+/* ===== Helpers ===== */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const yes = v => /^(true|yes|y|1|x|✓|✔|winner)$/i.test(String(v || '').trim());
+const safeUrl = u => { u = String(u || '').trim(); return /^(https?:\/\/|\.{0,2}\/|[\w-]+\/)/i.test(u) ? u : ''; };
+const safeColor = c => /^#[0-9a-f]{3,8}$/i.test(String(c || '').trim()) ? c.trim() : '';
+const slug = s => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+const initials = s => String(s).replace(/[^\p{L}\p{N} ]/gu, '').split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+const bg = u => u ? ` style="background-image:url('${esc(u)}')"` : '';
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const store = {get(k, d){ try{ return JSON.parse(localStorage.getItem(k)) ?? d; }catch(e){ return d; } }, set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }};
+
+// Accepts a "Publish to web" CSV link, or a normal Sheets link (which then needs "Anyone with the link can view").
+function csvUrl(u){
+  const m = u.match(/docs\.google\.com\/spreadsheets\/d\/([\w-]+)/);
+  if (!m || /output=csv|tqx=out:csv/.test(u)) return u;
+  const gid = (u.match(/[#&?]gid=(\d+)/) || [])[1] || '0';
+  return `https://docs.google.com/spreadsheets/d/${m[1]}/gviz/tq?tqx=out:csv&gid=${gid}`;
+}
+
+function parseCSV(text){
+  const rows = []; let row = [], f = '', q = false;
+  for (let i = 0; i < text.length; i++){
+    const c = text[i];
+    if (q){ if (c === '"'){ if (text[i + 1] === '"'){ f += '"'; i++; } else q = false; } else f += c; }
+    else if (c === '"') q = true;
+    else if (c === ','){ row.push(f); f = ''; }
+    else if (c === '\n' || c === '\r'){ if (c === '\r' && text[i + 1] === '\n') i++; row.push(f); rows.push(row); row = []; f = ''; }
+    else f += c;
+  }
+  if (f || row.length){ row.push(f); rows.push(row); }
+  const head = (rows.shift() || []).map(h => h.trim().toLowerCase().replace(/\s+/g, '_'));
+  return rows.filter(r => r.some(v => v.trim())).map(r => Object.fromEntries(head.map((h, i) => [h, (r[i] || '').trim()])));
+}
+
+const MOCK = {"mock-nominees.csv": "category,category_description,category_color,nominee,subtitle,image,image_search,link,winner,result,image_style,category_image\nAxA's Anime of the Year 2026,,,My Hero Academia,Final Season,../img/2025/my-hero-academia-hd.jpg,,,TRUE,,,../img/2025/trophy-best-anime.webp\nAxA's Anime of the Year 2026,,,The Apothecary Diaries,Season 2,../img/2025/the-apothecary-diaries-hd.jpg,,,,,,\nAxA's Anime of the Year 2026,,,Solo Leveling,Season 2,../img/2025/solo-leveling-hd.jpg,,,,,,\nAxA's Anime of the Year 2026,,,Takopi's Original Sin,,../img/2025/takopi-s-original-sin-best-anime-hd.jpg,,,,,,\nAxA's Anime of the Year 2026,,,BanG Dream! Ave Mujica,,../img/2025/bang-dream-ave-mujica-hd.jpg,,,,,,\nAxA's Anime of the Year 2026,,,Orb: On the Movements of the Earth,,../img/2025/orb-on-the-movements-of-the-earth-hd.jpg,,,,,,\nAxA's Anime of the Year 2026,,,Medalist,,../img/2025/medalist-best-anime-hd.jpg,,,,,,\nDebut Anime of the Year 2026,,,The Fragrant Flower Blooms with Dignity,,../img/2025/the-fragrant-flower-blooms-with-dignity-hd.jpg,,,TRUE,,,../img/2025/trophy-debut-anime.webp\nDebut Anime of the Year 2026,,,Medalist,,../img/2025/medalist-hd.jpg,,,,,,\nDebut Anime of the Year 2026,,,The Summer Hikaru Died,,../img/2025/the-summer-hikaru-died-hd.jpg,,,,,,\nDebut Anime of the Year 2026,,,Gachiakuta,,../img/2025/gachiakuta-hd.jpg,,,,,,\nDebut Anime of the Year 2026,,,Sakamoto Days,,../img/2025/sakamoto-days-hd.jpg,,,,,,\nDebut Anime of the Year 2026,,,Witch Watch,,../img/2025/witch-watch-hd.jpg,,,,,,\nDebut Anime of the Year 2026,,,Takopi's Original Sin,,../img/2025/takopi-s-original-sin-hd.jpg,,,,,,\nAnime Film of the Year 2026,,,Demon Slayer: Infinity Castle,,../img/2025/demon-slayer-infinity-castle-hd.jpg,,,TRUE,,,../img/2025/trophy-anime-film.webp\nAnime Film of the Year 2026,,,Chainsaw Man – The Movie: Reze Arc,,../img/2025/chainsaw-man-the-movie-reze-arc-hd.jpg,,,,,,\nAnime Film of the Year 2026,,,100 Meters,,../img/2025/100-meters-hd.jpg,,,,,,\nAnime Film of the Year 2026,,,Colorful Stage! The Movie: A Miku Who Can't Sing,,../img/2025/colorful-stage-the-movie-a-miku-who-can-t-sing-hd.jpg,,,,,,\nAnime Film of the Year 2026,,,Bâan: Otona no Kyoukai,,../img/2025/baan-otona-no-kyoukai-hd.jpg,,,,,,\nAnime Opening Song of the Year 2026,,,IRIS OUT,Kenshi Yonezu,../img/2025/iris-out-hd.jpg,,,TRUE,,,../img/2025/trophy-opening-song.webp\nAnime Opening Song of the Year 2026,,,ReawakeR,LiSA feat. Felix,../img/2025/reawaker-hd.jpg,,,TRUE,,,\nAnime Opening Song of the Year 2026,,,Kakumei Douchuu,Aina The End,../img/2025/kakumei-douchuu-hd.jpg,,,TRUE,,,\nAnime Opening Song of the Year 2026,,,Saikai,Vaundy,../img/2025/saikai-hd.jpg,,,,,,\nAnime Opening Song of the Year 2026,,,Bloody Liar,BLUE ENCOUNT,../img/2025/bloody-liar-hd.jpg,,,,,,\nAnime Opening Song of the Year 2026,,,Koeru,[Alexandros],../img/2025/koeru-hd.jpg,,,,,,\nAnime Opening Song of the Year 2026,,,Feel,Hitsujibungaku,../img/2025/feel-hd.jpg,,,,,,\nAnime Opening Song of the Year 2026,,,Ready to Rock,BAND-MAID,../img/2025/ready-to-rock-hd.jpg,,,,,,\nAnime Opening Song of the Year 2026,,,Manazashi wa Hikari,Tatsuya Kitani,../img/2025/manazashi-wa-hikari-hd.jpg,,,,,,\nAnime Opening Song of the Year 2026,,,Bow and Arrow,Kenshi Yonezu,../img/2025/bow-and-arrow-hd.jpg,,,,,,\nAnime Ending Song of the Year 2026,,,Jane Doe,\"Kenshi Yonezu, Hikaru Utada\",../img/2025/jane-doe-hd.jpg,,,TRUE,,,../img/2025/trophy-ending-song.webp\nAnime Ending Song of the Year 2026,,,I,BUMP OF CHICKEN,../img/2025/i-hd.jpg,,,TRUE,,,\nAnime Ending Song of the Year 2026,,,UN-APEX,TK,../img/2025/un-apex-hd.jpg,,,TRUE,,,\nAnime Ending Song of the Year 2026,,,Hebi,Yorushika,../img/2025/hebi-hd.jpg,,,,,,\nAnime Ending Song of the Year 2026,,,Hare no Hi ni,Reira Ushio,../img/2025/hare-no-hi-ni-hd.jpg,,,,,,\nAnime Ending Song of the Year 2026,,,Mild Days,Hitsujibungaku,../img/2025/mild-days-hd.jpg,,,,,,\nAnime Ending Song of the Year 2026,,,Yume Ja Nai Nara Nannano Sa,,../img/2025/yume-ja-nai-nara-nannano-sa-hd.jpg,,,,,,\nAnime Ending Song of the Year 2026,,,Anata wa Kaibutsu,Tooboe,../img/2025/anata-wa-kaibutsu-hd.jpg,,,,,,\nAnime Ending Song of the Year 2026,,,Tomoshibi,DUSTCELL,../img/2025/tomoshibi-hd.jpg,,,,,,\nAnime Ending Song of the Year 2026,,,Overlap,SHIYUI,../img/2025/overlap-hd.jpg,,,,,,\nAnime Ending Song of the Year 2026,,,\"Georgette Me, Georgette You\",Ave Mujica,../img/2025/georgette-me-georgette-you-hd.jpg,,,,,,\nGame of the Year 2026,,,Farm Merge Valley,CoolGames,../img/2025/farm-merge-valley-hd.jpg,,,,,,../img/2025/trophy-game.webp\nGame of the Year 2026,,,Uma Musume: Pretty Derby,\"\"\"Horse Girls\"\"\",../img/2025/uma-musume-pretty-derby-hd.jpg,,,,,,\nGame of the Year 2026,,,PEAK,Aggro Crab and Landfall,../img/2025/peak-hd.jpg,,,,,,\nGame of the Year 2026,,,Crystal of Atlan,VI-GAMES,../img/2025/crystal-of-atlan-hd.jpg,,,,,,\nGame of the Year 2026,,,Wordle,The New York Times,../img/2025/wordle-hd.jpg,,,TRUE,,,\nGame of the Year 2026,,,Tekken 8,Bandai Namco,../img/2025/tekken-8-hd.jpg,,,,,,\nAxA's Song of the Year 2026,,,Bold Ba To?,DhRey,../img/2025/bold-ba-to-hd.jpg,,,TRUE,,,../img/2025/trophy-axa-song.webp\nAxA Podcast Episode of the Year 2026,,,OVA13,,../img/2025/ova13-hd.jpg,,,,,,../img/2025/trophy-podcast.webp\nAxA Podcast Episode of the Year 2026,,,Ado Special,,../img/2025/ado-special-hd.jpg,,,,,,\nAxA Podcast Episode of the Year 2026,,,Episode 100 – Final,,../img/2025/episode-100-final-hd.jpg,,,,,,\nAxA Podcast Episode of the Year 2026,,,Demon Slayer: Infinity Castle Special Episode,,../img/2025/demon-slayer-infinity-castle-special-episode-hd.jpg,,,TRUE,,,\nAxA Podcast Episode of the Year 2026,,,MC 7.7,,../img/2025/mc-7-7-hd.jpg,,,,,,\nAxA Issue/Arc of the Year 2026,,,AxA TGS Bridge Burn,,../img/2025/axa-tgs-bridge-burn-hd.jpg,,,,,,../img/2025/trophy-issue-arc.webp\nAxA Issue/Arc of the Year 2026,,,AxA Ghosting,,../img/2025/axa-ghosting-hd.jpg,,,TRUE,,,\nAxA Issue/Arc of the Year 2026,,,2PM Deadline,,../img/2025/2pm-deadline-hd.jpg,,,,,,\nAxA Issue/Arc of the Year 2026,,,2.22.25 Pangit Meet Up,,../img/2025/2-22-25-pangit-meet-up-hd.jpg,,,,,,\nAxA Issue/Arc of the Year 2026,,,Aljurians,,../img/2025/aljurians-hd.jpg,,,,,,\nAxA Issue/Arc of the Year 2026,,,Spy,,../img/2025/spy-hd.jpg,,,,,,\nShip of the Year 2026,,,Totto x Jang,Tottjang,../img/2025/totto-x-jang-hd.jpg,,,,,,../img/2025/trophy-ship.webp\nShip of the Year 2026,,,Bean x Rylai x Shishino x Wax On Wax Off,Bearyshiwax,../img/2025/bean-x-rylai-x-shishino-x-wax-on-wax-off-hd.jpg,,,,,,\nShip of the Year 2026,,,Aya x Gate,Gaya,../img/2025/aya-x-gate-hd.jpg,,,TRUE,,,\nShip of the Year 2026,,,Duckbird x Spica,Spicuck,../img/2025/duckbird-x-spica-hd.jpg,,,,,,\nShip of the Year 2026,,,Hachi x Sorrow,Harrow,../img/2025/hachi-x-sorrow-hd.jpg,,,,,,\n\"Ang \"\"Heartthrob\"\" ng Anime x Angas 2025\",,,Gaebriel,Black Cat,../img/2025/gaebriel-hd.jpg,,,TRUE,,,../img/2025/trophy-heartthrob.webp\n\"Ang \"\"Heartthrob\"\" ng Anime x Angas 2025\",,,Aksa,,../img/2025/aksa-avatar-hd.png,,,,,avatar,\n\"Ang \"\"Heartthrob\"\" ng Anime x Angas 2025\",,,Usop,,../img/2025/usop-avatar-hd.png,,,,,avatar,\n\"Ang \"\"Heartthrob\"\" ng Anime x Angas 2025\",,,Redd,,../img/2025/redd-avatar-hd.png,,,,,avatar,\n\"Ang \"\"Heartthrob\"\" ng Anime x Angas 2025\",,,Sorrow,,../img/2025/sorrow-avatar-hd.png,,,,,avatar,\n\"Ang \"\"Heartthrob\"\" ng Anime x Angas 2025\",,,Totto,,../img/2025/totto-avatar-hd.png,,,,,avatar,\n\"Ang \"\"Heartthrob\"\" ng Anime x Angas 2025\",,,Wax On Wax Off,,../img/2025/wax-on-wax-off-avatar-hd.png,,,,,avatar,\n\"Ang \"\"Mutya\"\" ng Anime x Angas 2025\",,,Ayabunani,Harem Queen,../img/2025/ayabunani-hd.jpg,,,TRUE,,,../img/2025/trophy-mutya.webp\n\"Ang \"\"Mutya\"\" ng Anime x Angas 2025\",,,Meowmie,,../img/2025/meowmie-avatar-hd.png,,,,,avatar,\n\"Ang \"\"Mutya\"\" ng Anime x Angas 2025\",,,Kaye,,../img/2025/kaye-avatar-hd.png,,,,,avatar,\n\"Ang \"\"Mutya\"\" ng Anime x Angas 2025\",,,Midnightsun27,,../img/2025/midnightsun27-avatar-hd.png,,,,,avatar,\n\"Ang \"\"Mutya\"\" ng Anime x Angas 2025\",,,Jang,,../img/2025/jang-avatar-hd.png,,,,,avatar,\n\"Ang \"\"Mutya\"\" ng Anime x Angas 2025\",,,Rain,,../img/2025/rain-avatar-hd.png,,,,,avatar,\n\"Ang \"\"Mutya\"\" ng Anime x Angas 2025\",,,Manbea,,../img/2025/manbea-avatar-hd.png,,,,,avatar,\n", "mock-settings.csv": "key,value\ntitle,Anime X Angas Awards 2026\ntagline,\ndate,2026-12-20T21:00:00+08:00\nvenue,Online · YouTube\nvote_url,../vote/\nvote_open,TRUE\nreveal_winners,FALSE\nshow_results,FALSE\ntrophy_image,\nfacebook_url,https://www.facebook.com/AnimexAngas\nyoutube_url,https://www.youtube.com/@AnimexAngas\ndiscord_url,https://discord.gg/AnimexAngas\n"};
+async function getCSV(u){
+  if (MOCK[u]) return parseCSV(MOCK[u]);
+  const res = await fetch(/^https?:/.test(u) ? csvUrl(u) + (u.includes('?') ? '&' : '?') + 't=' + Math.floor(Date.now() / 30000) : u, {cache:'no-store'});
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const text = await res.text();
+  if (/^\s*<!doctype html|<html/i.test(text)) throw new Error('the sheet is not published or shared');
+  return parseCSV(text);
+}
+
+/* ===== Data ===== */
+function build(rows){
+  const cats = [], byName = {};
+  for (const r of rows){
+    const name = r.category; if (!name) continue;
+    let c = byName[name];
+    if (!c){ c = byName[name] = {name, id:slug(name), desc:'', color:'', noms:[]}; cats.push(c); }
+    if (r.category_description && !c.desc) c.desc = r.category_description;
+    if (r.category_color && !c.color) c.color = safeColor(r.category_color);
+    if (r.category_image && !c.trophy) c.trophy = safeUrl(r.category_image);
+    if (r.category_type === 'special') c.special = true;
+    if (r.nominee) c.noms.push({name:r.nominee, sub:r.subtitle, image:safeUrl(r.image), search:r.image_search, link:safeUrl(r.link), winner:yes(r.winner), result:r.result, avatar:/avatar/i.test(r.image_style || '')});
+  }
+  cats.forEach((c, i) => c.color ||= PALETTE[i % PALETTE.length]);
+  return cats;
+}
+
+/* ===== Rendering ===== */
+let HOSTS = [], S = {...DEFAULTS}, CATS = [], lastKey = '', covers = store.get('aw.show.covers2', {});
+const img = n => n.image || covers[n.search] || '';
+const linkAttrs = n => n.link ? ` href="${esc(n.link)}" target="_blank" rel="noopener"` : '';
+
+function capHTML(n, showRes){
+  const tag = n.link ? 'a' : 'div', u = img(n);
+  const art = n.avatar && u ? `<div class="art"></div><div class="ava"${bg(u)}></div>` : `<div class="art"${bg(u)}></div>`;
+  return `<${tag} class="cap rv"${linkAttrs(n)}>${art}${u ? '' : `<div class="mono">${esc(initials(n.name))}</div>`}
+    <div class="glare"></div><div class="info"><div class="name">${esc(n.name)}</div>${n.sub ? `<div class="sub">${esc(n.sub)}</div>` : ''}${showRes && n.result ? `<div class="res">${esc(n.result)}</div>` : ''}</div></${tag}>`;
+}
+
+function stageHTML(c, showRes){
+  // Several winners (e.g. a top three) share the stage; everyone else goes in the nominee list.
+  const ws = c.noms.filter(n => n.winner), rest = c.noms.filter(n => !n.winner);
+  const others = rest.map(n => capHTML(n, showRes)).join('');
+  const cards = ws.map(w => { const u = img(w), tag = w.link ? 'a' : 'div';
+    const trophy = ws.length === 1 && c.trophy ? `<div class="win-trophy"${bg(c.trophy)} role="img" aria-label="${esc(c.name)} trophy"></div>` : '';
+    return `<${tag} class="win"${linkAttrs(w)}><div class="blur"${bg(u)}></div>
+      <div class="poster"${bg(u)}>${u ? '' : esc(initials(w.name))}</div>
+      <div class="body">${trophy}<div class="badge metal"><svg><use href="#trophy"/></svg>Winner</div>
+      <div class="name"><span class="metal">${esc(w.name)}</span></div>${w.sub ? `<div class="sub">${esc(w.sub)}</div>` : ''}
+      ${showRes && w.result ? `<div class="res">${esc(w.result)}</div>` : ''}</div></${tag}>`; }).join('');
+  const layout = ws.length > 1 ? ' multi' : rest.length ? '' : ' solo';
+  return `<div class="stage rv${layout}" style="--n:${ws.length}">${cards}
+    ${rest.length ? `<div class="list"><h3>Nominees</h3><div class="grid">${others}</div></div>` : ''}</div>`;
+}
+
+function render(){
+  const reveal = yes(S.reveal_winners), showRes = yes(S.show_results), voteOpen = yes(S.vote_open);
+  document.title = S.title;
+  $('#footTitle').textContent = S.title;
+  $('#brandName').textContent = S.title.replace(/\s+\d{4}$/, '');
+  // "Anime X Angas Awards 2026" → ANIME X ANGAS / AWARDS / 2026. Other titles show on the big line.
+  const m = String(S.title).match(/^(.*?)\s*\bawards\b\s*(\d{4})?\s*$/i);
+  $('#title').setAttribute('aria-label', S.title);
+  $('#t1').textContent = m ? m[1] : ''; $('#t1').hidden = !(m && m[1]);
+  $('#t2').textContent = m ? 'Awards' : S.title;
+  $('#t3').textContent = m && m[2] || ''; $('#t3').hidden = !(m && m[2]);
+  // Optional trophy photo beside the title on wide screens (a transparent PNG looks best).
+  const cup = safeUrl(S.trophy_image);
+  $('.hero-grid').classList.toggle('has-cup', !!cup); $('#cup').hidden = !cup; if (cup && $('#cup').getAttribute('src') !== cup) $('#cup').src = cup;
+  $('#tagline').textContent = S.tagline;
+  const voteUrl = safeUrl(S.vote_url) || '../vote/';
+  ['#topVote', '#heroVote', '#footVote'].forEach(id => { $(id).hidden = !voteOpen; $(id).href = voteUrl; });
+  $('#rights').textContent = `© ${(String(S.title).match(/\d{4}/) || [new Date().getFullYear()])[0]} Anime x Angas. All Rights Reserved.`;
+  $('#topSocials').innerHTML = $('#footSocials').innerHTML = socialsHTML();
+  const watch = safeUrl(S.stream_url); $('#heroWatch').hidden = !watch; if (watch) $('#heroWatch').href = watch;
+
+  const d = S.date ? new Date(S.date) : null;
+  const dated = d && !isNaN(d);
+  $('#when').textContent = [dated ? d.toLocaleString(undefined, {month:'long', day:'numeric', year:'numeric', hour:'numeric', minute:'2-digit'}) : reveal ? '' : 'Date to be announced', S.venue].filter(Boolean).join('  ·  ');
+  $('#when').hidden = !$('#when').textContent;
+  tick();
+
+
+  // Winners at a glance, once any winner is revealed.
+  const winners = reveal ? CATS.flatMap(c => c.noms.filter(n => n.winner).map(w => [c, w])) : [];
+  const wonCats = new Set(winners.map(([c]) => c)).size;
+  $('#winners').hidden = !winners.length;
+  $('#winners').innerHTML = winners.length ? `<div class="cat-kicker" style="--c:var(--gold)">${esc(S.title)}</div><h2><span class="metal">The Winners</span></h2>
+    <p class="cat-desc">${wonCats < CATS.length ? `${wonCats} of ${CATS.length} awards revealed so far. Tap a winner for the full category.` : 'Every award, at a glance. Tap a winner for the full category and results.'}</p>
+    <div class="grid">${winners.map(([c, w]) => { const u = img(w); return `<a class="cap wcard" href="#${c.id}" style="--c:${c.color}"><div class="art"${bg(u)}></div>${u ? '' : `<div class="mono">${esc(initials(w.name))}</div>`}
+      <div class="glare"></div><div class="kick">★ ${esc(c.name)}</div><div class="info"><div class="name">${esc(w.name)}</div>${w.sub ? `<div class="sub">${esc(w.sub)}</div>` : ''}${showRes && w.result ? `<div class="res">${esc(w.result)}</div>` : ''}</div></a>`; }).join('')}</div>` : '';
+  $('#hosts').hidden = !HOSTS.length;
+  $('#hosts').innerHTML = HOSTS.length ? `<div class="cat-kicker" style="--c:var(--gold)">Tonight's ${HOSTS.length > 1 ? 'hosts' : 'host'}</div><h2><span class="metal">Your Hosts</span></h2>
+    <div class="host-list">${HOSTS.map(h => `<div class="host"><div class="pic"${bg(safeUrl(h.image))}></div>${h.nickname ? `<div class="nick">“${esc(h.nickname)}”</div>` : ''}
+      <div class="hname"><span class="metal">${esc(h.name)}</span></div><div class="role">${esc(h.role || 'Host')}</div></div>`).join('')}</div>` : '';
+  $('#heroExplore').textContent = winners.length ? 'See the winners' : 'Explore the awards';
+  $('#heroExplore').href = winners.length ? '#winners' : '#categories';
+
+  $('#catnav').hidden = !CATS.length;
+  $('#catlinks').innerHTML = (winners.length ? '<a href="#winners" style="--c:var(--gold)">★ Winners</a>' : '') + CATS.map(c => `<a href="#${c.id}" style="--c:${c.color}">${esc(c.name)}${reveal && c.noms.some(n => n.winner) ? '<span class="dot"></span>' : ''}</a>`).join('');
+
+  $('#categories').innerHTML = CATS.length ? CATS.map((c, i) => {
+    const hasWin = reveal && c.noms.some(n => n.winner);
+    const state = hasWin ? (c.special ? '<div class="cat-state">Special award</div>' : '')
+      : `<div class="cat-state">${c.special ? 'Special award · announced at the ceremony' : c.noms.length ? `${c.noms.length} nominees · winner revealed at the ceremony` : 'Nominees coming soon'}</div>`;
+    const body = hasWin ? stageHTML(c, showRes)
+      : `<div class="grid">${c.noms.length ? c.noms.map(capHTML).join('')
+        : Array.from({length:5}, () => '<div class="cap tba rv"><div class="mono">?</div><div class="info"><div class="name">To be announced</div></div></div>').join('')}</div>`;
+    return `<section class="cat" id="${c.id}" style="--c:${c.color}"><div class="cat-head rv">
+      <div class="cat-num" aria-hidden="true">${String(i + 1).padStart(2, '0')}</div>
+      ${c.trophy && !(hasWin && c.noms.filter(n => n.winner).length === 1) ? `<div class="cat-trophy"${bg(c.trophy)} role="img" aria-label="${esc(c.name)} trophy"></div>` : ''}
+      <div class="cat-kicker">Award ${String(i + 1).padStart(2, '0')}</div>
+      <h2>${esc(c.name)}</h2>${c.desc ? `<p class="cat-desc">${esc(c.desc)}</p>` : ''}${state}</div>${body}</section>`;
+  }).join('') : '<div class="note">Categories will be announced soon. Stay tuned.</div>';
+  observe();
+}
+
+function tick(){
+  const d = S.date ? new Date(S.date) : null, el = $('#count');
+  const ms = d && !isNaN(d) ? d - Date.now() : -1;
+  if (ms <= 0){ el.hidden = true; return; }
+  const u = [['Days', 864e5], ['Hours', 36e5], ['Mins', 6e4], ['Secs', 1e3]]; let r = ms;
+  el.innerHTML = u.map(([l, v]) => { const n = Math.floor(r / v); r -= n * v; return `<div><b>${String(n).padStart(2, '0')}</b><span>${l}</span></div>`; }).join('');
+  el.hidden = false;
+}
+setInterval(tick, 1000);
+
+/* ===== Motion ===== */
+// Fade sections in as they scroll into view.
+const io = 'IntersectionObserver' in window ? new IntersectionObserver(es => es.forEach(e => {
+  if (e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); }
+}), {rootMargin:'0px 0px -10% 0px'}) : null;
+function observe(){
+  document.querySelectorAll('.cat').forEach(s => io ? io.observe(s) : s.classList.add('in'));
+}
+
+// 3D tilt + glare on capsules (mouse only).
+document.addEventListener('pointermove', e => {
+  if (reduced || e.pointerType !== 'mouse') return;
+  const cap = e.target.closest('.cap:not(.tba)'); if (!cap) return;
+  const r = cap.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+  cap.classList.add('tilting');
+  cap.style.setProperty('--ry', (x - .5) * 14 + 'deg'); cap.style.setProperty('--rx', (.5 - y) * 14 + 'deg');
+  cap.style.setProperty('--mx', x * 100 + '%'); cap.style.setProperty('--my', y * 100 + '%');
+});
+document.addEventListener('pointerout', e => {
+  const cap = e.target.closest?.('.cap'); if (!cap || cap.contains(e.relatedTarget)) return;
+  cap.classList.remove('tilting'); cap.style.setProperty('--rx', '0deg'); cap.style.setProperty('--ry', '0deg');
+});
+
+// Top bar turns solid after the hero; nav highlights the category in view.
+addEventListener('scroll', () => {
+  $('#top').classList.toggle('solid', scrollY > 40);
+  let cur = '';
+  document.querySelectorAll('#winners:not([hidden]), .cat').forEach(s => { if (s.getBoundingClientRect().top < 200) cur = s.id; });
+  document.querySelectorAll('#catlinks a').forEach(a => {
+    const on = a.getAttribute('href') === '#' + cur;
+    // Scroll the nav strip itself; scrollIntoView would cancel the page's smooth scroll.
+    if (on && !a.classList.contains('on')){ const nav = a.parentNode; nav.scrollTo({left:nav.scrollLeft + a.getBoundingClientRect().left - nav.getBoundingClientRect().left - nav.clientWidth / 2 + a.clientWidth / 2}); }
+    a.classList.toggle('on', on);
+  });
+}, {passive:true});
+
+// Laurel branch (used mirrored on both sides of the title): leaves along a curved stem, shrinking toward the tip.
+(function branch(){
+  const P = [[104, 352], [6, 300], [-4, 120], [72, 12]];
+  const at = t => { const m = 1 - t; return [0, 1].map(k => m*m*m*P[0][k] + 3*m*m*t*P[1][k] + 3*m*t*t*P[2][k] + t*t*t*P[3][k]); };
+  const tan = t => { const m = 1 - t; return [0, 1].map(k => 3*m*m*(P[1][k]-P[0][k]) + 6*m*t*(P[2][k]-P[1][k]) + 3*t*t*(P[3][k]-P[2][k])); };
+  const leaf = (L, W) => `M0 0C${L*.3} ${-W} ${L*.75} ${-W*.9} ${L} 0C${L*.75} ${W*.9} ${L*.3} ${W} 0 0Z`;
+  let out = `<path d="M${P[0]}C${P[1]} ${P[2]} ${P[3]}" fill="none" stroke="url(#metalV)" stroke-width="3" stroke-linecap="round"/>`;
+  const n = 13;
+  for (let i = 0; i < n; i++){
+    const t = .05 + i / (n - 1) * .86, [x, y] = at(t), [dx, dy] = tan(t), a = Math.atan2(dy, dx) * 180 / Math.PI;
+    const L = 38 - i * 1.6, W = 10 - i * .35;
+    for (const side of [-1, 1]){
+      // Stagger the two sides slightly so leaves alternate like a real branch.
+      const rot = a + side * 36;
+      if (side > 0 && i === n - 1) continue;
+      out += `<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${rot.toFixed(1)})"><path d="${leaf(L, W)}" fill="url(#metalH)"/><path d="M2 0H${(L*.8).toFixed(1)}" stroke="#106d2b" stroke-width=".8" opacity=".6"/></g>`;
+    }
+  }
+  const [tx, ty] = at(1), [dx, dy] = tan(1);
+  out += `<g transform="translate(${tx} ${ty}) rotate(${(Math.atan2(dy, dx) * 180 / Math.PI).toFixed(1)})"><path d="${leaf(30, 9)}" fill="url(#metalH)"/></g>`;
+  document.querySelectorAll('.branch').forEach(b => b.innerHTML = out);
+})();
+
+// Warm bokeh lights behind the hero.
+(function bokeh(){
+  const hues = ['#7affa1', '#56f67d', '#a8ffc2', '#56ec72', '#8fffae'];
+  $('#bokeh').innerHTML = Array.from({length:26}, () => {
+    const size = 16 + Math.random() ** 2 * Math.min(150, innerWidth * .22), r = (a, b) => a + Math.random() * (b - a);
+    return `<i style="left:${r(-5, 100).toFixed(1)}%;top:${r(10, 100).toFixed(1)}%;width:${size.toFixed(0)}px;height:${size.toFixed(0)}px;filter:blur(${(size / 40).toFixed(1)}px);--b:${hues[Math.floor(Math.random() * hues.length)]};--o:${r(.1, .42).toFixed(2)};--d:${r(16, 30).toFixed(0)}s;--g:${r(5, 11).toFixed(1)}s;--dl:-${r(0, 30).toFixed(1)}s;--tx:${r(-140, 140).toFixed(0)}px;--ty:${r(-110, 50).toFixed(0)}px;--s:${r(.85, 1.2).toFixed(2)}"></i>`;
+  }).join('');
+})();
+
+// Drifting gold dust in the hero.
+(function dust(){
+  const cv = $('#dust'), x = cv.getContext('2d'); if (!x || reduced) return;
+  let W, H, P = [], running = true;
+  const size = () => { const r = devicePixelRatio || 1; W = cv.clientWidth; H = cv.clientHeight; cv.width = W * r; cv.height = H * r; x.setTransform(r, 0, 0, r, 0, 0); };
+  size(); addEventListener('resize', size);
+  for (let i = 0; i < Math.min(90, Math.round(W / 14)); i++) P.push({x:Math.random() * W, y:Math.random() * H, r:Math.random() * 1.6 + .3, v:Math.random() * .25 + .05, p:Math.random() * 6.28});
+  new IntersectionObserver(([e]) => { running = e.isIntersecting; if (running) frame(); }).observe(cv);
+  function frame(){
+    if (!running) return;
+    x.clearRect(0, 0, W, H);
+    for (const d of P){
+      d.y -= d.v; d.p += .02; d.x += Math.sin(d.p) * .2;
+      if (d.y < -5){ d.y = H + 5; d.x = Math.random() * W; }
+      x.globalAlpha = .35 + Math.sin(d.p * 2) * .25;
+      x.fillStyle = '#8cf6af'; x.beginPath(); x.arc(d.x, d.y, d.r, 0, 6.283); x.fill();
+    }
+    requestAnimationFrame(frame);
+  }
+})();
+
+/* ===== Load ===== */
+async function load(){
+  try {
+    const [rows, settings, hosts] = await Promise.all([getCSV(NOMINEES_CSV), SETTINGS_CSV ? getCSV(SETTINGS_CSV).catch(() => []) : [],
+      HOSTS_CSV ? getCSV(HOSTS_CSV).catch(() => []) : []]);
+    const key = JSON.stringify([rows, settings, hosts]);
+    HOSTS = hosts.filter(h => h.name);
+    if (key === lastKey) return;
+    lastKey = key;
+    S = {...DEFAULTS};
+    settings.forEach(r => { if (r.key) S[r.key.trim().toLowerCase()] = r.value; });
+    CATS = build(rows);
+    render();
+    loadCovers();
+  } catch (e){
+    if (!lastKey) $('#categories').innerHTML = `<div class="note err">Couldn't load the awards (${esc(e.message)}).</div>`;
+  }
+}
+
+// Cover art for nominees with an image_search value and no image.
+// Looks up poster art by anime title: AniList first (one request for every title), then Jikan / MyAnimeList
+// one at a time for anything AniList missed. Returns {title: imageUrl}.
+async function findCovers(titles){
+  const out = {};
+  try {
+    const query = '{' + titles.map((t, i) => `a${i}:Media(search:${JSON.stringify(t.split('|')[0].trim())},type:ANIME,format_not_in:[SPECIAL,OVA,TV_SHORT,MUSIC]){coverImage{extraLarge large}}`).join(' ') + '}';
+    const res = await fetch('https://graphql.anilist.co', {method:'POST', headers:{'Content-Type':'application/json', Accept:'application/json'}, body:JSON.stringify({query})});
+    const j = await res.json(); // AniList still returns the found titles when some are missing
+    titles.forEach((t, i) => { const c = j.data?.['a' + i]?.coverImage; if (c?.extraLarge || c?.large) out[t] = c.extraLarge || c.large; });
+  } catch (e){}
+  for (const t of titles.filter(t => !out[t])){
+    try {
+      const j = await (await fetch('https://api.jikan.moe/v4/anime?limit=1&q=' + encodeURIComponent(t.split('|')[0].trim()))).json();
+      const u = j.data?.[0]?.images?.webp?.large_image_url || j.data?.[0]?.images?.jpg?.large_image_url;
+      if (u) out[t] = u;
+    } catch (e){}
+    await new Promise(r => setTimeout(r, 450)); // Jikan allows ~3 requests/s
+  }
+  return out;
+}
+let loadingCovers = false;
+async function loadCovers(){
+  const want = [...new Set(CATS.flatMap(c => c.noms).filter(n => !n.image && n.search && !covers[n.search]).map(n => n.search))];
+  if (loadingCovers || !want.length) return; loadingCovers = true;
+  const found = await findCovers(want);
+  loadingCovers = false;
+  if (!Object.keys(found).length) return;
+  Object.assign(covers, found); store.set('aw.show.covers2', covers);
+  const y = scrollY; render(); document.querySelectorAll('.cat').forEach(s => s.classList.add('in')); scrollTo(0, y);
+}
+
+load();
+if (REFRESH_SECONDS) setInterval(load, REFRESH_SECONDS * 1000);
+</script>
+
+<div class="charge" aria-hidden="true"></div>
+<div class="smoke-page" aria-hidden="true"><i></i></div>
+<canvas id="embers" class="stars" aria-hidden="true"></canvas>
+<script>
+// Scroll progress for the energy bar and the spine.
+(function(){
+  const root = document.documentElement, cats = document.getElementById("categories");
+  function upd(){
+    const max = root.scrollHeight - innerHeight;
+    root.style.setProperty('--p', max > 0 ? (scrollY / max).toFixed(4) : 0);
+    if (cats){ const r = cats.getBoundingClientRect(), t = (innerHeight * .6 - r.top) / r.height; cats.style.setProperty('--p', Math.min(1, Math.max(0, t)).toFixed(4)); }
+  }
+  addEventListener('scroll', upd, {passive:true}); addEventListener('resize', upd); upd(); setTimeout(upd, 1500);
+})();
+// Cosmic backdrop: twinkling stars with a little parallax, and the odd shooting star.
+(function(){
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function field(cv, count, fixed){
+    const cx = cv.getContext('2d'); let W, H, D = devicePixelRatio || 1, shoot = null, nextShoot = performance.now() + 2500 + Math.random() * 4000;
+    const S = Array.from({length: count}, () => {
+      const z = Math.random();                       // depth: far stars are small, dim and move least
+      return {x: Math.random(), y: Math.random(), z, r: .35 + z * z * 1.6, a: .25 + z * .7, t: Math.random() * 6.28, sp: .4 + Math.random() * 1.6,
+        tint: Math.random() < .18 ? [150, 255, 205] : Math.random() < .3 ? [190, 240, 255] : [235, 255, 245]};
+    });
+    function size(){ const r = cv.getBoundingClientRect(); W = cv.width = Math.max(1, r.width * D); H = cv.height = Math.max(1, r.height * D); }
+    size(); addEventListener('resize', size);
+    function frame(now){
+      cx.clearRect(0, 0, W, H);
+      const off = fixed ? scrollY * D : 0;
+      for (const st of S){
+        const tw = still ? 1 : .55 + .45 * Math.sin(now / 1000 * st.sp + st.t);
+        let y = (st.y * H - off * st.z * .25) % H; if (y < 0) y += H;
+        const x = st.x * W, r = st.r * D, [cr, cg, cb] = st.tint;
+        cx.globalAlpha = st.a * tw; cx.fillStyle = `rgb(${cr},${cg},${cb})`;
+        cx.beginPath(); cx.arc(x, y, r, 0, 6.29); cx.fill();
+        if (st.r > 1.4){                              // the brightest stars get a soft cross glint
+          cx.globalAlpha = st.a * tw * .35; cx.fillRect(x - r * 5, y - .5 * D, r * 10, D); cx.fillRect(x - .5 * D, y - r * 5, D, r * 10);
+        }
+      }
+      if (!still){
+        if (!shoot && now > nextShoot){
+          const ang = .35 + Math.random() * .5;
+          shoot = {x: Math.random() * W * .8, y: Math.random() * H * .5, vx: Math.cos(ang) * 14 * D, vy: Math.sin(ang) * 14 * D, life: 1};
+          nextShoot = now + 4000 + Math.random() * 6000;
+        }
+        if (shoot){
+          const {x, y, vx, vy} = shoot, g = cx.createLinearGradient(x, y, x - vx * 9, y - vy * 9);
+          g.addColorStop(0, `rgba(230,255,240,${shoot.life})`); g.addColorStop(.3, `rgba(62,224,138,${shoot.life * .6})`); g.addColorStop(1, 'rgba(62,224,138,0)');
+          cx.globalAlpha = 1; cx.strokeStyle = g; cx.lineWidth = 1.6 * D; cx.beginPath(); cx.moveTo(x, y); cx.lineTo(x - vx * 9, y - vy * 9); cx.stroke();
+          shoot.x += vx; shoot.y += vy; shoot.life -= .018;
+          if (shoot.life <= 0 || shoot.x > W + 200 || shoot.y > H + 200) shoot = null;
+        }
+      }
+      cx.globalAlpha = 1;
+      if (!still) requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
+  field(document.getElementById('embers'), 260, true);
+  field(document.getElementById('heroStars'), 220, false);
+})();
+</script>
+</body>
+</html>
