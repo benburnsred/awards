@@ -461,6 +461,38 @@ body>.smoke-page i{position:absolute;left:0;right:0;top:0;bottom:0;background:ur
 .hero.off .smoke i,.hero.off #t2,.hero.off::before,.hero.off .hero-grid>div:first-child::before,.hero.off .hero-grid>div:first-child::after{animation-play-state:paused!important}
 .cat:not(.vis) .cat-head::before,.cat:not(.vis) .cap.tba::after,.cat:not(.vis) .win::after{animation-play-state:paused!important}
 </style>
+
+<style>
+/* ===== Smooth scrolling: everything that moves is a cheap slide, and nothing is repainted while scrolling ===== */
+body{background:var(--bg)!important}
+.nebula{position:fixed;inset:0;z-index:-4;pointer-events:none;background:
+  radial-gradient(40% 35% at 12% 30%,rgba(30,140,95,.16),transparent 70%),
+  radial-gradient(35% 30% at 88% 62%,rgba(40,150,160,.13),transparent 70%),
+  radial-gradient(45% 30% at 55% 95%,rgba(20,110,70,.14),transparent 70%),
+  radial-gradient(25% 20% at 75% 15%,rgba(120,90,200,.07),transparent 70%)}
+.charge{transform:scaleX(0);will-change:transform}
+/* Smoke slides as a whole layer instead of being redrawn and re-blurred every frame */
+.smoke{-webkit-mask:radial-gradient(120% 95% at 50% 100%,#000 25%,rgba(0,0,0,.55) 58%,transparent 88%)!important;mask:radial-gradient(120% 95% at 50% 100%,#000 25%,rgba(0,0,0,.55) 58%,transparent 88%)!important}
+.smoke i,body>.smoke-page i{left:0!important;right:auto!important;width:calc(100% + 1200px)!important;-webkit-mask:none!important;mask:none!important;filter:none!important;will-change:transform,translate}
+.smoke i:nth-child(1){animation:slide 80s linear infinite,bob 19s ease-in-out infinite alternate!important}
+.smoke i:nth-child(2){animation:slide 120s linear infinite reverse,bob 27s ease-in-out -8s infinite alternate!important}
+.smoke i:nth-child(3){animation:slide 60s linear infinite,bob 15s ease-in-out -4s infinite alternate!important}
+body>.smoke-page i{animation:slide 140s linear infinite!important}
+@keyframes slide{from{translate:0 0}to{translate:-1200px 0}}
+/* Sections fade and rise in without the blur */
+.rv{filter:none!important;transition:opacity .8s var(--ease),transform .8s var(--ease)!important}
+/* Bars are solid instead of blurring the moving stars behind them */
+.top.solid,.catnav{-webkit-backdrop-filter:none!important;backdrop-filter:none!important;background:rgba(3,8,6,.95)!important}
+.count div{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+/* Film grain no longer blends with the whole page */
+body::after{mix-blend-mode:normal!important;opacity:.03!important}
+/* Turning rings and card corners lose their live glow filter (the lines are brighter to make up for it) */
+.cap::before{filter:none!important}
+.cat-head::before{filter:none!important;opacity:1!important;will-change:transform}
+.hero-grid>div:first-child::before{filter:none!important;opacity:.75!important;will-change:transform}
+.hero-grid>div:first-child::after{filter:none!important;opacity:.85!important;will-change:transform}
+@media (prefers-reduced-motion:reduce){.smoke i,body>.smoke-page i{animation:none!important}}
+</style>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -849,6 +881,7 @@ load();
 if (REFRESH_SECONDS) setInterval(load, REFRESH_SECONDS * 1000);
 </script>
 
+<div class="nebula" aria-hidden="true"></div>
 <div class="charge" aria-hidden="true"></div>
 <div class="smoke-page" aria-hidden="true"><i></i></div>
 <canvas id="embers" class="stars" aria-hidden="true"></canvas>
@@ -856,6 +889,7 @@ if (REFRESH_SECONDS) setInterval(load, REFRESH_SECONDS * 1000);
 // Scroll progress for the energy bar; the menu starts flush left; effects pause when off screen.
 (function(){
   const root = document.documentElement, links = document.getElementById('catlinks'), main = document.getElementById('categories'), hero = document.querySelector('.hero');
+  const bar = document.querySelector('.charge');
   let flushed = false, queued = false;
   // Before any award is selected, show the menu from its first item (the blank space that lets items centre stays hidden).
   function flush(){
@@ -868,7 +902,7 @@ if (REFRESH_SECONDS) setInterval(load, REFRESH_SECONDS * 1000);
   function upd(){
     queued = false;
     const max = root.scrollHeight - innerHeight;
-    root.style.setProperty('--p', max > 0 ? (scrollY / max).toFixed(4) : 0);
+    bar.style.transform = 'scaleX(' + (max > 0 ? (scrollY / max).toFixed(4) : 0) + ')';
     flush();
     // Only awards near the screen keep their animations running.
     for (const c of main.children){ const r = c.getBoundingClientRect(); c.classList.toggle('vis', r.bottom > -200 && r.top < innerHeight + 200); }
