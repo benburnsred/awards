@@ -515,6 +515,51 @@ footer .soc{border-color:#4d5955}footer .soc:hover{border-color:#c99a3c;color:#e
 footer .rights{font-family:var(--wide);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#7f8c87}
 @media (max-width:600px){.brand{font-size:10px!important;letter-spacing:.08em!important}}
 </style>
+
+<style>
+/* ===== Cinematic pass: one light source, darkness, a plain countdown ===== */
+/* Darker header: the glow behind the title is much weaker, so the light shaft is the main light */
+.hero-bg{background:radial-gradient(40% 35% at 50% 48%,rgba(40,170,100,.14),transparent 72%),#010403!important}
+.hero::before{opacity:.35!important;animation:none!important}
+/* Light shaft: a few soft beams falling from the top right towards the title */
+.doom .shaft{position:absolute;inset:-20% -10% 0 0;pointer-events:none;mix-blend-mode:screen;
+  -webkit-mask:linear-gradient(215deg,#000 8%,rgba(0,0,0,.65) 45%,transparent 82%);mask:linear-gradient(215deg,#000 8%,rgba(0,0,0,.65) 45%,transparent 82%)}
+.doom .shaft i{position:absolute;top:-10%;right:8%;height:140%;transform-origin:top center;transform:rotate(38deg);filter:blur(7px);
+  background:linear-gradient(180deg,rgba(225,255,235,.75),rgba(140,245,185,.32) 40%,rgba(80,220,140,.08) 75%,transparent 95%);animation:beam 9s ease-in-out infinite alternate}
+.doom .shaft i:nth-child(1){width:70px;right:16%;opacity:.6}
+.doom .shaft i:nth-child(2){width:150px;right:7%;opacity:.4;animation-delay:-3s;animation-duration:12s}
+.doom .shaft i:nth-child(3){width:28px;right:24%;opacity:.55;animation-delay:-6s;animation-duration:7s}
+@keyframes beam{from{opacity:.35}to{opacity:.8}}
+.doom::after{content:"";position:absolute;top:-6%;right:2%;width:min(38vw,460px);aspect-ratio:1;border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle,rgba(220,255,232,.38),rgba(90,220,150,.12) 40%,transparent 70%);filter:blur(10px)}
+/* Heavy edge darkening, like a film frame */
+.doom .vignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(75% 70% at 50% 50%,transparent 45%,rgba(0,0,0,.55) 75%,rgba(0,0,0,.92) 100%)}
+/* No glitch flicker on the title */
+.t2,#t2{animation:none!important}
+/* The gold bar under the title gives way to the double lines under the countdown */
+.rule{display:none!important}
+.when{margin-top:30px}
+/* Countdown: plain white numbers, colons, small wide labels; no plates */
+.count{gap:clamp(10px,2.4vw,26px)!important;align-items:flex-start;margin-top:30px!important;position:relative;padding-bottom:30px}
+.count div{width:auto!important;padding:0!important;background:none!important;border:0!important;box-shadow:none!important;min-width:2.6em}
+.count div::before,.count div::after{display:none!important}
+.count b{font-family:var(--sans)!important;font-weight:600!important;font-size:clamp(34px,5.2vw,62px)!important;letter-spacing:.14em;padding-left:.14em;line-height:1;
+  background:none!important;color:#f4f7f5!important;-webkit-text-fill-color:#f4f7f5;text-shadow:0 2px 18px rgba(0,0,0,.6)}
+.count span{font-family:var(--sans)!important;font-weight:700!important;font-size:clamp(9px,1vw,12px)!important;letter-spacing:.38em!important;padding-left:.38em;color:#e9efe9!important;margin-top:14px!important}
+.count .colon{font-style:normal;font-family:var(--sans);font-weight:500;font-size:clamp(26px,3.8vw,46px);line-height:1;color:#dfe8e2;padding-top:.08em}
+/* Two thin lines under the countdown */
+.count::after{content:"";position:absolute;left:50%;bottom:0;width:min(560px,80%);height:7px;transform:translateX(-50%);
+  background:linear-gradient(#c9d3cf,#c9d3cf) top/100% 1px no-repeat,linear-gradient(90deg,transparent,#c9d3cf 12%,#c9d3cf 88%,transparent) bottom/80% 1px no-repeat;opacity:.55}
+@media (max-width:600px){
+  .count{gap:6px!important}
+  .count b{font-size:28px!important;letter-spacing:.06em;padding-left:.06em}
+  .count .colon{font-size:22px}
+  .count span{font-size:7.5px!important;letter-spacing:.18em!important;padding-left:.18em}
+  .doom .shaft i:nth-child(2){width:110px}
+}
+@media (prefers-reduced-motion:reduce){.doom .shaft i{animation:none}}
+.hero.off .doom .shaft i{animation-play-state:paused}
+</style>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -534,8 +579,7 @@ footer .rights{font-family:var(--wide);font-size:10px;letter-spacing:.14em;text-
 
 <section class="hero">
   <div class="hero-bg"></div>
-  <div class="doom" aria-hidden="true"><canvas class="stars" id="heroStars"></canvas></div>
-  <div class="smoke" aria-hidden="true"><i></i><i></i><i></i></div>
+  <div class="doom" aria-hidden="true"><canvas class="stars" id="heroStars"></canvas><div class="shaft"><i></i><i></i><i></i></div><div class="vignette"></div></div>
   <div class="bokeh" id="bokeh" aria-hidden="true"></div>
   <canvas id="dust" aria-hidden="true"></canvas>
   <div class="wrap hero-grid">
@@ -753,8 +797,8 @@ function tick(){
   const d = S.date ? new Date(S.date) : null, el = $('#count');
   const ms = d && !isNaN(d) ? d - Date.now() : -1;
   if (ms <= 0){ el.hidden = true; return; }
-  const u = [['Days', 864e5], ['Hours', 36e5], ['Mins', 6e4], ['Secs', 1e3]]; let r = ms;
-  el.innerHTML = u.map(([l, v]) => { const n = Math.floor(r / v); r -= n * v; return `<div><b>${String(n).padStart(2, '0')}</b><span>${l}</span></div>`; }).join('');
+  const u = [['Days', 864e5], ['Hours', 36e5], ['Minutes', 6e4], ['Seconds', 1e3]]; let r = ms;
+  el.innerHTML = u.map(([l, v]) => { const n = Math.floor(r / v); r -= n * v; return `<div><b>${String(n).padStart(2, '0')}</b><span>${l}</span></div>`; }).join('<i class="colon" aria-hidden="true">:</i>');
   el.hidden = false;
 }
 setInterval(tick, 1000);
@@ -908,7 +952,6 @@ if (REFRESH_SECONDS) setInterval(load, REFRESH_SECONDS * 1000);
 
 <div class="nebula" aria-hidden="true"></div>
 <div class="charge" aria-hidden="true"></div>
-<div class="smoke-page" aria-hidden="true"><i></i></div>
 <canvas id="embers" class="stars" aria-hidden="true"></canvas>
 <script>
 // Scroll progress for the energy bar; the menu starts flush left; effects pause when off screen.
