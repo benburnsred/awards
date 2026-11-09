@@ -501,6 +501,20 @@ body::after{mix-blend-mode:normal!important;opacity:.03!important}
 .cap.rv:not(.tba)::after{display:none!important}
 #embers{will-change:auto}
 </style>
+
+<style>
+/* ===== Top bar name and footer in the same lettering as the header ===== */
+.brand{font-family:var(--wide)!important;font-weight:400!important;letter-spacing:.22em!important;font-size:12px!important}
+.brand span{background:var(--steel);-webkit-background-clip:text;background-clip:text;color:transparent}
+footer .big{font-family:var(--tech)!important;font-weight:900!important;font-size:clamp(20px,3.4vw,34px)!important;letter-spacing:.1em!important;margin:0 0 26px!important;
+  background:none!important;color:inherit!important}
+footer .big .metal{display:inline-block;background:var(--steel)!important;-webkit-background-clip:text!important;background-clip:text!important;color:transparent;transform:skewX(-10deg);
+  filter:drop-shadow(0 2px 0 rgba(0,0,0,.7)) drop-shadow(0 0 16px rgba(62,224,138,.3))}
+footer .btn{font-family:var(--wide)!important;font-weight:400!important}
+footer .soc{border-color:#4d5955}footer .soc:hover{border-color:#c99a3c;color:#e9c46a}
+footer .rights{font-family:var(--wide);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#7f8c87}
+@media (max-width:600px){.brand{font-size:10px!important;letter-spacing:.08em!important}}
+</style>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
