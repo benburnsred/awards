@@ -280,6 +280,8 @@ body{background:var(--bg)}
   background:linear-gradient(transparent,#3ee08a 85%,#e6fff1);box-shadow:0 0 14px #3ee08a;border-radius:2px;opacity:.45}
 /* Drifting green embers behind everything below the hero */
 #embers{position:fixed;inset:0;z-index:-3;pointer-events:none;width:100%;height:100%}
+/* Glows fade out before the section edges, so no seam shows between awards */
+.cat::before{-webkit-mask:linear-gradient(transparent,#000 18%,#000 72%,transparent);mask:linear-gradient(transparent,#000 18%,#000 72%,transparent)}
 /* Each award: aurora glow, cracked energy divider, rune ring behind the trophy */
 .cat::before{background:
   radial-gradient(40% 240px at 50% 210px,color-mix(in srgb,var(--c) 22%,transparent),transparent 100%),
