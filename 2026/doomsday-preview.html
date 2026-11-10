@@ -518,22 +518,6 @@ footer .rights{font-family:var(--wide);font-size:10px;letter-spacing:.14em;text-
 
 <style>
 /* ===== Cinematic pass: one light source, darkness, a plain countdown ===== */
-/* Darker header: the glow behind the title is much weaker, so the light shaft is the main light */
-.hero-bg{background:radial-gradient(40% 35% at 50% 48%,rgba(40,170,100,.14),transparent 72%),#010403!important}
-.hero::before{opacity:.35!important;animation:none!important}
-/* Light shaft: a few soft beams falling from the top right towards the title */
-.doom .shaft{position:absolute;inset:-20% -10% 0 0;pointer-events:none;mix-blend-mode:screen;
-  -webkit-mask:linear-gradient(215deg,#000 8%,rgba(0,0,0,.65) 45%,transparent 82%);mask:linear-gradient(215deg,#000 8%,rgba(0,0,0,.65) 45%,transparent 82%)}
-.doom .shaft i{position:absolute;top:-10%;right:8%;height:140%;transform-origin:top center;transform:rotate(38deg);filter:blur(7px);
-  background:linear-gradient(180deg,rgba(225,255,235,.75),rgba(140,245,185,.32) 40%,rgba(80,220,140,.08) 75%,transparent 95%);animation:beam 9s ease-in-out infinite alternate}
-.doom .shaft i:nth-child(1){width:70px;right:16%;opacity:.6}
-.doom .shaft i:nth-child(2){width:150px;right:7%;opacity:.4;animation-delay:-3s;animation-duration:12s}
-.doom .shaft i:nth-child(3){width:28px;right:24%;opacity:.55;animation-delay:-6s;animation-duration:7s}
-@keyframes beam{from{opacity:.35}to{opacity:.8}}
-.doom::after{content:"";position:absolute;top:-6%;right:2%;width:min(38vw,460px);aspect-ratio:1;border-radius:50%;pointer-events:none;
-  background:radial-gradient(circle,rgba(220,255,232,.38),rgba(90,220,150,.12) 40%,transparent 70%);filter:blur(10px)}
-/* Heavy edge darkening, like a film frame */
-.doom .vignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(75% 70% at 50% 50%,transparent 45%,rgba(0,0,0,.55) 75%,rgba(0,0,0,.92) 100%)}
 /* No glitch flicker on the title */
 .t2,#t2{animation:none!important}
 /* The gold bar under the title gives way to the double lines under the countdown */
@@ -555,10 +539,17 @@ footer .rights{font-family:var(--wide);font-size:10px;letter-spacing:.14em;text-
   .count b{font-size:28px!important;letter-spacing:.06em;padding-left:.06em}
   .count .colon{font-size:22px}
   .count span{font-size:7.5px!important;letter-spacing:.18em!important;padding-left:.18em}
-  .doom .shaft i:nth-child(2){width:110px}
 }
-@media (prefers-reduced-motion:reduce){.doom .shaft i{animation:none}}
-.hero.off .doom .shaft i{animation-play-state:paused}
+</style>
+
+<style>
+/* ===== Bars fade into the page instead of ending in a line ===== */
+.top{border-bottom:0!important}
+.top.solid{background:rgba(3,8,6,.95)!important;border-color:transparent!important}
+.top.solid::after,.catnav::after{content:"";position:absolute;left:0;right:0;top:100%;height:44px;pointer-events:none;
+  background:linear-gradient(rgba(3,8,6,.95),rgba(3,8,6,.6) 40%,rgba(3,8,6,0))}
+.catnav{border:0!important;border-block:0!important}
+.catnav .wrap{position:relative;z-index:1}
 </style>
 </head>
 <body>
@@ -579,7 +570,7 @@ footer .rights{font-family:var(--wide);font-size:10px;letter-spacing:.14em;text-
 
 <section class="hero">
   <div class="hero-bg"></div>
-  <div class="doom" aria-hidden="true"><canvas class="stars" id="heroStars"></canvas><div class="shaft"><i></i><i></i><i></i></div><div class="vignette"></div></div>
+  <div class="doom" aria-hidden="true"><canvas class="stars" id="heroStars"></canvas></div>
   <div class="bokeh" id="bokeh" aria-hidden="true"></div>
   <canvas id="dust" aria-hidden="true"></canvas>
   <div class="wrap hero-grid">
