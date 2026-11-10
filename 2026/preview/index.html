@@ -771,7 +771,7 @@ function render(){
   const cup = safeUrl(S.trophy_image);
   $('.hero-grid').classList.toggle('has-cup', !!cup); $('#cup').hidden = !cup; if (cup && $('#cup').getAttribute('src') !== cup) $('#cup').src = cup;
   $('#tagline').textContent = S.tagline;
-  const voteUrl = safeUrl(S.vote_url) || '../../vote/';
+  const voteUrl = safeUrl(S.vote_url) ? (/^[a-z]+:/i.test(S.vote_url) ? safeUrl(S.vote_url) : new URL(S.vote_url, new URL('../', location.href)).href) : '../../vote/';   // relative links resolve as if this page sat in 2026/
   ['#topVote', '#heroVote', '#footVote'].forEach(id => { $(id).hidden = !voteOpen; $(id).href = voteUrl; });
   $('#rights').textContent = `© ${(String(S.title).match(/\d{4}/) || [new Date().getFullYear()])[0]} Anime x Angas. All Rights Reserved.`;
   $('#topSocials').innerHTML = $('#footSocials').innerHTML = socialsHTML();
