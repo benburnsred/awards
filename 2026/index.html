@@ -636,7 +636,10 @@ document.addEventListener('contextmenu', e => { if (!(e.target.closest && e.targ
   mask-image:radial-gradient(circle at var(--px,50%) var(--py,50%),transparent calc(var(--pr,0px) - 16px),#000 var(--pr,0px))}
 #portal canvas{position:absolute;inset:0;width:100%;height:100%;transition:opacity .6s ease}
 #portal .lbl{position:absolute;left:0;right:0;top:calc(50% + 28vmin + 30px);text-align:center;transition:opacity .4s ease;
-  font:400 10px/1 "Michroma",sans-serif;letter-spacing:.5em;padding-left:.5em;text-transform:uppercase;color:#c9a95a;opacity:.8;visibility:hidden}
+  font:400 10px/1 "Michroma",sans-serif;letter-spacing:.5em;padding-left:.5em;text-transform:uppercase;color:#c9a95a;opacity:.8;visibility:hidden;
+  /* The same hole as the dark backdrop, so the opening portal erases the text exactly as it erases the dark. */
+  -webkit-mask-image:radial-gradient(circle at var(--px,50%) var(--ly,50%),transparent calc(var(--pr,0px) - 16px),#000 var(--pr,0px));
+  mask-image:radial-gradient(circle at var(--px,50%) var(--ly,50%),transparent calc(var(--pr,0px) - 16px),#000 var(--pr,0px))}
 #portal .sekai{opacity:0;animation:sekaiIn 1.4s ease .9s forwards;color:#ffcf7a;text-shadow:0 0 12px rgba(255,140,40,.55)}
 @keyframes sekaiIn{to{opacity:1}}
 @keyframes portalBlink{from{opacity:.35}to{opacity:.85}}
@@ -787,6 +790,7 @@ html:not(.page-ready) body{overflow:hidden}
     const drift = leave && !still ? ease((now - leave.t) / 500) : 0;   // the last sparks drift gently apart as they fade
     if (!labelPlaced){ label.style.top = Math.round(st.homeY + st.fullR * 1.16 + 22) + 'px'; label.style.visibility = 'visible'; labelPlaced = true; }   // placed once, under the fully grown portal
     box.style.setProperty('--px', st.cx + 'px'); box.style.setProperty('--py', st.cy + 'px'); box.style.setProperty('--pr', (st.r * .98) + 'px');   // the see-through hole
+    box.style.setProperty('--ly', (st.cy - label.offsetTop) + 'px');   // the hole's centre, measured from the top of the loading text
     x.setTransform(1, 0, 0, 1, 0, 0);
     x.clearRect(0, 0, W, H);   // a clean slate each frame: no ghost rings left behind
     x.setTransform(D, 0, 0, D, 0, 0); x.globalCompositeOperation = 'lighter';
