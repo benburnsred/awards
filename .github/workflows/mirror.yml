@@ -2,8 +2,10 @@ name: Copy the site from benburnsred/awards
 
 # Runs only in a copy (fork) of this repository, such as animexangas/awards.
 # Every 15 minutes it pulls the latest site from benburnsred/awards and, if anything changed, republishes it.
-# Note: if the original changes a file in .github/workflows, this copy can't update itself;
-# then open the copy on GitHub and click "Sync fork" once.
+# Workflow files: GitHub's built-in token may not copy changes to files in .github/workflows. Either
+#   - add a repository secret MIRROR_TOKEN (a personal access token with the "repo" and "workflow" scopes), or
+#   - when that happens, open the copy on GitHub and click "Sync fork" once.
+# After a manual "Sync fork", the next run notices the site wasn't republished yet and republishes it.
 
 on:
   schedule:
@@ -22,11 +24,14 @@ jobs:
       - name: Pull the latest site and republish if it changed
         env:
           GH_TOKEN: ${{ github.token }}
+          SYNC_TOKEN: ${{ secrets.MIRROR_TOKEN || github.token }}
         run: |
           before=$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)
-          gh repo sync "$GITHUB_REPOSITORY" --source benburnsred/awards --branch main --force
+          GH_TOKEN="$SYNC_TOKEN" gh repo sync "$GITHUB_REPOSITORY" --source benburnsred/awards --branch main --force
           after=$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)
-          if [ "$before" != "$after" ] || [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+          # The commit the site was last published from (a manual "Sync fork" doesn't republish by itself).
+          published=$(gh run list -R "$GITHUB_REPOSITORY" --workflow pages.yml --limit 1 --json headSha --jq '.[0].headSha // ""')
+          if [ "$before" != "$after" ] || [ "$published" != "$after" ] || [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
             gh workflow run pages.yml -R "$GITHUB_REPOSITORY" --ref main
             echo "Republished ($after)"
           else
