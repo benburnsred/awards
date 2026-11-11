@@ -28,6 +28,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # The newest commit on the branch, not the one that started this run: a deploy requested right after a
+          # bot commit (e.g. new videos) must include it.
+          ref: ${{ github.ref_name }}
       # Freeze an awards edition that reads a Google Sheet into files in the repo (runs only when a year is given).
       - name: Archive awards edition
         if: ${{ github.event.inputs.archive_year != '' }}
