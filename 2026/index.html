@@ -677,10 +677,9 @@ html:not(.page-ready) body{overflow:hidden}
   const toTop = () => { if (!location.hash) scrollTo(0, 0); };
   if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
   toTop(); addEventListener('load', toTop); addEventListener('pageshow', toTop);   // browsers may restore the old position late in a reload
-  // One loading line per visit, picked at random. In the "void" line, "sekai" fades in a moment later.
-  const LINES = ['Bridging the realms', 'Opening the portal', 'Crossing over', 'Entering the void… <span class="sekai">sekai</span>'];
+  // The loading line: "sekai" fades in a moment after "Entering the void…".
   const label = box.querySelector('.lbl');
-  label.innerHTML = LINES[Math.floor(Math.random() * LINES.length)];
+  label.innerHTML = 'Entering the void… <span class="sekai">sekai</span>';
   let W, H, D = Math.min(devicePixelRatio || 1, 1.5);
   const size = () => { W = cv.width = Math.round(innerWidth * D); H = cv.height = Math.round(innerHeight * D); };
   size(); addEventListener('resize', size);
