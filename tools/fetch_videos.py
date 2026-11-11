@@ -18,7 +18,10 @@ The awards page and the ballot read that file and play the video in theater mode
 - Songs with no good match are retried after a week.
 
 Needs a YouTube Data API key in the YOUTUBE_API_KEY environment variable (a GitHub Actions secret); without
-one it does nothing. Each search costs 100 of the free 10,000 daily quota units. Stdlib only.
+one it searches nothing. Each search costs 100 of the free 10,000 daily quota units. Stdlib only.
+
+Each song also gets a `thumb`: the YouTube still of its official video (or, when no video plays in the region,
+of the best official upload), used as the card picture when the nominee has no anime poster.
 """
 import csv
 import datetime
@@ -163,7 +166,8 @@ def trusted(item, artist, anime):
 
 
 def find(key, song, artist, anime, kind, region):
-    """Up to KEEP official videos for one song that play in the region, best first. Empty if none."""
+    """(up to KEEP official videos that play in the region, best first; the best official video id even if it
+    doesn't play there, for its picture, or '')."""
     queries = [f'{song} {artist} {anime} creditless {kind}'.strip(), f'{song} {artist} official music video'.strip()]
     scored = {}
     for q in queries:
@@ -176,7 +180,21 @@ def find(key, song, artist, anime, kind, region):
                 scored[vid] = (item, sc)
     ranked = sorted(scored.values(), key=lambda x: -x[1])
     info = details(key, [it['id']['videoId'] for it, _ in ranked])
-    return [it for it, _ in ranked if playable(info.get(it['id']['videoId']), region)][:KEEP]
+    picks = [it for it, _ in ranked if playable(info.get(it['id']['videoId']), region)][:KEEP]
+    return picks, (ranked[0][0]['id']['videoId'] if ranked else '')
+
+
+def thumb_for(vid):
+    """The largest still YouTube has for a video (thumbnails are never region-blocked), or ''. No quota used."""
+    for name in ('maxresdefault', 'hq720', 'hqdefault'):
+        url = f'https://i.ytimg.com/vi/{vid}/{name}.jpg'
+        try:
+            with urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': 'axa-awards-video-finder'}), timeout=15) as r:
+                if r.status == 200 and len(r.read()) > 2000:
+                    return url
+        except Exception:
+            continue
+    return ''
 
 
 def main():
@@ -186,8 +204,7 @@ def main():
         pass
     key = os.environ.get('YOUTUBE_API_KEY', '').strip()
     if not key:
-        print('videos: no YOUTUBE_API_KEY, skipping')
-        return 0
+        print('videos: no YOUTUBE_API_KEY, so no searching (pictures for videos already found are still added)')
     region = (os.environ.get('VIDEO_REGION') or REGION).strip().upper()
     today = datetime.date.today()
     searches = 0
@@ -209,15 +226,18 @@ def main():
             k = cat + '|' + song
             old = videos.get(k)
             # Picks from an older version of this script (fan uploads allowed, no region check) are redone once.
-            if old and old.get('v') == VERSION and (old.get('id') or
-                    (today - datetime.date.fromisoformat(old.get('checked', '2000-01-01'))).days < RETRY_DAYS):
+            current = old and old.get('v') == VERSION
+            if current and 'thumb' not in old and old.get('id'):
+                old['thumb'] = thumb_for(old['id'])   # a picture for the card, from the video already found
+            if current and (old.get('id') or ('thumb' in old and
+                    (today - datetime.date.fromisoformat(old.get('checked', '2000-01-01'))).days < RETRY_DAYS)):
                 continue
-            if searches + 2 > MAX_SEARCHES:
-                break
+            if not key or searches + 2 > MAX_SEARCHES:
+                continue
             parts = [p.strip() for p in re.split(r'\s*·\s*', r.get('subtitle') or '')]
             artist, anime = (parts + ['', ''])[:2]
             try:
-                picks = find(key, song, artist, anime, m.group(1).lower(), region)
+                picks, best_any = find(key, song, artist, anime, m.group(1).lower(), region)
             except Exception as e:  # quota used up or API trouble: stop for today, keep what we have
                 print(f'  YouTube search failed: {e}')
                 searches = MAX_SEARCHES
@@ -228,11 +248,13 @@ def main():
                 videos[k] = {'v': VERSION, 'id': first['id']['videoId'], 'alts': [p['id']['videoId'] for p in picks[1:]],
                              'title': html.unescape(first['snippet']['title']),
                              'channel': html.unescape(first['snippet']['channelTitle']), 'region': region,
-                             'checked': today.isoformat()}
+                             'thumb': thumb_for(first['id']['videoId']), 'checked': today.isoformat()}
                 found += 1
                 print(f'  {song}: {videos[k]["title"]} ({videos[k]["channel"]}) + {len(picks) - 1} backup(s)')
             else:
-                videos[k] = {'v': VERSION, 'id': None, 'region': region, 'checked': today.isoformat()}
+                # No video that plays here, but an official one's picture still works for the card.
+                videos[k] = {'v': VERSION, 'id': None, 'region': region, 'thumb': thumb_for(best_any) if best_any else '',
+                             'checked': today.isoformat()}
                 missed += 1
                 print(f'  {song}: no official video that plays in {region}')
         if json.dumps(videos, sort_keys=True) != before:

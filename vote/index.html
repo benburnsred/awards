@@ -623,6 +623,7 @@ const slug = s => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^
 const ytId = u => (String(u || '').match(/(?:youtube(?:-nocookie)?\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{11})/) || [])[1] || '';
 // A YouTube link typed in the Sheet wins; otherwise the found video and its backups.
 const videoIds = (link, v) => ytId(link) ? [ytId(link)] : v && v.id ? [v.id, ...(v.alts || [])].filter(x => /^[\w-]{11}$/.test(x)) : [];
+const ytThumb = (link, v) => ytId(link) ? `https://i.ytimg.com/vi/${ytId(link)}/hqdefault.jpg` : v && /^https:\/\/i\.ytimg\.com\//.test(v.thumb || '') ? v.thumb : '';
 const safeUrl = u => { u = String(u || '').trim(); return /^(https?:\/\/|\.{0,2}\/|[\w-]+\/)/i.test(u) ? u : ''; };
 
 function csvUrl(u){
@@ -676,7 +677,7 @@ async function loadData(){
       max:parseInt(r.max_picks, 10) || 3, opens:r.opens, closes:r.closes, locked:r.locked === 'TRUE'}), CATEGORIES[CATEGORIES.length - 1]);
     if (r.category_description && !c.blurb) c.blurb = r.category_description;
     if (r.nominee) c.nominees.push({id:r.nominee_id || slug(r.nominee), name:r.nominee, sub:r.subtitle, image:safeUrl(r.image), q:r.image_search, link:safeUrl(r.link),
-      videos:videoIds(r.link, videos[r.category + '|' + r.nominee])});
+      videos:videoIds(r.link, videos[r.category + '|' + r.nominee]), thumb:ytThumb(r.link, videos[r.category + '|' + r.nominee])});
     const last = c.nominees[c.nominees.length - 1]; if (last) last.video = last.videos[0] || '';
   }
 }
@@ -709,7 +710,7 @@ function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.add
 
 /* ===== Rendering ===== */
 function cardHTML(n, badge){
-  const u = n.image || covers[n.q];
+  const u = n.image || covers[n.q] || n.thumb;
   const img = u ? `<div class="img" style="background-image:url('${esc(u)}')"></div>` : '';
   const meta = String(n.sub || '').split(' · ').filter(Boolean).slice(0, 2);
   return `<div class="card${selected === n.id ? ' sel' : ''}${badge ? ' picked' : ''}" draggable="${cat().method === 'tier'}" data-id="${n.id}" title="${esc(n.name)}${n.sub ? ' — ' + esc(n.sub) : ''}">
@@ -726,7 +727,7 @@ function renderSpot(c, d, tier){
   const picks = c.nominees.filter(n => d[n.id]).sort((a, b) => d[a.id] - d[b.id]);
   const key = c.id + ':' + picks.map(n => n.id).join(',');
   if (key === lastSpot) return; lastSpot = key;
-  const big = n => { const u = n.image || covers[n.q]; const meta = String(n.sub || '').split(' · ').filter(Boolean);
+  const big = n => { const u = n.image || covers[n.q] || n.thumb; const meta = String(n.sub || '').split(' · ').filter(Boolean);
     return `<div class="pick"><div class="art"${u ? ` style="background-image:url('${esc(u)}')"` : ''}>${u ? '' : `<span class="mono">${esc(n.name.split(/\s+/).slice(0, 2).map(w => w[0]).join(''))}</span>`}</div>
       ${c.method === 'rank' ? `<span class="ord">${d[n.id]}</span>` : ''}
       <div class="cap"><div class="nm">${esc(n.name)}</div>${meta.map(m => `<div class="mt">${esc(m)}</div>`).join('')}</div></div>`; };
@@ -1115,7 +1116,7 @@ async function slidePick(x, name, c){
   x.fillStyle = steelFill(x, 280, 420); x.font = `900 72px Orbitron, sans-serif`;
   const yT = wrapText(x, c.title.toUpperCase(), W / 2, 350, W - 200, 84, 3);
   if (picks.length === 1){
-    const n = picks[0], im = await storyImg(n.image || covers[n.q]);
+    const n = picks[0], im = await storyImg(n.image || covers[n.q] || n.thumb);
     const pw = 660, ph = 880, px = (W - pw) / 2, py = Math.max(yT + 40, 540);
     const g = x.createRadialGradient(W / 2, py + ph / 2, 0, W / 2, py + ph / 2, 620); g.addColorStop(0, 'rgba(255,150,50,.35)'); g.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = g; x.fillRect(0, py - 200, W, ph + 400);
     x.fillStyle = '#e9c46a'; x.fillRect(px - 8, py - 8, pw + 16, ph + 16); x.fillStyle = '#030806'; x.fillRect(px - 3, py - 3, pw + 6, ph + 6);
@@ -1129,7 +1130,7 @@ async function slidePick(x, name, c){
   for (let i = 0; i < picks.length; i++){
     const n = picks[i], r = Math.floor(i / cols), col = i % cols;
     const px = 100 + col * (pw + gap), py = Math.max(yT + 40, 520) + r * (ph + 110);
-    drawPoster(x, await storyImg(n.image || covers[n.q]), n, px, py, pw, ph);
+    drawPoster(x, await storyImg(n.image || covers[n.q] || n.thumb), n, px, py, pw, ph);
     if (c.method === 'rank'){ x.fillStyle = goldFill(x, py + 14, py + 74); x.fillRect(px + 14, py + 14, 60, 60); x.fillStyle = '#16120a'; x.font = `900 36px Orbitron, sans-serif`; x.textAlign = 'center'; x.fillText(String(i + 1), px + 44, py + 58); }
     x.fillStyle = '#fff'; x.font = `700 30px Inter, sans-serif`; x.textAlign = 'center'; wrapText(x, n.name, px + pw / 2, py + ph + 44, pw, 36, 2);
   }
@@ -1154,7 +1155,7 @@ async function slideTier(x, name, c){
     const tth = Math.round(tw * 4 / 3), x0 = 90 + bw + 14 + 12;
     for (let j = 0; j < ns.length; j++){
       const n = ns[j], px = x0 + j * (tw + gap), py = y + 12;
-      drawPoster(x, await storyImg(n.image || covers[n.q]), n, px, py, tw, tth);
+      drawPoster(x, await storyImg(n.image || covers[n.q] || n.thumb), n, px, py, tw, tth);
       x.fillStyle = '#e8f5ec'; x.font = `600 ${tw > 120 ? 20 : 16}px Inter, sans-serif`; x.textAlign = 'center';
       wrapText(x, n.name, px + tw / 2, py + tth + 24, tw + gap - 4, tw > 120 ? 22 : 18, 2);
     }

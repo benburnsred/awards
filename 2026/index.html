@@ -873,6 +873,7 @@ const yes = v => /^(true|yes|y|1|x|✓|✔|winner)$/i.test(String(v || '').trim(
 // The 11-character video id from any YouTube address (watch, youtu.be, embed, shorts), or ''.
 const ytId = u => (String(u || '').match(/(?:youtube(?:-nocookie)?\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{11})/) || [])[1] || '';
 let VIDEOS = {};
+const ytThumb = (link, v) => ytId(link) ? `https://i.ytimg.com/vi/${ytId(link)}/hqdefault.jpg` : v && /^https:\/\/i\.ytimg\.com\//.test(v.thumb || '') ? v.thumb : '';
 // A YouTube link typed in the Sheet wins; otherwise the found video and its backups.
 const videoIds = (link, v) => ytId(link) ? [ytId(link)] : v && v.id ? [v.id, ...(v.alts || [])].filter(x => /^[\w-]{11}$/.test(x)) : [];
 const safeUrl = u => { u = String(u || '').trim(); return /^(https?:\/\/|\.{0,2}\/|[\w-]+\/)/i.test(u) ? u : ''; };
@@ -928,7 +929,7 @@ function build(rows){
     if (r.category_image && !c.trophy) c.trophy = safeUrl(r.category_image);
     if (r.category_type === 'special') c.special = true;
     if (r.nominee) c.noms.push({name:r.nominee, sub:r.subtitle, image:safeUrl(r.image), search:r.image_search, link:safeUrl(r.link), winner:yes(r.winner), result:r.result, avatar:/avatar/i.test(r.image_style || ''),
-      videos:videoIds(r.link, VIDEOS[name + '|' + r.nominee])});
+      videos:videoIds(r.link, VIDEOS[name + '|' + r.nominee]), thumb:ytThumb(r.link, VIDEOS[name + '|' + r.nominee])});
   }
   cats.forEach(c => c.noms.forEach(n => { n.video = n.videos[0] || ''; }));
   cats.forEach((c, i) => c.color ||= PALETTE[i % PALETTE.length]);
@@ -937,7 +938,8 @@ function build(rows){
 
 /* ===== Rendering ===== */
 let HOSTS = [], S = {...DEFAULTS}, CATS = [], lastKey = '', covers = store.get('aw.show.covers2', {});
-const img = n => n.image || covers[n.search] || '';
+// Picture: the poster from the Sheet, else one looked up by anime title, else the still of the song's official video.
+const img = n => n.image || covers[n.search] || n.thumb || '';
 const linkAttrs = n => n.video ? ` href="https://www.youtube.com/watch?v=${esc(n.video)}" target="_blank" rel="noopener" data-yt="${esc(n.videos.join(','))}" data-yt-title="${esc(n.name)}" data-yt-sub="${esc(n.sub || '')}" aria-label="Play ${esc(n.name)}"`
   : n.link ? ` href="${esc(n.link)}" target="_blank" rel="noopener"` : '';
 const playBadge = n => n.video ? '<span class="yt-play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>' : '';
@@ -1014,8 +1016,9 @@ function render(){
 
   $('#categories').innerHTML = CATS.length ? CATS.map((c, i) => {
     const hasWin = reveal && c.noms.some(n => n.winner);
-    const state = hasWin ? (c.special ? '<div class="cat-state">Special award</div>' : '')
-      : `<div class="cat-state">${c.special ? 'Special award · announced at the ceremony' : c.noms.length ? `${c.noms.length} nominees · winner revealed at the ceremony` : 'Nominees coming soon'}</div>`;
+    // No status line under the heading (nominee count / "winner revealed at the ceremony"); only a revealed
+    // special award is labelled as such.
+    const state = hasWin && c.special ? '<div class="cat-state">Special award</div>' : '';
     const body = hasWin ? stageHTML(c, showRes)
       : `<div class="grid">${c.noms.length ? c.noms.map(capHTML).join('')
         : Array.from({length:5}, () => '<div class="cap tba rv"><div class="mono">?</div><div class="info"><div class="name">To be announced</div></div></div>').join('')}</div>`;

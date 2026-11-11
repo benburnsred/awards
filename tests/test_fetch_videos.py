@@ -53,8 +53,12 @@ def fake_details(key, ids):
     return {i: RULES.get(i, (True, set(), None)) for i in ids}
 
 
+def fake_thumb(vid):
+    return f'https://i.ytimg.com/vi/{vid}/maxresdefault.jpg'
+
+
 def patched():
-    return mock.patch.multiple(fv, search=fake_search, details=fake_details)
+    return mock.patch.multiple(fv, search=fake_search, details=fake_details, thumb_for=fake_thumb)
 
 
 class Scoring(unittest.TestCase):
@@ -63,17 +67,17 @@ class Scoring(unittest.TestCase):
 
     def test_creditless_beats_fan_amv_and_lyrics(self):
         with patched():
-            picks = fv.find('k', 'lulu.', 'Mrs. GREEN APPLE', 'Frieren Season 2', 'opening', 'PH')
+            picks = fv.find('k', 'lulu.', 'Mrs. GREEN APPLE', 'Frieren Season 2', 'opening', 'PH')[0]
         self.assertEqual(picks[0]['id']['videoId'], 'credless001')
 
     def test_official_music_video_beats_cover(self):
         with patched():
-            picks = fv.find('k', 'Hanakage', 'Superfly', '', 'ending', 'PH')
+            picks = fv.find('k', 'Hanakage', 'Superfly', '', 'ending', 'PH')[0]
         self.assertEqual([p['id']['videoId'] for p in picks], ['official001'])
 
     def test_no_good_match_gives_nothing(self):
         with patched():
-            self.assertEqual(fv.find('k', 'Nothing Here', 'Nobody', '', 'ending', 'PH'), [])
+            self.assertEqual(fv.find('k', 'Nothing Here', 'Nobody', '', 'ending', 'PH')[0], [])
 
     def test_fan_edits_and_live_streams_score_low(self):
         good = fv.score(item('a', 'Song - Artist (Official Music Video)', 'Artist'), 'Song', 'Artist', '', 'opening')
@@ -93,12 +97,12 @@ class Scoring(unittest.TestCase):
                item('tWn_GlPZd-I', '「Creditless」Jujutsu Kaisen Season 3 OP / Opening 1「UHD 60FPS」', 'TriaxFx'),
                item('zz2a9Q2Wru0', 'King Gnu - AIZO', 'King Gnu official YouTube channel')]
         with mock.patch.multiple(fv, search=lambda k, q, r: frieren, details=fake_details):
-            ids = [p['id']['videoId'] for p in fv.find('k', 'lulu.', 'Mrs. GREEN APPLE', 'Frieren Season 2', 'opening', 'PH')]
+            ids = [p['id']['videoId'] for p in fv.find('k', 'lulu.', 'Mrs. GREEN APPLE', 'Frieren Season 2', 'opening', 'PH')[0]]
         self.assertEqual(ids[0], 'C0BG3B7aksU')
         self.assertNotIn('37iU_fjnjus', ids, 'fan re-upload')
         self.assertNotIn('weGCg61AWhM', ids, 'lyrics re-upload')
         with mock.patch.multiple(fv, search=lambda k, q, r: jjk, details=fake_details):
-            ids = [p['id']['videoId'] for p in fv.find('k', 'AIZO', 'King Gnu', 'Jujutsu Kaisen Season 3', 'opening', 'PH')]
+            ids = [p['id']['videoId'] for p in fv.find('k', 'AIZO', 'King Gnu', 'Jujutsu Kaisen Season 3', 'opening', 'PH')[0]]
         self.assertEqual(ids, ['Xr032EhUDPw', 'zz2a9Q2Wru0'])
 
     def test_matching_ignores_case_and_punctuation(self):
@@ -118,7 +122,7 @@ class OfficialOnly(unittest.TestCase):
     def test_a_good_fan_upload_is_never_picked(self):
         fan = [item('fan00000001', 'Song Opening | "Song" by Artist (Creditless)', 'Zuax anime and music')]
         with mock.patch.multiple(fv, search=lambda k, q, r: fan, details=fake_details):
-            self.assertEqual(fv.find('k', 'Song', 'Artist', 'Show', 'opening', 'PH'), [])
+            self.assertEqual(fv.find('k', 'Song', 'Artist', 'Show', 'opening', 'PH')[0], [])
 
 
 class Region(unittest.TestCase):
@@ -136,20 +140,20 @@ class Region(unittest.TestCase):
     def test_a_video_blocked_in_the_philippines_is_skipped_for_the_next_official_one(self):
         RULES['credless001'] = (True, {'PH'}, None)
         with patched():
-            picks = fv.find('k', 'lulu.', 'Mrs. GREEN APPLE', 'Frieren Season 2', 'opening', 'PH')
+            picks = fv.find('k', 'lulu.', 'Mrs. GREEN APPLE', 'Frieren Season 2', 'opening', 'PH')[0]
         self.assertEqual([p['id']['videoId'] for p in picks], ['museasia001'])
 
     def test_allowed_list_without_the_philippines_is_skipped(self):
         RULES['credless001'] = (True, set(), {'JP'})
         RULES['museasia001'] = (True, set(), {'PH', 'SG', 'MY'})
         with patched():
-            picks = fv.find('k', 'lulu.', 'Mrs. GREEN APPLE', 'Frieren Season 2', 'opening', 'PH')
+            picks = fv.find('k', 'lulu.', 'Mrs. GREEN APPLE', 'Frieren Season 2', 'opening', 'PH')[0]
         self.assertEqual([p['id']['videoId'] for p in picks], ['museasia001'])
 
     def test_keeps_up_to_three_official_videos(self):
         many = [item(f'off{i:08d}', f'Song Opening creditless {i}', 'Crunchyroll') for i in range(6)]
         with mock.patch.multiple(fv, search=lambda k, q, r: many, details=fake_details):
-            self.assertEqual(len(fv.find('k', 'Song', 'Artist', '', 'opening', 'PH')), fv.KEEP)
+            self.assertEqual(len(fv.find('k', 'Song', 'Artist', '', 'opening', 'PH')[0]), fv.KEEP)
 
 
 class Run(unittest.TestCase):
@@ -167,7 +171,7 @@ class Run(unittest.TestCase):
             calls.append(q)
             return fake_search(k, q, r)
         with mock.patch.object(fv, 'ROOT', tmp), mock.patch.object(fv, 'editions', lambda: iter([('2026', CSV)])), \
-                mock.patch.multiple(fv, search=counted, details=fake_details), mock.patch.dict(os.environ, {'YOUTUBE_API_KEY': key}):
+                mock.patch.multiple(fv, search=counted, details=fake_details, thumb_for=fake_thumb), mock.patch.dict(os.environ, {'YOUTUBE_API_KEY': key}):
             fv.main()
         path = os.path.join(tmp, '2026', 'data', 'videos.json')
         out = json.load(open(path, encoding='utf-8')) if os.path.exists(path) else None
@@ -196,12 +200,34 @@ class Run(unittest.TestCase):
     def test_misses_are_retried_only_after_a_week(self):
         today = datetime.date.today()
         k = 'Anime Ending of the Year 2026|Nothing Here'
-        recent = {k: {'v': fv.VERSION, 'id': None, 'checked': today.isoformat()}}
-        old = {k: {'v': fv.VERSION, 'id': None, 'checked': (today - datetime.timedelta(days=8)).isoformat()}}
+        recent = {k: {'v': fv.VERSION, 'id': None, 'thumb': '', 'checked': today.isoformat()}}
+        old = {k: {'v': fv.VERSION, 'id': None, 'thumb': '', 'checked': (today - datetime.timedelta(days=8)).isoformat()}}
         _, calls = self.run_main(existing=recent)
         self.assertFalse(any(q.startswith('Nothing Here') for q in calls))
         _, calls = self.run_main(existing=old)
         self.assertTrue(any(q.startswith('Nothing Here') for q in calls))
+
+    def test_found_videos_get_their_picture_even_without_a_key(self):
+        found = {'Anime Opening of the Year 2026|lulu.': {'v': fv.VERSION, 'id': 'credless001', 'checked': '2026-11-11'}}
+        out, calls = self.run_main(existing=found, key='')
+        self.assertEqual(calls, [])
+        self.assertEqual(out['Anime Opening of the Year 2026|lulu.']['thumb'], fake_thumb('credless001'))
+
+    def test_a_song_without_a_playable_video_still_gets_an_official_picture(self):
+        RULES['official001'] = (True, {'PH'}, None)   # Hanakage's only official video is blocked here
+        out, _ = self.run_main()
+        h = out['Anime Ending of the Year 2026|Hanakage']
+        self.assertIsNone(h['id'])
+        self.assertEqual(h['thumb'], fake_thumb('official001'))
+
+    def test_misses_from_before_pictures_are_searched_once_for_one(self):
+        today = datetime.date.today().isoformat()
+        k = 'Anime Ending of the Year 2026|Hanakage'
+        RULES['official001'] = (True, {'PH'}, None)
+        out, calls = self.run_main(existing={k: {'v': fv.VERSION, 'id': None, 'checked': today}})
+        self.assertTrue(any(q.startswith('Hanakage') for q in calls))
+        _, calls = self.run_main(existing={k: out[k]})
+        self.assertFalse(any(q.startswith('Hanakage') for q in calls), 'not searched again within the week')
 
     def test_without_a_key_nothing_happens(self):
         out, calls = self.run_main(key='')
@@ -216,8 +242,11 @@ class Run(unittest.TestCase):
         keep = {'Anime Opening of the Year 2026|lulu.': {'id': 'credless001', 'checked': '2026-11-01'}}
         with open(os.path.join(tmp, '2026', 'data', 'videos.json'), 'w', encoding='utf-8') as f:
             json.dump(keep, f)
+        keep['Anime Opening of the Year 2026|lulu.']['thumb'] = ''
+        with open(os.path.join(tmp, '2026', 'data', 'videos.json'), 'w', encoding='utf-8') as f:
+            json.dump(keep, f)
         with mock.patch.object(fv, 'ROOT', tmp), mock.patch.object(fv, 'editions', lambda: iter([('2026', CSV)])), \
-                mock.patch.object(fv, 'search', boom), mock.patch.dict(os.environ, {'YOUTUBE_API_KEY': 'k'}):
+                mock.patch.multiple(fv, search=boom, thumb_for=fake_thumb), mock.patch.dict(os.environ, {'YOUTUBE_API_KEY': 'k'}):
             self.assertEqual(fv.main(), 0)
         self.assertEqual(json.load(open(os.path.join(tmp, '2026', 'data', 'videos.json'), encoding='utf-8')), keep)
 
