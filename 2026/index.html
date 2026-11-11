@@ -630,7 +630,10 @@ document.addEventListener('contextmenu', e => { if (!(e.target.closest && e.targ
 <style>
 /* ===== Loader: a spark portal that grows, then settles onto the header's rune ring ===== */
 #portal{position:fixed;inset:0;z-index:9999;pointer-events:auto}
-#portal .bg{position:absolute;inset:0;background:radial-gradient(60% 50% at 50% 50%,#08130e,#030806 70%);transition:opacity .9s ease}
+#portal .bg{position:absolute;inset:0;background:radial-gradient(60% 50% at 50% 50%,#08130e,#030806 70%);transition:opacity .9s ease;
+  /* A hole the size of the portal: the site shows through the ring, everything outside stays dark. */
+  -webkit-mask-image:radial-gradient(circle at var(--px,50%) var(--py,50%),transparent calc(var(--pr,0px) - 16px),#000 var(--pr,0px));
+  mask-image:radial-gradient(circle at var(--px,50%) var(--py,50%),transparent calc(var(--pr,0px) - 16px),#000 var(--pr,0px))}
 #portal canvas{position:absolute;inset:0;width:100%;height:100%;transition:opacity .6s ease}
 #portal .lbl{position:absolute;left:0;right:0;top:calc(50% + 28vmin + 30px);text-align:center;transition:opacity .4s ease;
   font:400 10px/1 "Michroma",sans-serif;letter-spacing:.5em;padding-left:.5em;text-transform:uppercase;color:#c9a95a;opacity:.8;visibility:hidden}
@@ -706,13 +709,18 @@ html:not(.page-ready) body{overflow:hidden}
   // Bright arcs on the ring at uneven spacing, lengths and speeds, so nothing looks grouped.
   const ARCS = Array.from({length: 7}, () => ({at: Math.random() * 6.28, len: .15 + Math.random() * .6, sp: .6 + Math.random() * .9, o: .35 + Math.random() * .65}));
   const t0 = performance.now(); let last = t0, spin = 0, on = true, leave = null, sparks = [];
+  // The "fingertips": one point circling the ring as if tracing it with two fingers, like Dr Strange opening a
+  // portal. Sparks are densest and brightest there, and a bright trail shows the circle being drawn behind it.
+  let tip = Math.random() * Math.PI * 2;
+  const TIP_SPEED = .1;   // radians per frame at 60 fps: about one turn a second
   // where we are right now (CSS pixels)
   let opened = 0, labelPlaced = false;
   function state(now){
     const h = home(); if (!h) return null;
     if (!opened) opened = now;
-    const grow = ease((now - opened) / 1300);
-    let cx = h.cx, cy = h.cy, r = 10 + (h.r - 10) * grow, power = .25 + .75 * grow, burst = power;
+    const grow = easeIO((now - opened) / 4500);   // opens over 4.5 s, slowly at first: a point of sparks that widens into the portal
+    const outline = Math.min(1, Math.max(0, (grow - .3) / .5));   // the ring's outline only appears once it has grown
+    let cx = h.cx, cy = h.cy, r = 3 + (h.r - 3) * grow, power = .25 + .75 * grow, burst = power;
     if (leave){
       const raw = Math.min(1, (now - leave.t) / 1100), k = easeIO(raw);
       cx += (leave.cx - cx) * k; cy += (leave.cy - cy) * k; r += (leave.r - r) * k;
@@ -720,7 +728,7 @@ html:not(.page-ready) body{overflow:hidden}
       power *= 1 - k;
     }
     const fling = leave ? Math.min(1, (now - leave.t) / 700) : 0;   // grows as the loader hands over
-    return {cx, cy, r, power, burst, fling, fullR: h.r, homeY: h.cy};
+    return {cx, cy, r, power, burst, fling, outline, fullR: h.r, homeY: h.cy};
   }
   function emit(n, st){
     for (let i = 0; i < n; i++){
@@ -731,12 +739,45 @@ html:not(.page-ready) body{overflow:hidden}
         life: 1, decay: .014 + Math.random() * .026, w: .7 + Math.random() * 1.8, k: Math.random() < .2 ? .35 + Math.random() * 1.3 : 1});   // about 1 in 5 sparks is randomly dimmer or brighter
     }
   }
+  // Sparks thrown off the fingertips: faster, brighter and longer-lived, flung the way the fingers are moving.
+  function emitTip(n, st){
+    for (let i = 0; i < n; i++){
+      const a = tip - Math.random() * .3, rr = st.r + (Math.random() - .5) * st.r * .05;
+      const sp = (2.6 + Math.random() * 4.2) * (.5 + st.r / 300), out = (Math.random() - .25) * 1.6 * (st.r / 250);
+      sparks.push({x: st.cx + Math.cos(a) * rr, y: st.cy + Math.sin(a) * rr,
+        vx: -Math.sin(a) * sp + Math.cos(a) * out, vy: Math.cos(a) * sp + Math.sin(a) * out,
+        life: 1, decay: .012 + Math.random() * .022, w: 1 + Math.random() * 2, k: 1.15 + Math.random() * .5});
+    }
+  }
+  // The send-off: as the ring lands on the header, the sparks in the air drift gently straight outward (a soft
+  // push that builds up over a moment, no spin) and fade, instead of stopping dead before the fade.
+  function disperse(p, st, dt, k){
+    const dx = p.x - st.cx, dy = p.y - st.cy, d = Math.hypot(dx, dy) || 1, push = .025 * k * dt;
+    p.vx += dx / d * push; p.vy += dy / d * push;
+  }
+  // White-hot glow at the fingertips, and the trail they leave on the ring.
+  function drawTip(st){
+    const tx = st.cx + Math.cos(tip) * st.r, ty = st.cy + Math.sin(tip) * st.r;
+    const flick = .85 + Math.random() * .3, R = Math.max(10, st.r * .16) * flick, p = st.power;
+    const g = x.createRadialGradient(tx, ty, 0, tx, ty, R);
+    g.addColorStop(0, `rgba(255,250,235,${.95 * p})`); g.addColorStop(.18, `rgba(255,214,140,${.75 * p})`);
+    g.addColorStop(.5, `rgba(255,130,40,${.28 * p})`); g.addColorStop(1, 'rgba(255,70,20,0)');
+    x.fillStyle = g; x.beginPath(); x.arc(tx, ty, R, 0, 6.29); x.fill();
+    x.lineWidth = 3.2;
+    for (let j = 0; j < 14; j++){   // the trail: brightest at the fingertips, fading behind them
+      const k = 1 - j / 14;
+      x.strokeStyle = `rgba(255,${200 + 40 * k},${120 + 100 * k},${.85 * k * k * p * st.outline})`;
+      x.beginPath(); x.arc(st.cx, st.cy, st.r, tip - (j + 1) * .07, tip - j * .07); x.stroke();
+    }
+  }
   function frame(now){
     if (!on) return;
-    const dt = Math.min(2.5, (now - last) / 16.7); last = now; spin += .025 * dt;
+    const dt = Math.min(2.5, (now - last) / 16.7); last = now; spin += .025 * dt; tip += TIP_SPEED * dt;
     const st = state(now);
     if (!st){ requestAnimationFrame(frame); return; }
+    const drift = leave && !still ? ease((now - leave.t - 650) / 700) : 0;   // 0 → 1 as the ring lands
     if (!labelPlaced){ label.style.top = Math.round(st.homeY + st.fullR * 1.16 + 22) + 'px'; label.style.visibility = 'visible'; labelPlaced = true; }   // placed once, under the fully grown portal
+    box.style.setProperty('--px', st.cx + 'px'); box.style.setProperty('--py', st.cy + 'px'); box.style.setProperty('--pr', (st.r * .98) + 'px');   // the see-through hole
     x.setTransform(1, 0, 0, 1, 0, 0);
     x.clearRect(0, 0, W, H);   // a clean slate each frame: no ghost rings left behind
     x.setTransform(D, 0, 0, D, 0, 0); x.globalCompositeOperation = 'lighter';
@@ -744,25 +785,59 @@ html:not(.page-ready) body{overflow:hidden}
       const g = x.createRadialGradient(st.cx, st.cy, st.r * .82, st.cx, st.cy, st.r * 1.16);
       g.addColorStop(0, 'rgba(255,120,30,0)'); g.addColorStop(.5, `rgba(255,140,40,${.12 * st.power})`); g.addColorStop(1, 'rgba(255,60,20,0)');
       x.fillStyle = g; x.beginPath(); x.arc(st.cx, st.cy, st.r * 1.16, 0, 6.29); x.fill();
-      if (!still) emit(Math.round(16 * dt * st.burst * Math.max(.4, st.r / 200)), st);
+      if (!still){
+        const n = dt * st.burst * Math.max(.4, st.r / 200);
+        emit(Math.round(7 * n), st);        // light sparks all round the ring
+        emitTip(Math.round(9 * n), st);     // a denser spray at the fingertips (16 in all, as before the fingertips)
+      }
       x.lineWidth = 2.4; x.strokeStyle = `rgba(255,200,110,${.6 * st.power})`;
-      for (const a of ARCS){ const a0 = spin * a.sp + a.at; x.globalAlpha = a.o; x.beginPath(); x.arc(st.cx, st.cy, st.r, a0, a0 + a.len); x.stroke(); }
+      for (const a of ARCS){ const a0 = spin * a.sp + a.at; x.globalAlpha = a.o * st.outline; x.beginPath(); x.arc(st.cx, st.cy, st.r, a0, a0 + a.len); x.stroke(); }
       x.globalAlpha = 1;
+      if (!still) drawTip(st);
       if (still){ x.lineWidth = 3; x.strokeStyle = `rgba(255,170,80,${.8 * st.power})`; x.beginPath(); x.arc(st.cx, st.cy, st.r, 0, 6.29); x.stroke(); }
     }
-    x.lineCap = 'round';
+    x.lineCap = 'round'; x.lineJoin = 'round';   // smooth curves where the streak bends
     for (let i = sparks.length - 1; i >= 0; i--){
-      const p = sparks[i], nx = p.x + p.vx * dt, ny = p.y + p.vy * dt;
-      x.strokeStyle = `hsla(${18 + p.life * 30},100%,${Math.min(85, (45 + p.life * 25) * (.85 + .15 * p.k))}%,${Math.min(1, p.life * p.k)})`; x.lineWidth = (p.w * p.life + .3) * (.7 + .3 * p.k);
-      const tail = 5 + (1 - p.life) * 14;   // the tail stretches out as the spark fades
-      x.beginPath(); x.moveTo(p.x - p.vx * tail, p.y - p.vy * tail); x.lineTo(nx, ny); x.stroke();
-      p.x = nx; p.y = ny; p.vx *= .985; p.vy *= .985; p.vy += .025 * dt; p.life -= p.decay * dt;
+      const p = sparks[i];
+      // Natural spark motion. Air drag makes it shoot out fast and then slow; a little gravity arcs the path more
+      // as it slows. The streak is drawn through the spark's own last few positions, so it curves exactly as the
+      // path does and its length follows the speed (fast = long, slow = short), like motion blur.
+      if (!p.h){
+        p.h = [p.x - p.vx * 3, p.y - p.vy * 3, p.x, p.y];   // a short streak from the start
+        p.fork = !p.kid && Math.random() < .06;              // a few sparks split as they cool
+        p.splitAt = .3 + Math.random() * .3;
+      }
+      const drag = Math.pow(.977, dt);
+      p.vx *= drag; p.vy *= drag; p.vy += .05 * dt;
+      if (drift > 0) disperse(p, st, dt, drift);
+      p.x += p.vx * dt; p.y += p.vy * dt; p.life -= p.decay * dt;
+      p.h.push(p.x, p.y);
+      if (p.h.length > 18) p.h.splice(0, p.h.length - 18);   // the last 9 positions
+      // Colour by temperature: white-hot head, then yellow, orange and deep red as it cools; a slight flicker.
+      const a = Math.min(1, p.life * p.k) * (.82 + Math.random() * .18);
+      const hue = 12 + p.life * 36, light = Math.min(90, (40 + p.life * 40) * (.85 + .15 * p.k));
+      const w = p.w * (.35 + .65 * p.life) * (.7 + .3 * p.k), n = p.h.length / 2 - 1;
+      for (let j = 0; j < n; j++){   // tapered: thin and dim at the tail, thick and bright at the head
+        const t = (j + 1) / n;
+        x.strokeStyle = `hsla(${hue - (1 - t) * 10},100%,${light * (.55 + .45 * t)}%,${a * t * t})`;
+        x.lineWidth = w * (.25 + .75 * t) + .2;
+        x.beginPath(); x.moveTo(p.h[j * 2], p.h[j * 2 + 1]); x.lineTo(p.h[j * 2 + 2], p.h[j * 2 + 3]); x.stroke();
+      }
+      if (p.life > .4){ x.fillStyle = `hsla(46,100%,93%,${a * .85})`; x.beginPath(); x.arc(p.x, p.y, w * .55, 0, 6.29); x.fill(); }   // the hot head
+      if (p.fork && p.life < p.splitAt){   // the split: two or three fine, short-lived sparks fan out
+        p.fork = false;
+        for (let c = 2 + (Math.random() < .4 ? 1 : 0); c > 0; c--){
+          const ang = (Math.random() - .5) * 1.1, ca = Math.cos(ang), sa = Math.sin(ang), sp = .6 + Math.random() * .5;
+          sparks.push({x: p.x, y: p.y, vx: (p.vx * ca - p.vy * sa) * sp, vy: (p.vx * sa + p.vy * ca) * sp,
+            life: .5, decay: .03 + Math.random() * .03, w: p.w * .55, k: p.k, kid: true});
+        }
+      }
       if (p.life <= 0) sparks.splice(i, 1);
     }
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
-  // Ready = title fonts loaded, the awards drawn from the Sheet, and the header rings in place (at most 8 s, and never before the portal has opened).
+  // Ready = title fonts loaded, the awards drawn from the Sheet, and the header rings in place (at most 13 s, and never before the portal has been open 5.5 s).
   function done(){
     if (leave) return;
     toTop();   // while the portal still covers everything, make sure we're at the top
@@ -773,13 +848,14 @@ html:not(.page-ready) body{overflow:hidden}
     leave = b && w && cy > 0 && cy < innerHeight ? {t: performance.now(), cx: b.left + b.width / 2, cy, r: w * .485} : {t: performance.now(), ...home()};
     box.classList.add('leaving');
     document.documentElement.classList.add('page-ready');
-    setTimeout(() => box.classList.add('gone'), 1050);
-    setTimeout(() => { on = false; box.remove(); }, 1800);
+    setTimeout(() => box.classList.add('gone'), 1200);   // fade while the sparks are still flying apart
+    setTimeout(() => { on = false; box.remove(); }, 1950);
   }
   // Add ?portal to the address to keep the loader on screen (for previewing the effect).
   if (!/[?&]portal(=|&|$)/.test(location.search)) (function wait(){
     const age = performance.now() - t0;
-    if ((ready() && opened && performance.now() - opened > 1300) || age > 8000) done(); else setTimeout(wait, 120);
+    // Stays open at least 5.5 s (4.5 s opening + 1 s at full size), so the reveal has time to play.
+    if ((ready() && opened && performance.now() - opened > 5500) || age > 13000) done(); else setTimeout(wait, 120);
   })();
 })();
 </script>
