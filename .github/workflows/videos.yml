@@ -1,0 +1,43 @@
+name: Find opening and ending videos
+
+# Every 6 hours (and on demand from the Actions tab) looks up the official YouTube video for any new anime
+# opening or ending nominee, saves the picks in <year>/data/videos.json, and republishes the site if anything
+# was added. Needs the repository secret YOUTUBE_API_KEY (a YouTube Data API v3 key); without it, nothing happens.
+# Runs only in benburnsred/awards: the official copy picks up videos.json with everything else.
+
+on:
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: videos
+  cancel-in-progress: false
+
+jobs:
+  find:
+    if: github.repository == 'benburnsred/awards'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Find videos
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+        run: python3 tools/fetch_videos.py
+      - name: Save and republish if anything changed
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ -z "$(git status --porcelain)" ]; then echo "No new videos"; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Add opening and ending videos"
+          git pull --rebase -q origin main
+          git push
+          # A push made with this token doesn't start other workflows, so ask for the deploy directly.
+          gh workflow run pages.yml --ref main

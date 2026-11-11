@@ -845,6 +845,9 @@ html:not(.page-ready) body{overflow:hidden}
 const NOMINEES_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT3drRB6t5qgQb6EKA2cZwP7eNJpywJvxW_z9jskSucv6jBLtzgA3g93ZaRmCcaw_roiKJry41ADMf-/pub?gid=636394&single=true&output=csv';
 const SETTINGS_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT3drRB6t5qgQb6EKA2cZwP7eNJpywJvxW_z9jskSucv6jBLtzgA3g93ZaRmCcaw_roiKJry41ADMf-/pub?gid=738431832&single=true&output=csv';
 const HOSTS_CSV = 'data/hosts.csv'; // optional: name, nickname, image, role
+// Official YouTube videos for opening and ending nominees, found by the "Find opening and ending videos" GitHub
+// Action (tools/fetch_videos.py). A YouTube link typed into a nominee's link in the Sheet wins over this file.
+const VIDEOS_JSON = 'data/videos.json';
 const REFRESH_SECONDS = 60; // re-check the sheet so winners appear live during the ceremony
 
 const DEFAULTS = {title:'Anime X Angas Awards', tagline:'', date:'', venue:'', stream_url:'', vote_url:'../vote/',
@@ -867,6 +870,9 @@ const PALETTE = ['#3ee08a', '#5fe3c0', '#a3f06b', '#2fd4a0', '#7dffb9', '#c8f07a
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const yes = v => /^(true|yes|y|1|x|✓|✔|winner)$/i.test(String(v || '').trim());
+// The 11-character video id from any YouTube address (watch, youtu.be, embed, shorts), or ''.
+const ytId = u => (String(u || '').match(/(?:youtube(?:-nocookie)?\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{11})/) || [])[1] || '';
+let VIDEOS = {};
 const safeUrl = u => { u = String(u || '').trim(); return /^(https?:\/\/|\.{0,2}\/|[\w-]+\/)/i.test(u) ? u : ''; };
 const safeColor = c => /^#[0-9a-f]{3,8}$/i.test(String(c || '').trim()) ? c.trim() : '';
 const slug = s => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -919,7 +925,8 @@ function build(rows){
     if (r.category_color && !c.color) c.color = safeColor(r.category_color);
     if (r.category_image && !c.trophy) c.trophy = safeUrl(r.category_image);
     if (r.category_type === 'special') c.special = true;
-    if (r.nominee) c.noms.push({name:r.nominee, sub:r.subtitle, image:safeUrl(r.image), search:r.image_search, link:safeUrl(r.link), winner:yes(r.winner), result:r.result, avatar:/avatar/i.test(r.image_style || '')});
+    if (r.nominee) c.noms.push({name:r.nominee, sub:r.subtitle, image:safeUrl(r.image), search:r.image_search, link:safeUrl(r.link), winner:yes(r.winner), result:r.result, avatar:/avatar/i.test(r.image_style || ''),
+      video:ytId(r.link) || (VIDEOS[name + '|' + r.nominee] || {}).id || ''});
   }
   cats.forEach((c, i) => c.color ||= PALETTE[i % PALETTE.length]);
   return cats;
@@ -928,23 +935,25 @@ function build(rows){
 /* ===== Rendering ===== */
 let HOSTS = [], S = {...DEFAULTS}, CATS = [], lastKey = '', covers = store.get('aw.show.covers2', {});
 const img = n => n.image || covers[n.search] || '';
-const linkAttrs = n => n.link ? ` href="${esc(n.link)}" target="_blank" rel="noopener"` : '';
+const linkAttrs = n => n.video ? ` href="https://www.youtube.com/watch?v=${esc(n.video)}" target="_blank" rel="noopener" data-yt="${esc(n.video)}" data-yt-title="${esc(n.name)}" data-yt-sub="${esc(n.sub || '')}" aria-label="Play ${esc(n.name)}"`
+  : n.link ? ` href="${esc(n.link)}" target="_blank" rel="noopener"` : '';
+const playBadge = n => n.video ? '<span class="yt-play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>' : '';
 
 function capHTML(n, showRes){
-  const tag = n.link ? 'a' : 'div', u = img(n);
+  const tag = n.link || n.video ? 'a' : 'div', u = img(n);
   const art = n.avatar && u ? `<div class="art"></div><div class="ava"${bg(u)}></div>` : `<div class="art"${bg(u)}></div>`;
   return `<${tag} class="cap rv"${linkAttrs(n)}>${art}${u ? '' : `<div class="mono">${esc(initials(n.name))}</div>`}
-    <div class="glare"></div><div class="info"><div class="name">${esc(n.name)}</div>${n.sub ? `<div class="sub">${esc(n.sub)}</div>` : ''}${showRes && n.result ? `<div class="res">${esc(n.result)}</div>` : ''}</div></${tag}>`;
+    <div class="glare"></div>${playBadge(n)}<div class="info"><div class="name">${esc(n.name)}</div>${n.sub ? `<div class="sub">${esc(n.sub)}</div>` : ''}${showRes && n.result ? `<div class="res">${esc(n.result)}</div>` : ''}</div></${tag}>`;
 }
 
 function stageHTML(c, showRes){
   // Several winners (e.g. a top three) share the stage; everyone else goes in the nominee list.
   const ws = c.noms.filter(n => n.winner), rest = c.noms.filter(n => !n.winner);
   const others = rest.map(n => capHTML(n, showRes)).join('');
-  const cards = ws.map(w => { const u = img(w), tag = w.link ? 'a' : 'div';
+  const cards = ws.map(w => { const u = img(w), tag = w.link || w.video ? 'a' : 'div';
     const trophy = ws.length === 1 && c.trophy ? `<div class="win-trophy"${bg(c.trophy)} role="img" aria-label="${esc(c.name)} trophy"></div>` : '';
     return `<${tag} class="win"${linkAttrs(w)}><div class="blur"${bg(u)}></div>
-      <div class="poster"${bg(u)}>${u ? '' : esc(initials(w.name))}</div>
+      <div class="poster"${bg(u)}>${u ? '' : esc(initials(w.name))}${playBadge(w)}</div>
       <div class="body">${trophy}<div class="badge metal"><svg><use href="#trophy"/></svg>Winner</div>
       <div class="name"><span class="metal">${esc(w.name)}</span></div>${w.sub ? `<div class="sub">${esc(w.sub)}</div>` : ''}
       ${showRes && w.result ? `<div class="res">${esc(w.result)}</div>` : ''}</div></${tag}>`; }).join('');
@@ -1142,9 +1151,11 @@ function navUpdate(){
 /* ===== Load ===== */
 async function load(){
   try {
-    const [rows, settings, hosts] = await Promise.all([getCSV(NOMINEES_CSV), SETTINGS_CSV ? getCSV(SETTINGS_CSV).catch(() => []) : [],
-      HOSTS_CSV ? getCSV(HOSTS_CSV).catch(() => []) : []]);
-    const key = JSON.stringify([rows, settings, hosts]);
+    const [rows, settings, hosts, videos] = await Promise.all([getCSV(NOMINEES_CSV), SETTINGS_CSV ? getCSV(SETTINGS_CSV).catch(() => []) : [],
+      HOSTS_CSV ? getCSV(HOSTS_CSV).catch(() => []) : [],
+      VIDEOS_JSON ? fetch(VIDEOS_JSON, {cache:'no-store'}).then(r => r.ok ? r.json() : {}).catch(() => ({})) : {}]);
+    const key = JSON.stringify([rows, settings, hosts, videos]);
+    VIDEOS = videos && typeof videos === 'object' ? videos : {};
     HOSTS = hosts.filter(h => h.name);
     if (key === lastKey) return;
     lastKey = key;
@@ -1195,8 +1206,79 @@ async function loadCovers(){
 
 load();
 if (REFRESH_SECONDS) setInterval(load, REFRESH_SECONDS * 1000);
+
+/* ===== Theater mode: play a nominee's official video over a dimmed page ===== */
+let theaterBack = null;
+function openTheater(id, title, sub){
+  const t = $('#theater');
+  theaterBack = document.activeElement;
+  t.querySelector('.th-title').textContent = title || '';
+  t.querySelector('.th-sub').textContent = sub || '';
+  t.querySelector('.th-yt').href = 'https://www.youtube.com/watch?v=' + id;
+  // youtube-nocookie: YouTube's privacy-enhanced player sets no cookies until the visitor plays.
+  t.querySelector('.th-frame').innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0&playsinline=1" title="${esc(title)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
+  t.hidden = false;
+  document.documentElement.classList.add('theater-on');
+  requestAnimationFrame(() => t.classList.add('on'));
+  t.querySelector('.th-close').focus();
+}
+function closeTheater(){
+  const t = $('#theater');
+  if (t.hidden) return;
+  t.classList.remove('on');
+  t.querySelector('.th-frame').innerHTML = '';   // removing the player stops the video
+  t.hidden = true;
+  document.documentElement.classList.remove('theater-on');
+  if (theaterBack && theaterBack.focus) theaterBack.focus();
+}
+document.addEventListener('click', e => {
+  const a = e.target.closest && e.target.closest('[data-yt]');
+  if (a){ e.preventDefault(); openTheater(a.dataset.yt, a.dataset.ytTitle, a.dataset.ytSub); return; }
+  if (e.target.closest && (e.target.closest('.th-close') || e.target.id === 'theater')) closeTheater();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeTheater(); });
 </script>
 
+<div id="theater" role="dialog" aria-modal="true" aria-label="Video" hidden>
+  <div class="th-box">
+    <button class="th-close" type="button" aria-label="Close video">✕</button>
+    <div class="th-frame"></div>
+    <div class="th-cap"><div><div class="th-title"></div><div class="th-sub"></div></div><a class="th-yt" target="_blank" rel="noopener">Open on YouTube ↗</a></div>
+  </div>
+</div>
+
+<style>
+/* play badge on nominees that have a video */
+.yt-play{position:absolute;top:12px;right:12px;z-index:5;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;
+  background:rgba(4,10,7,.72);border:1px solid rgba(62,224,138,.75);box-shadow:0 0 18px rgba(62,224,138,.35);transition:transform .2s,background .2s}
+.yt-play svg{width:18px;height:18px;fill:#3ee08a;margin-left:2px}
+a:hover > .yt-play,a:hover .poster > .yt-play{transform:scale(1.12);background:rgba(62,224,138,.9)}
+a:hover > .yt-play svg,a:hover .poster > .yt-play svg{fill:#04110a}
+.win .poster .yt-play{top:auto;bottom:14px;right:14px;width:52px;height:52px}
+.win .poster .yt-play svg{width:22px;height:22px}
+/* theater mode */
+html.theater-on{overflow:hidden}
+#theater{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:20px;background:rgba(2,6,4,.9);
+  -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);opacity:0;transition:opacity .25s}
+#theater[hidden]{display:none}
+#theater.on{opacity:1}
+#theater .th-box{position:relative;width:min(1100px,100%,calc((100vh - 150px) * 16 / 9));transform:scale(.97);transition:transform .25s}
+#theater.on .th-box{transform:none}
+#theater .th-frame{position:relative;aspect-ratio:16/9;background:#000;box-shadow:0 0 0 1px #c99a3c,0 0 60px -10px rgba(62,224,138,.45),0 40px 90px -30px #000}
+#theater .th-frame::before,#theater .th-frame::after{content:"";position:absolute;width:22px;height:22px;pointer-events:none;border:2px solid #e9c46a}
+#theater .th-frame::before{left:-8px;top:-8px;border-right:0;border-bottom:0}
+#theater .th-frame::after{right:-8px;bottom:-8px;border-left:0;border-top:0}
+#theater iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+#theater .th-cap{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-top:14px;color:#e8f5ec}
+#theater .th-title{font:800 18px/1.25 var(--serif,inherit);letter-spacing:.02em}
+#theater .th-sub{color:#a9bcb2;font-size:13px;margin-top:3px}
+#theater .th-yt{flex:none;color:#e9c46a;font-size:13px;text-decoration:none;padding-top:3px}
+#theater .th-yt:hover{text-decoration:underline}
+#theater .th-close{position:absolute;top:-46px;right:-4px;width:38px;height:38px;border-radius:50%;cursor:pointer;
+  background:rgba(4,10,7,.8);border:1px solid #c99a3c;color:#f6e3ad;font:600 16px/1 system-ui,sans-serif}
+#theater .th-close:hover,#theater .th-close:focus-visible{background:#c99a3c;color:#04110a;outline:none}
+@media (max-width:600px){ #theater{padding:12px} #theater .th-cap{flex-direction:column;gap:6px} }
+</style>
 <div class="nebula" aria-hidden="true"></div>
 <div class="charge" aria-hidden="true"></div>
 <canvas id="embers" class="stars" aria-hidden="true"></canvas>

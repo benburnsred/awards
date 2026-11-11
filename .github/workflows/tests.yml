@@ -4,7 +4,7 @@ name: Tests
 # don't paste that Code.gs into Apps Script until it's fixed.
 on:
   push:
-    paths: ['apps-script/**', 'vote/**', 'tests/**', '.github/workflows/tests.yml']
+    paths: ['apps-script/**', 'vote/**', 'tests/**', 'tools/**', '.github/workflows/tests.yml']
   pull_request:
   workflow_dispatch:
 
@@ -20,3 +20,5 @@ jobs:
         with:
           node-version: 20
       - run: node tests/run.js
+      - name: Video finder tests
+        run: python3 -m unittest discover -s tests -p "test_*.py"

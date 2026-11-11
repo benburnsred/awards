@@ -530,6 +530,36 @@ document.addEventListener('contextmenu', e => { if (!(e.target.closest && e.targ
   <footer><div class="socials" id="socials" style="justify-content:center;margin-bottom:14px"></div>Cover art via <a href="https://anilist.co" target="_blank" rel="noopener">AniList</a> and <a href="https://jikan.moe" target="_blank" rel="noopener">Jikan</a>.</footer>
 </div>
 <div class="toast" id="toast"></div>
+<div id="theater" role="dialog" aria-modal="true" aria-label="Video" hidden>
+  <div class="th-box">
+    <button class="th-close" type="button" aria-label="Close video">✕</button>
+    <div class="th-frame"></div>
+    <div class="th-cap"><div><div class="th-title"></div><div class="th-sub"></div></div><a class="th-yt" target="_blank" rel="noopener">Open on YouTube ↗</a></div>
+  </div>
+</div>
+<style>
+html.theater-on{overflow:hidden}
+#theater{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:20px;background:rgba(2,6,4,.9);
+  -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);opacity:0;transition:opacity .25s}
+#theater[hidden]{display:none}
+#theater.on{opacity:1}
+#theater .th-box{position:relative;width:min(1100px,100%,calc((100vh - 150px) * 16 / 9));transform:scale(.97);transition:transform .25s}
+#theater.on .th-box{transform:none}
+#theater .th-frame{position:relative;aspect-ratio:16/9;background:#000;box-shadow:0 0 0 1px #c99a3c,0 0 60px -10px rgba(62,224,138,.45),0 40px 90px -30px #000}
+#theater .th-frame::before,#theater .th-frame::after{content:"";position:absolute;width:22px;height:22px;pointer-events:none;border:2px solid #e9c46a}
+#theater .th-frame::before{left:-8px;top:-8px;border-right:0;border-bottom:0}
+#theater .th-frame::after{right:-8px;bottom:-8px;border-left:0;border-top:0}
+#theater iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+#theater .th-cap{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-top:14px;color:#e8f5ec;text-align:left}
+#theater .th-title{font:800 18px/1.25 var(--serif,inherit);letter-spacing:.02em}
+#theater .th-sub{color:#a9bcb2;font-size:13px;margin-top:3px}
+#theater .th-yt{flex:none;color:#e9c46a;font-size:13px;text-decoration:none;padding-top:3px}
+#theater .th-yt:hover{text-decoration:underline}
+#theater .th-close{position:absolute;top:-46px;right:-4px;width:38px;height:38px;border-radius:50%;cursor:pointer;
+  background:rgba(4,10,7,.8);border:1px solid #c99a3c;color:#f6e3ad;font:600 16px/1 system-ui,sans-serif}
+#theater .th-close:hover,#theater .th-close:focus-visible{background:#c99a3c;color:#04110a;outline:none}
+@media (max-width:600px){ #theater{padding:12px} #theater .th-cap{flex-direction:column;gap:6px} }
+</style>
 
 <script>
 /* ===== Config ===== */
@@ -541,6 +571,9 @@ const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwz3VTQcz3j7UNm
 // Published Site and Settings tabs of the 2026 Google Sheet (testing: agonoy.ben's account).
 const NOMINEES_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT3drRB6t5qgQb6EKA2cZwP7eNJpywJvxW_z9jskSucv6jBLtzgA3g93ZaRmCcaw_roiKJry41ADMf-/pub?gid=636394&single=true&output=csv';
 const SETTINGS_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT3drRB6t5qgQb6EKA2cZwP7eNJpywJvxW_z9jskSucv6jBLtzgA3g93ZaRmCcaw_roiKJry41ADMf-/pub?gid=738431832&single=true&output=csv';
+
+// Official YouTube videos for opening and ending nominees (see VIDEOS_JSON on the edition's page).
+const VIDEOS_JSON = '../2026/data/videos.json';
 
 // true = voters also enter a one-time code from the Codes tab. false = name only (one ballot per name per category).
 const USE_VOTER_CODES = false;
@@ -580,6 +613,8 @@ function socialsHTML(){
 }
 
 const slug = s => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+// The 11-character video id from any YouTube address (watch, youtu.be, embed, shorts), or ''.
+const ytId = u => (String(u || '').match(/(?:youtube(?:-nocookie)?\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{11})/) || [])[1] || '';
 const safeUrl = u => { u = String(u || '').trim(); return /^(https?:\/\/|\.{0,2}\/|[\w-]+\/)/i.test(u) ? u : ''; };
 
 function csvUrl(u){
@@ -617,7 +652,9 @@ function isClosed(){
 const picksMax = c => c.method === 'single' ? 1 : Math.min(c.max, c.nominees.length);
 
 async function loadData(){
-  const [rows, settings] = await Promise.all([getCSV(NOMINEES_CSV), getCSV(SETTINGS_CSV).catch(() => [])]);
+  const [rows, settings, vids] = await Promise.all([getCSV(NOMINEES_CSV), getCSV(SETTINGS_CSV).catch(() => []),
+    fetch(VIDEOS_JSON, {cache:'no-store'}).then(r => r.ok ? r.json() : {}).catch(() => ({}))]);
+  const videos = vids && typeof vids === 'object' ? vids : {};
   settings.forEach(r => { if (r.key) SETTINGS[r.key.trim().toLowerCase()] = r.value; });
   EDITION = SETTINGS.title || EDITION;
   $('#socials').innerHTML = socialsHTML();
@@ -630,7 +667,8 @@ async function loadData(){
     const c = byId[id] ||= (CATEGORIES.push({id, title:r.category, blurb:'', nominees:[], method:RULES[r.method] ? r.method : 'tier',
       max:parseInt(r.max_picks, 10) || 3, opens:r.opens, closes:r.closes, locked:r.locked === 'TRUE'}), CATEGORIES[CATEGORIES.length - 1]);
     if (r.category_description && !c.blurb) c.blurb = r.category_description;
-    if (r.nominee) c.nominees.push({id:r.nominee_id || slug(r.nominee), name:r.nominee, sub:r.subtitle, image:safeUrl(r.image), q:r.image_search, link:safeUrl(r.link)});
+    if (r.nominee) c.nominees.push({id:r.nominee_id || slug(r.nominee), name:r.nominee, sub:r.subtitle, image:safeUrl(r.image), q:r.image_search, link:safeUrl(r.link),
+      video:ytId(r.link) || (videos[r.category + '|' + r.nominee] || {}).id || ''});
   }
 }
 
@@ -667,7 +705,8 @@ function cardHTML(n, badge){
   const meta = String(n.sub || '').split(' · ').filter(Boolean).slice(0, 2);
   return `<div class="card${selected === n.id ? ' sel' : ''}${badge ? ' picked' : ''}" draggable="${cat().method === 'tier'}" data-id="${n.id}" title="${esc(n.name)}${n.sub ? ' — ' + esc(n.sub) : ''}">
     ${img}${badge ? `<span class="badge">${badge}</span>` : ''}<div class="txt"><div class="song">${esc(n.name)}</div>${meta.map(m => `<div class="meta">${esc(m)}</div>`).join('')}</div>
-    ${n.link ? `<a class="play" href="${esc(n.link)}" target="_blank" rel="noopener" title="Watch / listen">▶</a>` : ''}</div>`;
+    ${n.video ? `<a class="play" href="https://www.youtube.com/watch?v=${esc(n.video)}" target="_blank" rel="noopener" title="Watch the video" aria-label="Play ${esc(n.name)}" data-yt="${esc(n.video)}" data-yt-title="${esc(n.name)}" data-yt-sub="${esc(n.sub || '')}">▶</a>`
+      : n.link ? `<a class="play" href="${esc(n.link)}" target="_blank" rel="noopener" title="Watch / listen">▶</a>` : ''}</div>`;
 }
 
 // Large preview of your pick(s) above the nominees, for the pick-one / pick-several / ranking categories.
@@ -703,7 +742,7 @@ function render(){
   $('#soonText').textContent = closed ? (startsLater ? `Voting opens ${new Date(SETTINGS.voting_opens).toLocaleString()}.` : 'Voting has closed. Thanks to everyone who voted!')
     : 'The nominees for this award haven\'t been announced yet. Check back soon, or vote in another category.';
   $('#board').hidden = !tier; $('#poolWrap').classList.toggle('picking', !tier);
-  $('#poolTitle').textContent = c.nominees.some(n => n.link) ? 'Nominees — tap ▶ to watch' : 'Nominees';
+  $('#poolTitle').textContent = c.nominees.some(n => n.link || n.video) ? 'Nominees — tap ▶ to watch' : 'Nominees';
   $('#modeBadge').hidden = live;
   $('#modeBadge').innerHTML = '<b>●</b> Demo mode — ballots stay in this browser';
   $('#cats').innerHTML = CATEGORIES.length > 1 ? CATEGORIES.map((x, i) =>
@@ -766,7 +805,36 @@ function togglePick(id){
   LS.set('aw.drafts', placements); render();
 }
 
+/* ===== Theater mode: play a nominee's official video over a dimmed page ===== */
+let theaterBack = null;
+function openTheater(id, title, sub){
+  const t = $('#theater');
+  theaterBack = document.activeElement;
+  t.querySelector('.th-title').textContent = title || '';
+  t.querySelector('.th-sub').textContent = sub || '';
+  t.querySelector('.th-yt').href = 'https://www.youtube.com/watch?v=' + id;
+  // youtube-nocookie: YouTube's privacy-enhanced player sets no cookies until the visitor plays.
+  t.querySelector('.th-frame').innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0&playsinline=1" title="${esc(title || 'Video')}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
+  t.hidden = false;
+  document.documentElement.classList.add('theater-on');
+  requestAnimationFrame(() => t.classList.add('on'));
+  t.querySelector('.th-close').focus();
+}
+function closeTheater(){
+  const t = $('#theater');
+  if (t.hidden) return;
+  t.classList.remove('on');
+  t.querySelector('.th-frame').innerHTML = '';   // removing the player stops the video
+  t.hidden = true;
+  document.documentElement.classList.remove('theater-on');
+  if (theaterBack && theaterBack.focus) theaterBack.focus();
+}
+document.addEventListener('click', e => { if (e.target.closest('.th-close') || e.target.id === 'theater') closeTheater(); }, true);
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#theater').hidden){ e.stopPropagation(); closeTheater(); } }, true);
+
 document.addEventListener('click', e => {
+  const yt = e.target.closest('[data-yt]');
+  if (yt){ e.preventDefault(); openTheater(yt.dataset.yt, yt.dataset.ytTitle, yt.dataset.ytSub); return; }
   if (e.target.closest('.play')) return;
   const card = e.target.closest('.card');
   if (card && cat().method !== 'tier'){ togglePick(card.dataset.id); return; }
