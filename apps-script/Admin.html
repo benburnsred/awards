@@ -79,8 +79,8 @@ select.no{border-color:#e3e1e8;color:var(--muted)}
 </style>
 </head>
 <body>
-<header><h1>Awards Admin</h1><div class="row"><span class="me" id="me"></span><a id="committeeLink" href="#" style="color:#e9c46a;font-size:12px">Committee page</a><button class="primary" id="publish">Publish to site</button></div></header>
-<nav id="tabs"><button data-tab="proposals">Proposals</button><button data-tab="categories" class="on">Categories</button><button data-tab="results">Results</button><button data-tab="check">Data check</button><button data-tab="settings">Settings</button><button data-tab="activity">Activity</button></nav>
+<header><h1>Awards Admin</h1><div class="row"><span class="me" id="me"></span><button class="primary" id="publish">Publish to site</button></div></header>
+<nav id="tabs"><button data-tab="categories" class="on">Categories</button><button data-tab="results">Results</button><button data-tab="check">Data check</button><button data-tab="settings">Settings</button><button data-tab="activity">Activity</button></nav>
 <div class="status" id="status"></div>
 <main id="main"><div id="loading">Loading…</div></main>
 <div id="toast"></div>
@@ -188,31 +188,13 @@ function renderCategories(){
     <div id="newcat"></div>${list || '<p class="note">No categories yet. Add the first one.</p>'}`;
 }
 
-/* ===== Proposals ===== */
-function catLabel(ref){
-  const c = STATE.categories.find(x => x.id === ref); if (c) return c.name;
-  const p = STATE.proposals.find(x => x.id === ref); return p ? p.title + ' (proposed, accept it first)' : 'Unknown category';
-}
-function renderProposals(){
-  const list = STATE.proposals;
-  return `<p class="note">What the committee proposed on the committee page, most supported first (${STATE.members} members). Accepting adds it to the official ballot under Categories; nothing goes public until you publish.</p>`
-    + (list.length ? `<div class="card"><div class="body" style="border:0"><table><tr><th>Support</th><th>Proposal</th><th>Details</th><th></th></tr>${list.map(p => {
-      const d = p.details;
-      const info = p.kind === 'category' ? (d.type === 'special' ? 'Special award' : (STATE.methods[d.method] || '').replace('N', d.max_picks || 3)) + (d.description ? ' · ' + d.description : '')
-        : p.kind === 'method' ? 'For ' + catLabel(p.category_ref) : 'In ' + catLabel(p.category_ref) + (d.subtitle ? ' · ' + d.subtitle : '');
-      return `<tr><td><b>👍 ${p.up} · 👎 ${p.down}</b></td>
-        <td><span class="tag">${p.kind}</span> <b>${esc(p.title)}</b><div class="meta">by ${esc(p.authorName)}</div></td><td class="meta">${esc(info)}</td>
-        <td class="num"><button class="icon" data-accept="${p.id}">Accept</button> <button class="icon danger" data-rejectp="${p.id}">Reject</button></td></tr>`;
-    }).join('')}</table></div></div>` : '<p class="note">No open proposals.</p>');
-}
-
 /* ===== Results ===== */
 function renderResults(){
   const cats = STATE.categories.filter(c => c.type !== 'special');
   const vi = STATE.votesInfo;
   if (vi.error) return `<div class="hint">${esc(vi.error)}. Check the votes sheet ID in Settings, and that you have access to that sheet.</div>`;
   if (!cats.length) return '<p class="note">No public-vote categories yet.</p>';
-  return '<p class="note">Only the committee sees this. Ranked by points; ties are broken by first-place picks (S tier, rank 1 or a pick). Tick the winner(s) and publish.</p>' + cats.map(c => {
+  return '<p class="note">Only admins see this. Ranked by points; ties are broken by first-place picks (S tier, rank 1 or a pick). Tick the winner(s) and publish.</p>' + cats.map(c => {
     const r = STATE.results[c.id] || {};
     const rows = nomsOf(c.id).map(n => Object.assign({n}, r[n.id] || {points:0, voters:0, top:0}))
       .sort((a, b) => b.points - a.points || b.top - a.top);
@@ -275,23 +257,10 @@ function renderActivity(){
     `<tr><td class="meta">${esc(new Date(l.Timestamp).toLocaleString())}</td><td>${esc(l.Email)}</td><td>${esc(l.Action)} <span class="meta">${esc(l.Details)}</span></td></tr>`).join('') || '<tr><td colspan="3" class="note">Nothing yet.</td></tr>'}</table></div></div>`;
 }
 
-// Address of another page of this web app. The page itself runs in a frame on a googleusercontent.com address, so a
-// relative link would open that frame on its own (a blank page). The browser's referrer is the real /exec address;
-// the server's own idea of it is the fallback.
 // Never write two slashes in a row in this script outside a comment: Google's page loader treats them as the start
 // of a comment and drops the rest of the line, even inside text (write &#47;&#47; in HTML instead).
-function pageUrl(page){
-  let base = STATE.url || '';
-  try {
-    const u = new URL(document.referrer), i = u.pathname.indexOf('/exec');
-    if (u.hostname === 'script.google.com' && u.pathname.indexOf('/macros/') >= 0 && i > 0) base = u.origin + u.pathname.slice(0, i + 5);
-  } catch (e){}
-  return base ? base + '?page=' + page : '#';
-}
-
 function render(){
   $('#me').textContent = STATE.email;
-  $('#committeeLink').href = pageUrl('committee');
   const st = STATE.settings, cats = STATE.categories;
   const ballots = cats.reduce((n, c) => n + (Number(c.ballots) || 0), 0);
   $('#status').innerHTML = [
@@ -302,14 +271,12 @@ function render(){
       return `<span class="pill on"><i></i>Voting open${c ? ' until ' + c.toLocaleString() : ''}</span>`; })(),
     st.reveal_winners === 'TRUE' ? '<span class="pill on"><i></i>Winners revealed</span>' : '<span class="pill"><i></i>Winners hidden</span>',
     STATE.unpublished ? '<span class="pill warn"><i></i>Unpublished changes</span>' : '<span class="pill on"><i></i>Site up to date</span>',
-    `<span class="pill">${cats.length} categories · ${STATE.nominees.length} nominees · ${ballots} ballots</span>`,
-    STATE.proposals.length ? `<span class="pill warn" style="cursor:pointer" data-tab="proposals"><i></i>${STATE.proposals.length} proposals to review</span>` : ''
+    `<span class="pill">${cats.length} categories · ${STATE.nominees.length} nominees · ${ballots} ballots</span>`
   ].join('');
   $('#publish').classList.toggle('dirty', !!STATE.unpublished);
   $('#publish').title = STATE.unpublished ? 'Changes since the last publish are not on the website yet' : 'The website is up to date';
   document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === TAB));
-  $('[data-tab=proposals]').textContent = STATE.proposals.length ? `Proposals (${STATE.proposals.length})` : 'Proposals';
-  $('#main').innerHTML = {proposals:renderProposals, categories:renderCategories, results:renderResults, check:renderDataCheck, settings:renderSettings, activity:renderActivity}[TAB]();
+  $('#main').innerHTML = {categories:renderCategories, results:renderResults, check:renderDataCheck, settings:renderSettings, activity:renderActivity}[TAB]();
   document.querySelectorAll('.catform').forEach(f => {
     syncForm(f);
     const c = STATE.categories.find(x => x.id === f.dataset.id);
@@ -362,8 +329,6 @@ document.addEventListener('click', e => {
   if ('cancelNom' in t.dataset){ EDIT_NOM = null; render(); return; }
   if (t.dataset.move){ e.stopPropagation(); call('adminMoveCategory', t.dataset.move, Number(t.dataset.dir)); return; }
   if (t.dataset.unlock){ if (confirm('Unlock this category? Changing nominees after people have voted can make results unfair.')) call('adminUnlockCategory', t.dataset.unlock); return; }
-  if (t.dataset.accept){ call('adminDecideProposal', t.dataset.accept, 'accept').then(s => s && toast('Accepted: added to the official ballot')); return; }
-  if (t.dataset.rejectp){ if (confirm('Reject this proposal?')) call('adminDecideProposal', t.dataset.rejectp, 'reject'); return; }
   if (t.dataset.editnom){ EDIT_NOM = t.dataset.editnom; render(); return; }
   if (t.dataset.delnom){ if (confirm('Delete this nominee?')) call('adminDeleteNominee', t.dataset.delnom); return; }
   if (t.dataset.delcat){ if (confirm('Delete this category and all its nominees?')){ OPEN = null; call('adminDeleteCategory', t.dataset.delcat); } return; }

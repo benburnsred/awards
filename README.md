@@ -1,6 +1,6 @@
 # Anime X Angas Awards
 
-Website, ballot and committee tools for the Anime X Angas community awards. Live at https://benburnsred.github.io/awards/
+Website, ballot and admin tools for the Anime X Angas community awards. Live at https://benburnsred.github.io/awards/
 
 **First time setting up the Google Sheet? Follow [SETUP.md](SETUP.md) step by step.**
 
@@ -10,7 +10,6 @@ Website, ballot and committee tools for the Anime X Angas community awards. Live
 | Awards 2026 | https://benburnsred.github.io/awards/2026/ | Current edition: voting open, winners hidden until the ceremony |
 | Latest awards | https://benburnsred.github.io/awards/ | Forwards to the newest edition (currently 2026) |
 | Ballot | https://benburnsred.github.io/awards/vote/ | Tier-list voting, saved to a private Google Sheet |
-| Committee page | https://benburnsred.github.io/awards/committee/ | Short link to the committee's proposals page (Google sign-in) |
 | Admin dashboard | https://benburnsred.github.io/awards/admin/ | Short link to the admin dashboard (Google sign-in, admins only) |
 
 # Awards site (`<year>/index.html`)
@@ -161,20 +160,9 @@ The Results tab is hidden (`SHOW_RESULTS_TAB = false`) until it's decided how re
 
 These are popular 2026 anime songs from the Billboard JAPAN Hot Animation mid-year chart and the Anime Corner and Anime!Anime! seasonal fan polls. Treat them as placeholder data. "IRIS OUT" is a movie theme rather than a TV opening.
 
-# Committee page (2026 onwards)
-
-Where the committee argues out what goes on the ballot: https://benburnsred.github.io/awards/committee/ (forwards to `…/exec?page=committee`, the same deployment as the admin dashboard).
-
-- **Propose** a category (name, type, voting method), a nominee (for an official or a proposed category), or a different voting method for an official category. Duplicates are refused.
-- **Vote** 👍 / 👎 on any open proposal: one vote per member, changeable, and the proposer's 👍 is added automatically. Everyone can see who voted which way.
-- **Comment** on proposals to make the case.
-- See the **Official ballot** so far, and every **Decided** proposal.
-
-Admins see the proposals ranked by support in the dashboard's **Proposals** tab and **Accept** (added to the official ballot) or **Reject** them. Accepting a proposed category carries its nominee proposals over to it. Who's an admin is set by the `role` column of the `Committee` tab (`admin` or `member`), so the dashboard can be handed to committee chairs by making them admins.
-
 # Admin dashboard (2026 onwards)
 
-A simple admin page for the committee, served by the same Apps Script (`apps-script/Code.gs` + `apps-script/Admin.html`). The committee can:
+The committee agrees the categories and nominees in its own shared spreadsheet, and sends thumbnails to an admin. An admin then enters them here. The dashboard is served by the Apps Script (`apps-script/Code.gs` + `apps-script/Admin.html`). Who is an admin is set by the `role` column of the `Committee` tab. Admins can:
 
 - **Create categories:** name, description, and type:
   - **Public vote:** appears on the ballot.
@@ -184,7 +172,7 @@ A simple admin page for the committee, served by the same Apps Script (`apps-scr
 - **Automatic posters:** a nominee saved with an anime title and no picture gets its poster from AniList (then MyAnimeList) straight away. **Find posters** fills in any that are missing. Pictures that live elsewhere are downloaded into the site when the edition is archived.
 - **Add, edit and delete nominees:** with picture, subtitle, anime title for an automatic poster, and a watch/listen link. Categories and nominees that already have votes can't be deleted.
 - **Reorder categories.**
-- **See live results (committee only):** points, voters and first-place picks. Ties are flagged, and the committee ticks the winner(s).
+- **See live results (admins only):** points, voters and first-place picks. Ties are flagged, and the committee ticks the winner(s).
 - **Edit event settings:** title, date, voting open, reveal winners, social links.
 - **Publish to site:** copies categories, nominees and winners to the `Site` tab, which the public awards page and ballot read.
 - **Activity log:** who changed what.
@@ -193,12 +181,12 @@ A simple admin page for the committee, served by the same Apps Script (`apps-scr
 
 1. Create a new Google Sheet for the edition. Open **Extensions → Apps Script**, then:
    - paste `Code.gs`
-   - add two HTML files, named `Admin` and `Committee`, with the contents of `Admin.html` and `Committee.html`
+   - add an HTML file named `Admin` with the contents of `Admin.html`
    - run `setup`
-2. In the `Committee` tab, list each member's Google email, name and role (`admin` or `member`). Share the Sheet with them as **Editor**.
+2. In the `Committee` tab, list each admin's Google email, name and role `admin`. Share the Sheet with them as **Editor**.
 3. Make two deployments: **Deploy → New deployment → Web app**, once with each of these settings:
    - **Public:** Execute as *Me*, access *Anyone*. Paste this URL into `APPS_SCRIPT_URL` in `vote/index.html`.
-   - **Committee:** Execute as *User accessing the web app*, access *Anyone with Google account*. Committee page: this URL + `?page=committee`; admin dashboard: this URL + `?page=admin`.
+   - **Admin:** Execute as *User accessing the web app*, access *Anyone with Google account*. Admin dashboard: this URL + `?page=admin`.
 4. Publish the data to the site: **File → Share → Publish to web**, once for the `Site` tab and once for the `Settings` tab, choosing CSV each time. Put the two links in:
    - `NOMINEES_CSV` / `SETTINGS_CSV` at the top of `2026/index.html`
    - the same two variables in `vote/index.html`
@@ -229,20 +217,29 @@ Votes can live in a separate Google Sheet, for example an existing one:
 | value | tier letter, rank number, or "pick" | — |
 | points | points for this row | tier letters score their tier points, anything else 1 |
 
-The Settings tab shows which fields are still unmapped. New ballots are written with readable names into a re-mapped sheet, and with ids into the built-in layout. Committee members need view access to the votes sheet to see results. An Excel file has to be converted first (open it in Google Drive → **File → Save as Google Sheets**). For a sheet that's shaped differently, such as one row per ballot like Google Forms, send it over and an adapter can be added.
+The Settings tab shows which fields are still unmapped. New ballots are written with readable names into a re-mapped sheet, and with ids into the built-in layout. Admins need view access to the votes sheet to see results. An Excel file has to be converted first (open it in Google Drive → **File → Save as Google Sheets**). For a sheet that's shaped differently, such as one row per ballot like Google Forms, send it over and an adapter can be added.
 
 ## Hosting
 
 - **Now (testing and development):** the Google Sheet and Apps Script run on the repo owner's personal Google account.
   - Sheet: the private "AxA Awards 2026" Google Sheet in the owner's Drive (its link isn't published here; ask the owner or an admin).
-  - Committee page: https://benburnsred.github.io/awards/committee/
   - Admin dashboard: https://benburnsred.github.io/awards/admin/
-  - Both short links forward to the committee deployment. Its full URL is `COMMITTEE_APP` in [`committee/index.html`](committee/index.html) and [`admin/index.html`](admin/index.html).
+  - The short link forwards to the admin deployment. Its full URL is `ADMIN_APP` in [`admin/index.html`](admin/index.html).
   - The 2026 page and the ballot read that Sheet's published Site and Settings tabs, and send votes to its public deployment.
 - **Production:** everything moves to **animexangas@gmail.com**: the Sheet, the Apps Script deployments, and this repository (Settings → Transfer; the site then lives at animexangas.github.io/awards/).
 
 To move the Sheet:
 1. Transfer ownership of the Sheet (Share → *Transfer ownership*), or make a fresh copy under animexangas.
 2. Signed in as animexangas, create both web app deployments again. Deployments run as the account that made them, so the URLs change.
-3. Update `APPS_SCRIPT_URL` and the published CSV links in `vote/index.html` and the edition's `index.html`, and `COMMITTEE_APP` in `committee/index.html` and `admin/index.html` (the short links then point at the new deployment).
-4. Clear test data (`Votes`, `Proposals`, `ProposalVotes`, `Comments`, `Log`) before launch.
+3. Update `APPS_SCRIPT_URL` and the published CSV links in `vote/index.html` and the edition's `index.html`, and `ADMIN_APP` in `admin/index.html` (the short link then points at the new deployment).
+4. Clear test data (`Votes`, `Log`) before launch.
+
+# Tests
+
+`tests/` holds unit tests for the voting script (`apps-script/Code.gs`): scoring, one ballot per name, voting window, voter codes, Discord passes, the flood limit, the Data check and the admin-only rule. They run against a pretend Google Sheet, so nothing real is touched.
+
+- **In a browser:** open https://benburnsred.github.io/awards/tests/ (or `tests/index.html` from a local server). Every test shows as passed or failed.
+- **On GitHub:** they run on every change (`.github/workflows/tests.yml`); a red ✗ next to a commit means a test failed.
+- **With Node:** `node tests/run.js`
+
+Run them before pasting a new `Code.gs` into Apps Script.

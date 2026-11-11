@@ -1,13 +1,15 @@
 /**
- * Anime X Angas Awards — Google Sheets backend and committee dashboard (2026 onwards).
+ * Anime X Angas Awards — Google Sheets backend and admin dashboard (2026 onwards).
  *
  * Bound to a private Google Sheet (Extensions → Apps Script) holding one edition. Two web app deployments of
  * this same script (see README.md):
- *   Public   — Execute as: Me · Who has access: Anyone. Accepts ballots from the public ballot page.
- *   Committee — Execute as: User accessing · Who has access: Anyone with Google account.
- *               ?page=committee  committee page: propose categories, nominees and voting methods, vote and comment
- *               ?page=admin      admin dashboard: accept proposals, manage the official ballot, results, publish
- *               Everyone must be in the Committee tab and have edit access to the Sheet; role admin unlocks ?page=admin.
+ *   Public — Execute as: Me · Who has access: Anyone. Accepts ballots from the public ballot page.
+ *   Admin  — Execute as: User accessing · Who has access: Anyone with Google account.
+ *            ?page=admin  admin dashboard: manage the official ballot, results, data check, settings, publish.
+ *            Admins must be listed in the Committee tab with role admin and have edit access to the Sheet.
+ *
+ * Categories and nominees are agreed by the committee outside this tool (a shared spreadsheet) and entered in the
+ * admin dashboard by an admin.
  *
  * Tabs (created by setup()):
  *   Settings   — key | value                 (title, date, vote_open, reveal_winners, …)
@@ -22,12 +24,7 @@
  *                existing sheet with its own headers can be used as the datasource.
  *   VotesMapping — field | column   (timestamp, voter, code, category, nominee, value, points)
  *   Codes      — optional voter codes: Code | Category | Used By | Used At
- *   Committee  — email | name | role   (role: admin or member; if nobody is admin, the first row is)
- *   Proposals  — id | kind | category_ref | title | details | author | created | status | decided_by
- *                kind: category, nominee or method; category_ref: official category id, or a category proposal id
- *                status: open, accepted, rejected or withdrawn
- *   ProposalVotes — proposal_id | email | vote | at   (vote: up or down, one per member per proposal)
- *   Comments   — id | proposal_id | email | text | at   (no longer used: comments were removed from the committee page)
+ *   Committee  — email | name | role   (who may open the admin dashboard: role admin; if nobody is admin, the first row is)
  *   Log        — Timestamp | Email | Action | Details
  *   Site       — written by Publish: the public pages read this tab (published to the web as CSV)
  */
@@ -60,9 +57,6 @@ const TABS = {
   Codes: ['Code', 'Category', 'Used By', 'Used At'],
   VotesMapping: ['field', 'column'],
   Committee: ['email', 'name', 'role'],
-  Proposals: ['id', 'kind', 'category_ref', 'title', 'details', 'author', 'created', 'status', 'decided_by'],
-  ProposalVotes: ['proposal_id', 'email', 'vote', 'at'],
-  Comments: ['id', 'proposal_id', 'email', 'text', 'at'],
   Log: ['Timestamp', 'Email', 'Action', 'Details']
 };
 const SITE_HEADERS = ['category', 'category_description', 'category_color', 'nominee', 'subtitle', 'image', 'image_search',
@@ -238,9 +232,9 @@ function appendVotes(list) {
 
 function doGet(e) {
   const p = (e && e.parameter) || {};
+  // ?page=committee is the retired committee page: old links land on the admin dashboard (admins only).
   if (p.page === 'admin' || p.page === 'committee') {
-    return HtmlService.createHtmlOutputFromFile(p.page === 'admin' ? 'Admin' : 'Committee')
-      .setTitle(p.page === 'admin' ? 'Awards Admin' : 'Awards Committee')
+    return HtmlService.createHtmlOutputFromFile('Admin').setTitle('Awards Admin')
       .addMetaTag('viewport', 'width=device-width, initial-scale=1');
   }
   if (p.state && (p.code || p.error)) return discordCallback(p);   // coming back from "Sign in with Discord"
@@ -365,11 +359,16 @@ const NAME_TAKEN = 'This name has already voted. Votes can\'t be changed. If thi
 function recordBallot(b) {
   const voter = cleanVoter(b.voter);
   let code = String(b.code || '').trim().toUpperCase().slice(0, 20);
+  // "DC-…" codes mark a Discord sign-in and are only ever set here from a signed pass: a typed one is dropped,
+  // so nobody can skip the voter-code check or pose as a Discord account by typing it.
+  if (/^DC-/.test(code)) code = '';
+  let discord = false;
   // Signed in with Discord: record a scrambled form of the account (the voter still chooses the name shown).
   if (b.dc) {
     const pass = readPass(b.dc);
     if (!pass) return {ok: false, error: 'Your Discord sign-in has expired. Sign in again, or vote without Discord.'};
     code = 'DC-' + pass.h;
+    discord = true;
   }
   const items = Array.isArray(b.ballots) ? b.ballots.slice(0, 50) : [];
   if (!voter) return {ok: false, error: 'Please enter your name'};
@@ -401,7 +400,7 @@ function recordBallot(b) {
 
   // Voter codes: if the Codes sheet lists any, a valid code that hasn't voted yet is required.
   const codeRows = sheet('Codes').getDataRange().getValues().slice(1);
-  if (codeRows.length && !/^DC-/.test(code)) {
+  if (codeRows.length && !discord) {
     const mine = codeRows.filter(r => String(r[0]).toUpperCase() === code);
     if (!code || !mine.some(r => !r[1])) return {ok: false, error: 'Unknown voter code'};
     if (mine.some(r => r[1])) return {ok: false, error: 'This code has already voted'};
@@ -425,15 +424,15 @@ function tally(categoryId) {
   return categoryId ? (out[categoryId] || {}) : out;
 }
 
-/* ===== Committee dashboard (called from Admin.html with google.script.run) ===== */
+/* ===== Admin dashboard (called from Admin.html with google.script.run) ===== */
 
-// The signed-in member, {email, name, admin}, or an error if they're not in the Committee tab.
+// The signed-in person, {email, name, admin}, or an error if they're not in the Committee tab.
 function currentMember() {
   const email = (Session.getActiveUser().getEmail() || '').toLowerCase();
   const rows = readTable('Committee').filter(r => r.email.trim());
   const me = rows.find(r => r.email.trim().toLowerCase() === email);
   if (!email || !me) {
-    throw new Error('Not on the committee list' + (email ? ' (' + email + ')' : ' — open the Committee deployment link, signed in to Google'));
+    throw new Error('Not on the admin list' + (email ? ' (' + email + ')' : ' — open the admin link, signed in to Google'));
   }
   const anyAdmin = rows.some(r => String(r.role).trim().toLowerCase() === 'admin');
   const admin = anyAdmin ? String(me.role).trim().toLowerCase() === 'admin' : rows[0] === me;
@@ -441,9 +440,9 @@ function currentMember() {
 }
 
 // Admin dashboard functions: admins only.
-function requireCommittee() {
+function requireAdmin() {
   const m = currentMember();
-  if (!m.admin) throw new Error('Admins only. Use the committee page (?page=committee) to propose and vote.');
+  if (!m.admin) throw new Error('Admins only');
   return m.email;
 }
 
@@ -451,18 +450,8 @@ function log(email, action, details) {
   appendRow('Log', [new Date(), email, action, cell(String(details || '').slice(0, 500))]);
 }
 
-// This deployment's /exec address. The pages run inside a frame on another Google domain, so a link such as
-// "?page=admin" would point at that frame instead of the web app; the pages build their links from this.
-function appUrl() {
-  try {
-    return ScriptApp.getService().getUrl() || '';
-  } catch (err) {
-    return '';
-  }
-}
-
 function adminState() {
-  const email = requireCommittee();
+  const email = requireAdmin();
   const categories = readTable('Categories').sort((a, b) => Number(a.order) - Number(b.order));
   const counts = {};
   let votes = [], votesInfo;
@@ -480,14 +469,11 @@ function adminState() {
   });
   return {
     email: email,
-    url: appUrl(),
     methods: METHODS,
     settings: settingsMap(),
     categories: categories.map(c => Object.assign(c, {ballots: Object.keys(counts[c.id] || {}).length})),
     nominees: readTable('Nominees'),
     results: votesInfo.error ? {} : tally(),
-    proposals: proposalList(currentMember().email).filter(x => x.status === 'open'),
-    members: readTable('Committee').filter(r => r.email.trim()).length,
     votesInfo: votesInfo,
     log: readTable('Log').slice(-30).reverse(),
     unpublished: hasUnpublishedChanges()
@@ -495,6 +481,7 @@ function adminState() {
 }
 
 // True when categories, nominees or winners changed since the last Publish (settings go live without publishing).
+// The proposal actions are from the retired committee page: old Log rows may still hold them.
 function hasUnpublishedChanges() {
   const log = readTable('Log');
   let last = -1;
@@ -503,7 +490,7 @@ function hasUnpublishedChanges() {
 }
 
 function adminSaveCategory(c) {
-  const email = requireCommittee();
+  const email = requireAdmin();
   return withLock(() => {
     const rows = readTable('Categories');
     const name = String(c.name || '').trim();
@@ -530,7 +517,7 @@ function adminSaveCategory(c) {
 }
 
 function adminDeleteCategory(id) {
-  const email = requireCommittee();
+  const email = requireAdmin();
   return withLock(() => {
     const rows = readTable('Categories');
     const c = rows.find(r => r.id === id);
@@ -544,7 +531,7 @@ function adminDeleteCategory(id) {
 }
 
 function adminMoveCategory(id, dir) {
-  const email = requireCommittee();
+  const email = requireAdmin();
   return withLock(() => {
     const rows = readTable('Categories').sort((a, b) => Number(a.order) - Number(b.order));
     const i = rows.findIndex(r => r.id === id), j = i + (dir < 0 ? -1 : 1);
@@ -581,7 +568,7 @@ function findPoster(titles) {
 
 // Fills in the picture of every nominee that has an anime title but no picture yet.
 function adminFillPosters() {
-  const email = requireCommittee();
+  const email = requireAdmin();
   return withLock(() => {
     const rows = readTable('Nominees');
     let found = 0, missed = [];
@@ -599,7 +586,7 @@ function adminFillPosters() {
 }
 
 function adminSaveNominee(n) {
-  const email = requireCommittee();
+  const email = requireAdmin();
   return withLock(() => {
     const rows = readTable('Nominees');
     const name = String(n.name || '').trim();
@@ -621,7 +608,7 @@ function adminSaveNominee(n) {
 }
 
 function adminDeleteNominee(id) {
-  const email = requireCommittee();
+  const email = requireAdmin();
   return withLock(() => {
     const rows = readTable('Nominees');
     const n = rows.find(r => r.id === id);
@@ -636,7 +623,7 @@ function adminDeleteNominee(id) {
 
 // Marks the given nominees as the category's winner(s); an empty list clears the winners.
 function adminSetWinners(categoryId, nomineeIds) {
-  const email = requireCommittee();
+  const email = requireAdmin();
   return withLock(() => {
     const rows = readTable('Nominees');
     rows.forEach(r => { if (r.category_id === categoryId) r.winner = nomineeIds.indexOf(r.id) >= 0 ? 'TRUE' : ''; });
@@ -647,7 +634,7 @@ function adminSetWinners(categoryId, nomineeIds) {
 }
 
 function adminSaveSettings(values) {
-  const email = requireCommittee();
+  const email = requireAdmin();
   return withLock(() => {
     const current = settingsMap();
     Object.keys(values).forEach(k => { if (/^[a-z_]+$/.test(k)) current[k] = String(values[k]); });
@@ -659,7 +646,7 @@ function adminSaveSettings(values) {
 
 // Copies categories and nominees into the Site tab, which the public awards page and ballot read.
 function adminPublish() {
-  const email = requireCommittee();
+  const email = requireAdmin();
   return withLock(() => {
     const cats = readTable('Categories').sort((a, b) => Number(a.order) - Number(b.order));
     const noms = readTable('Nominees');
@@ -686,7 +673,7 @@ function adminPublish() {
 }
 
 function adminUnlockCategory(id) {
-  const email = requireCommittee();
+  const email = requireAdmin();
   return withLock(() => {
     const rows = readTable('Categories');
     const c = rows.find(r => r.id === id);
@@ -694,206 +681,6 @@ function adminUnlockCategory(id) {
     c.locked = '';
     writeTable('Categories', TABS.Categories, rows);
     log(email, 'unlock category', c.name);
-    return adminState();
-  });
-}
-
-/* ===== Committee page: proposals, votes and comments ===== */
-
-function parseDetails(x) {
-  try { return JSON.parse(x || '{}'); } catch (err) { return {}; }
-}
-
-// One proposal as the pages show it: vote counts, who voted which way, and the viewer's own vote.
-function proposalView(p, votes, email, who) {
-  const v = votes.filter(x => x.proposal_id === p.id);
-  const mine = v.find(x => x.email === email);
-  return Object.assign({}, p, {details: parseDetails(p.details), authorName: who(p.author),
-    up: v.filter(x => x.vote === 'up').length, down: v.filter(x => x.vote === 'down').length,
-    upBy: v.filter(x => x.vote === 'up').map(x => who(x.email)), downBy: v.filter(x => x.vote === 'down').map(x => who(x.email)),
-    mine: mine ? mine.vote : ''});
-}
-
-// Member email → display name, from the Committee tab.
-function memberNames() {
-  const names = {};
-  readTable('Committee').forEach(r => { names[r.email.trim().toLowerCase()] = r.name || r.email.split('@')[0]; });
-  return e => names[String(e).toLowerCase()] || String(e).split('@')[0];
-}
-
-// Proposals with their vote counts and the viewer's own vote, best-supported first.
-function proposalList(email) {
-  const votes = readTable('ProposalVotes'), who = memberNames();
-  return readTable('Proposals').map(p => proposalView(p, votes, email, who))
-    .sort((a, b) => (b.up - b.down) - (a.up - a.down) || String(a.created).localeCompare(String(b.created)));
-}
-
-function committeeState() {
-  const m = currentMember();
-  const cats = readTable('Categories').sort((a, b) => Number(a.order) - Number(b.order));
-  const noms = readTable('Nominees');
-  return {
-    me: m,
-    url: appUrl(),
-    methods: METHODS,
-    members: readTable('Committee').filter(r => r.email.trim()).length,
-    categories: cats.map(c => ({id: c.id, name: c.name, description: c.description, type: c.type, method: c.method,
-      max_picks: c.max_picks, locked: c.locked, nominees: noms.filter(n => n.category_id === c.id).map(n => n.name)})),
-    proposals: proposalList(m.email)
-  };
-}
-
-function cleanText(v, max) {
-  return String(v || '').replace(/\s+/g, ' ').trim().slice(0, max);
-}
-
-// p: {kind, category_ref, title, description, type, method, max_picks, subtitle, link, image}
-function committeePropose(p) {
-  const m = currentMember();
-  return withLock(() => {
-    const kind = ['category', 'nominee', 'method'].indexOf(p.kind) >= 0 ? p.kind : '';
-    if (!kind) throw new Error('Unknown proposal type');
-    const cats = readTable('Categories'), props = readTable('Proposals');
-    const details = {};
-    let title = cleanText(p.title, 100), ref = String(p.category_ref || '');
-    if (kind === 'category') {
-      if (!title) throw new Error('Give the category a name');
-      details.description = cleanText(p.description, 300);
-      details.type = p.type === 'special' ? 'special' : 'vote';
-      details.method = METHODS[p.method] ? p.method : 'tier';
-      details.max_picks = String(parseInt(p.max_picks, 10) || '');
-      ref = '';
-    } else {
-      const official = cats.find(c => c.id === ref);
-      const proposed = props.find(x => x.id === ref && x.kind === 'category' && x.status === 'open');
-      if (!official && !proposed) throw new Error('Pick a category');
-      if (kind === 'method') {
-        if (!official) throw new Error('Voting methods can be proposed for official categories; for a proposed category, comment on it instead');
-        details.method = METHODS[p.method] ? p.method : 'tier';
-        details.max_picks = String(parseInt(p.max_picks, 10) || '');
-        title = METHODS[details.method].replace('N', details.max_picks || 3);
-      } else {
-        if (!title) throw new Error('Name the nominee');
-        details.subtitle = cleanText(p.subtitle, 100);
-        details.link = cleanText(p.link, 300);
-        details.image = cleanText(p.image, 300);
-      }
-      if (official && official.locked === 'TRUE' && kind !== 'method') throw new Error('That category is locked for voting');
-    }
-    const dup = props.some(x => x.status === 'open' && x.kind === kind && x.category_ref === ref && x.title.toLowerCase() === title.toLowerCase());
-    if (dup) throw new Error('That has already been proposed. Vote on it instead.');
-    const id = newId(), now = new Date().toISOString();
-    appendRow('Proposals', [id, kind, ref, cell(title), JSON.stringify(details), m.email, now, 'open', '']);
-    appendRow('ProposalVotes', [id, m.email, 'up', now]); // proposers back their own idea
-    log(m.email, 'propose ' + kind, title);
-    // Only the new proposal goes back; the page adds it to what it already shows (much faster than resending everything).
-    const p = {id: id, kind: kind, category_ref: ref, title: title, details: JSON.stringify(details), author: m.email,
-      created: now, status: 'open', decided_by: ''};
-    return {proposal: proposalView(p, [{proposal_id: id, email: m.email, vote: 'up'}], m.email, memberNames())};
-  });
-}
-
-// vote: 'up', 'down', or '' to clear. One vote per member per proposal.
-// Only this member's row changes (no rewriting the whole tab), and only this proposal's counts go back.
-function committeeVote(id, vote) {
-  const m = currentMember();
-  return withLock(() => {
-    const p = readTable('Proposals').find(x => x.id === id);
-    if (!p || p.status !== 'open') throw new Error('This proposal is closed');
-    vote = vote === 'up' || vote === 'down' ? vote : '';
-    const sh = sheet('ProposalVotes'), values = sh.getDataRange().getValues();
-    let row = -1;
-    for (let i = 1; i < values.length; i++) {
-      if (String(values[i][0]) === id && String(values[i][1]).toLowerCase() === m.email) { row = i + 1; break; }
-    }
-    const now = new Date().toISOString();
-    if (row > 0 && vote) sh.getRange(row, 3, 1, 2).setValues([[vote, now]]);
-    else if (row > 0) sh.deleteRow(row);
-    else if (vote) sh.appendRow([id, m.email, vote, now]);
-    forget('ProposalVotes');
-    return proposalView(p, readTable('ProposalVotes'), m.email, memberNames());
-  });
-}
-
-function committeeWithdraw(id) {
-  const m = currentMember();
-  return withLock(() => {
-    const rows = readTable('Proposals');
-    const p = rows.find(x => x.id === id);
-    if (!p || p.author !== m.email || p.status !== 'open') throw new Error('Only the person who proposed it can withdraw it');
-    p.status = 'withdrawn';
-    writeTable('Proposals', TABS.Proposals, rows);
-    log(m.email, 'withdraw proposal', p.title);
-    return {id: id, status: 'withdrawn'};
-  });
-}
-
-// Move an open nominee proposal to another category (an official one, or a proposed category that's still open).
-// Allowed for the person who proposed it and for admins. Votes stay with it. Only its category cell is written.
-function committeeMoveProposal(id, ref) {
-  const m = currentMember();
-  return withLock(() => {
-    const props = readTable('Proposals'), p = props.find(x => x.id === id);
-    if (!p || p.status !== 'open') throw new Error('This proposal is closed');
-    if (p.kind !== 'nominee') throw new Error('Only nominees can be moved to another category');
-    if (p.author !== m.email && !m.admin) throw new Error('Only the person who proposed it, or an admin, can change its category');
-    ref = String(ref || '');
-    if (ref === p.category_ref) return proposalView(p, readTable('ProposalVotes'), m.email, memberNames());
-    const official = readTable('Categories').find(c => c.id === ref);
-    const proposed = props.find(x => x.id === ref && x.kind === 'category' && x.status === 'open');
-    if (!official && !proposed) throw new Error('Pick a category');
-    if (official && official.locked === 'TRUE') throw new Error('That category is locked for voting');
-    if (props.some(x => x.status === 'open' && x.kind === 'nominee' && x.category_ref === ref && x.title.toLowerCase() === p.title.toLowerCase()))
-      throw new Error('That nominee is already proposed in that category');
-    const from = p.category_ref;
-    const sh = sheet('Proposals'), ids = sh.getRange(1, 1, sh.getLastRow(), 1).getValues();
-    const row = ids.findIndex(r => String(r[0]) === id) + 1;
-    if (row < 2) throw new Error('This proposal is closed');
-    sh.getRange(row, TABS.Proposals.indexOf('category_ref') + 1).setValue(ref);
-    forget('Proposals');
-    p.category_ref = ref;
-    log(m.email, 'move nominee', p.title + ': ' + from + ' → ' + ref);
-    return proposalView(p, readTable('ProposalVotes'), m.email, memberNames());
-  });
-}
-
-// Admin: accept a proposal (it becomes part of the official ballot) or reject it.
-function adminDecideProposal(id, decision) {
-  const email = requireCommittee();
-  return withLock(() => {
-    const props = readTable('Proposals');
-    const p = props.find(x => x.id === id);
-    if (!p || p.status !== 'open') throw new Error('This proposal is already closed');
-    const d = parseDetails(p.details);
-    if (decision === 'accept') {
-      const cats = readTable('Categories');
-      if (p.kind === 'category') {
-        const newCat = {id: newId(), name: p.title, description: d.description || '', type: d.type || 'vote', method: d.method || 'tier',
-          max_picks: d.max_picks || '', opens: '', closes: '', order: String(cats.length + 1), locked: ''};
-        cats.push(newCat);
-        writeTable('Categories', TABS.Categories, cats);
-        // Nominee proposals made for the proposed category now point at the official one.
-        props.forEach(x => { if (x.category_ref === p.id) x.category_ref = newCat.id; });
-      } else {
-        const c = cats.find(x => x.id === p.category_ref);
-        if (!c) throw new Error('Accept the category proposal first');
-        if (c.locked === 'TRUE') throw new Error('That category is locked: unlock it in Categories first');
-        if (p.kind === 'method') {
-          c.method = d.method; c.max_picks = d.max_picks || '';
-          writeTable('Categories', TABS.Categories, cats);
-        } else {
-          const noms = readTable('Nominees');
-          if (!noms.some(n => n.category_id === c.id && n.name.toLowerCase() === p.title.toLowerCase())) {
-            noms.push({id: newId(), category_id: c.id, name: p.title, subtitle: d.subtitle || '', image: d.image || '', image_search: '', link: d.link || '', winner: ''});
-            writeTable('Nominees', TABS.Nominees, noms);
-          }
-        }
-      }
-    } else if (decision !== 'reject') throw new Error('Unknown decision');
-    p.status = decision === 'accept' ? 'accepted' : 'rejected';
-    p.decided_by = email;
-    writeTable('Proposals', TABS.Proposals, props);
-    log(email, decision + ' proposal', p.kind + ': ' + p.title);
     return adminState();
   });
 }
@@ -949,14 +736,14 @@ function dataCheck() {
 }
 
 function adminDataCheck() {
-  requireCommittee();
+  requireAdmin();
   return Object.assign(adminState(), {dataCheck: dataCheck()});
 }
 
 // Removes every vote row of one ballot (matched by voter name, ignoring capitals and spaces), frees a voter code it
 // used, and logs who removed it. The name can then vote again.
 function adminRemoveBallot(key) {
-  const email = requireCommittee();
+  const email = requireAdmin();
   key = cleanVoter(key).toLowerCase();
   if (!key) throw new Error('No ballot chosen');
   return withLock(() => {

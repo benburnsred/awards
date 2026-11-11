@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Anime X Angas Awards — Tests</title>
+<link rel="icon" type="image/png" sizes="32x32" href="../img/favicon-32.png">
+<style>
+body{margin:0;background:#050b08;color:#e8f5ec;font:15px/1.5 system-ui,sans-serif;padding:24px 16px 60px}
+main{max-width:860px;margin:0 auto}
+h1{font-size:22px;margin:0 0 4px}
+p{color:#93a89d;margin:0 0 18px}
+#sum{font-size:18px;font-weight:700;padding:12px 14px;border:1px solid #2b3a34;margin-bottom:18px}
+#sum.pass{border-color:#3ee08a;color:#3ee08a}
+#sum.fail{border-color:#ff6b5e;color:#ff6b5e}
+h2{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:#e9c46a;margin:22px 0 6px}
+ul{list-style:none;margin:0;padding:0}
+li{padding:5px 0 5px 26px;position:relative;border-bottom:1px solid #14221c}
+li::before{position:absolute;left:2px;font-weight:700}
+li.ok::before{content:"✓";color:#3ee08a}
+li.bad::before{content:"✗";color:#ff6b5e}
+li.bad{color:#ffd0cb}
+small{display:block;color:#ff9a90;font-family:ui-monospace,Consolas,monospace;font-size:12.5px;overflow-wrap:anywhere}
+</style>
+</head>
+<body>
+<main>
+<h1>Voting script tests</h1>
+<p>Checks the rules of the ballot (scoring, one ballot per name, voting window, Discord sign-in, admin-only actions) against a pretend Google Sheet. Nothing real is read or changed.</p>
+<div id="sum">Running…</div>
+<div id="out"></div>
+</main>
+<script src="harness.js"></script>
+<script src="tests.js"></script>
+<script>
+const get = p => fetch(p, {cache: 'no-store'}).then(r => { if (!r.ok) throw new Error('Could not load ' + p); return r.text(); });
+const esc = s => String(s).replace(/[&<>]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;'}[c]));
+Promise.all([get('../apps-script/Code.gs'), get('../apps-script/Admin.html'), get('../vote/index.html')]).then(([code, admin, vote]) => {
+  const results = AxaTests(AxaHarness, {code, admin, vote});
+  const failed = results.filter(r => !r.ok).length, sum = document.getElementById('sum');
+  sum.textContent = failed ? failed + ' of ' + results.length + ' tests failed' : 'All ' + results.length + ' tests passed';
+  sum.className = failed ? 'fail' : 'pass';
+  let html = '', group = null;
+  results.forEach(r => {
+    if (r.group !== group){ html += (group === null ? '' : '</ul>') + '<h2>' + esc(group = r.group) + '</h2><ul>'; }
+    html += '<li class="' + (r.ok ? 'ok' : 'bad') + '">' + esc(r.name) + (r.ok ? '' : '<small>' + esc(r.error) + '</small>') + '</li>';
+  });
+  document.getElementById('out').innerHTML = html + '</ul>';
+  window.TEST_RESULTS = results;
+}).catch(err => { const s = document.getElementById('sum'); s.textContent = 'Could not run the tests: ' + err.message; s.className = 'fail'; });
+</script>
+</body>
+</html>
