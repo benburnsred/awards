@@ -531,8 +531,7 @@ document.addEventListener('contextmenu', e => { if (!(e.target.closest && e.targ
 </div>
 <div class="toast" id="toast"></div>
 <div id="theater" role="dialog" aria-modal="true" aria-label="Video" hidden>
-  <div class="th-box">
-    <button class="th-close" type="button" aria-label="Close video">✕</button>
+  <div class="th-box" tabindex="-1">
     <div class="th-frame"></div>
     <div class="th-cap"><div><div class="th-title"></div><div class="th-sub"></div></div><a class="th-yt" target="_blank" rel="noopener">Open on YouTube ↗</a></div>
   </div>
@@ -543,7 +542,7 @@ html.theater-on{overflow:hidden}
   -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);opacity:0;transition:opacity .25s}
 #theater[hidden]{display:none}
 #theater.on{opacity:1}
-#theater .th-box{position:relative;width:min(1100px,100%,calc((100vh - 150px) * 16 / 9));transform:scale(.97);transition:transform .25s}
+#theater .th-box{outline:none;position:relative;width:min(1100px,100%,calc((100vh - 150px) * 16 / 9));transform:scale(.97);transition:transform .25s}
 #theater.on .th-box{transform:none}
 #theater .th-frame{position:relative;aspect-ratio:16/9;background:#000;box-shadow:0 0 0 1px #c99a3c,0 0 60px -10px rgba(62,224,138,.45),0 40px 90px -30px #000}
 #theater .th-frame::before,#theater .th-frame::after{content:"";position:absolute;width:22px;height:22px;pointer-events:none;border:2px solid #e9c46a}
@@ -561,9 +560,6 @@ html.theater-on{overflow:hidden}
 #theater .th-sub{color:#a9bcb2;font-size:13px;margin-top:3px}
 #theater .th-yt{flex:none;color:#e9c46a;font-size:13px;text-decoration:none;padding-top:3px}
 #theater .th-yt:hover{text-decoration:underline}
-#theater .th-close{position:absolute;top:-46px;right:-4px;width:38px;height:38px;border-radius:50%;cursor:pointer;
-  background:rgba(4,10,7,.8);border:1px solid #c99a3c;color:#f6e3ad;font:600 16px/1 system-ui,sans-serif}
-#theater .th-close:hover,#theater .th-close:focus-visible{background:#c99a3c;color:#04110a;outline:none}
 @media (max-width:600px){ #theater{padding:12px} #theater .th-cap{flex-direction:column;gap:6px} }
 </style>
 
@@ -869,7 +865,7 @@ function openTheater(ids, title, sub){
   t.hidden = false;
   document.documentElement.classList.add('theater-on');
   requestAnimationFrame(() => t.classList.add('on'));
-  t.querySelector('.th-close').focus();
+  t.querySelector('.th-box').focus({preventScroll: true});   // closes with Escape, or a tap/click outside the video
   theaterPlay(ids, 0, ++theaterRun);
 }
 function closeTheater(){
@@ -883,7 +879,7 @@ function closeTheater(){
   document.documentElement.classList.remove('theater-on');
   if (theaterBack && theaterBack.focus) theaterBack.focus();
 }
-document.addEventListener('click', e => { if (e.target.closest('.th-close') || e.target.id === 'theater') closeTheater(); }, true);
+document.addEventListener('click', e => { if (e.target.id === 'theater') closeTheater();   // a tap or click outside the video }, true);
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#theater').hidden){ e.stopPropagation(); closeTheater(); } }, true);
 
 document.addEventListener('click', e => {
