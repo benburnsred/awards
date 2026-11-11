@@ -2,10 +2,13 @@
 
 For each awards edition (<year>/index.html), reads its nominees from NOMINEES_CSV (the published Google Sheet,
 or data/nominees.csv once archived). In every category whose name says Opening or Ending, it searches YouTube
-for each song, preferring the official creditless opening/ending, then the official music video, and only
-videos that are allowed to play on other websites. The picks go into <year>/data/videos.json:
+for each song, preferring the official creditless opening/ending, then the official music video. Only official
+channels count (studios, publishers, labels, the artist or the anime), and only videos that may play on other
+websites and aren't blocked in the Philippines (REGION). Up to three are kept per song; the page falls back to
+the next one if a video won't play for a visitor. The picks go into <year>/data/videos.json:
 
-    {"<category>|<nominee>": {"id": "<YouTube video id>", "title": ..., "channel": ..., "checked": "YYYY-MM-DD"}}
+    {"<category>|<nominee>": {"id": "<YouTube video id>", "alts": [<backup ids>], "title": ..., "channel": ...,
+                              "region": "PH", "checked": "YYYY-MM-DD", "v": 2}}
 
 The awards page and the ballot read that file and play the video in theater mode when a nominee is clicked.
 
@@ -30,19 +33,26 @@ import urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # repository root
 API = 'https://www.googleapis.com/youtube/v3/search'
+VIDEOS_API = 'https://www.googleapis.com/youtube/v3/videos'
+REGION = 'PH'   # the country most voters watch from; override with the VIDEO_REGION environment variable
+KEEP = 3        # videos saved per song: the first plays, the others are backups if it won't play for a visitor
+VERSION = 2     # bump when the rules change, so earlier picks are searched again once
 RETRY_DAYS = 7
-MAX_SEARCHES = 60   # per run: 6,000 quota units at most, well under the free daily 10,000
+MAX_SEARCHES = 70   # per run: about 7,000 quota units at most, under the free daily 10,000
 
 KIND = re.compile(r'\b(opening|ending)s?\b', re.I)
 CREDITLESS = re.compile(r'creditless|non[- ]?credit|textless|non[- ]?telop|ノンクレジット|ノンテロップ|\bnc ?(op|ed)\b', re.I)
 OFFICIAL = re.compile(r'official|公式|\bmv\b|music video|ミュージックビデオ', re.I)
 # Channels of anime studios, publishers and labels that post official openings and endings.
 STUDIO = re.compile(r'animation チャンネル|toho animation|aniplex|kadokawa|crunchyroll|muse asia|ani-one|pony ?canyon|avex|'
-                    r'sony music|lantis|king records|bandai namco|warner bros\. japan|東宝|アニプレックス', re.I)
+                    r'sony music|lantis|king records|bandai namco|warner bros\. japan|東宝|アニプレックス|medialink|aniplus|'
+                    r'netflix anime|tms entertainment|mappa|toei animation|ufotable|kyoto animation|cloverworks|a-1 pictures', re.I)
+# Channels that name themselves official.
+OFFICIAL_CHANNEL = re.compile(r'official|公式|オフィシャル', re.I)
 # Fan edits, covers and re-uploads that shouldn't be picked (re-uploads tend to advertise their quality).
 AVOID = re.compile(r'\bamv\b|\bcover\b|lyric|reaction|\breact\b|nightcore|slowed|sped ?up|8d audio|1 ?hour|'
                    r'piano|guitar|karaoke|instrumental|remix|tutorial|\bfan\b|mashup|#shorts|\bshorts\b|'
-                   r'\b\d{2,3} ?fps\b|upscal|\b4k\b|\buhd\b', re.I)
+                   r'\b\d{2,3} ?fps\b|upscal|\b4k\b|\buhd\b|vietsub|lirik|terjemahan|sub espa|legendado|extended|\[en sub\]', re.I)
 
 
 def norm(s):
@@ -110,24 +120,63 @@ def score(item, song, artist, anime, kind):
     return s
 
 
-def search(key, q):
-    params = {'part': 'snippet', 'type': 'video', 'videoEmbeddable': 'true', 'maxResults': '8', 'q': q, 'key': key}
+def search(key, q, region):
+    params = {'part': 'snippet', 'type': 'video', 'videoEmbeddable': 'true', 'maxResults': '10', 'q': q,
+              'regionCode': region, 'key': key}
     data = json.loads(fetch_text(API + '?' + urllib.parse.urlencode(params)))
     return data.get('items', [])
 
 
-def find(key, song, artist, anime, kind):
-    """Best (video, score) for one song, trying creditless first and the music video second. None if no good match."""
+def details(key, ids):
+    """{video id: (embeddable, blocked countries, allowed countries or None)} for up to 50 videos (1 quota unit)."""
+    if not ids:
+        return {}
+    params = {'part': 'contentDetails,status', 'id': ','.join(ids[:50]), 'key': key}
+    data = json.loads(fetch_text(VIDEOS_API + '?' + urllib.parse.urlencode(params)))
+    out = {}
+    for v in data.get('items', []):
+        rr = (v.get('contentDetails') or {}).get('regionRestriction') or {}
+        allowed = rr.get('allowed')
+        out[v['id']] = (bool((v.get('status') or {}).get('embeddable', True)), set(rr.get('blocked') or []),
+                        set(allowed) if allowed is not None else None)
+    return out
+
+
+def playable(info, region):
+    """True if a video may be embedded and isn't blocked in the region."""
+    if not info:
+        return False
+    embeddable, blocked, allowed = info
+    return embeddable and region not in blocked and (allowed is None or region in allowed)
+
+
+def trusted(item, artist, anime):
+    """Official sources only: studio, publisher or label channels, channels that call themselves official,
+    the artist's own channel, or the anime's own channel. Fan re-uploads are never used."""
+    channel = html.unescape(item['snippet']['channelTitle'])
+    c = norm(channel)
+    if STUDIO.search(channel) or OFFICIAL_CHANNEL.search(channel):
+        return True
+    if len(norm(artist)) >= 3 and norm(artist) in c and not re.search(r'\btopic\b', channel, re.I):
+        return True
+    return bool(len(norm(anime)) >= 4 and norm(anime) in c)
+
+
+def find(key, song, artist, anime, kind, region):
+    """Up to KEEP official videos for one song that play in the region, best first. Empty if none."""
     queries = [f'{song} {artist} {anime} creditless {kind}'.strip(), f'{song} {artist} official music video'.strip()]
-    best = None
+    scored = {}
     for q in queries:
-        for item in search(key, q):
+        for item in search(key, q, region):
+            vid = item['id']['videoId']
+            if vid in scored or not trusted(item, artist, anime):
+                continue
             sc = score(item, song, artist, anime, kind)
-            if best is None or sc > best[1]:
-                best = (item, sc)
-        if best and best[1] >= 8:   # song + creditless/official: good enough, save the second search
-            break
-    return best if best and best[1] >= 5 else None   # at least the song title and one more sign
+            if sc >= 5:   # at least the song title and one more sign
+                scored[vid] = (item, sc)
+    ranked = sorted(scored.values(), key=lambda x: -x[1])
+    info = details(key, [it['id']['videoId'] for it, _ in ranked])
+    return [it for it, _ in ranked if playable(info.get(it['id']['videoId']), region)][:KEEP]
 
 
 def main():
@@ -139,6 +188,7 @@ def main():
     if not key:
         print('videos: no YOUTUBE_API_KEY, skipping')
         return 0
+    region = (os.environ.get('VIDEO_REGION') or REGION).strip().upper()
     today = datetime.date.today()
     searches = 0
     found = missed = 0
@@ -158,29 +208,33 @@ def main():
                 continue
             k = cat + '|' + song
             old = videos.get(k)
-            if old and (old.get('id') or (today - datetime.date.fromisoformat(old.get('checked', '2000-01-01'))).days < RETRY_DAYS):
+            # Picks from an older version of this script (fan uploads allowed, no region check) are redone once.
+            if old and old.get('v') == VERSION and (old.get('id') or
+                    (today - datetime.date.fromisoformat(old.get('checked', '2000-01-01'))).days < RETRY_DAYS):
                 continue
-            if searches >= MAX_SEARCHES:
+            if searches + 2 > MAX_SEARCHES:
                 break
             parts = [p.strip() for p in re.split(r'\s*·\s*', r.get('subtitle') or '')]
             artist, anime = (parts + ['', ''])[:2]
             try:
-                best = find(key, song, artist, anime, m.group(1).lower())
+                picks = find(key, song, artist, anime, m.group(1).lower(), region)
             except Exception as e:  # quota used up or API trouble: stop for today, keep what we have
                 print(f'  YouTube search failed: {e}')
                 searches = MAX_SEARCHES
                 break
-            searches += 2 if best is None else 1
-            if best:
-                item = best[0]
-                videos[k] = {'id': item['id']['videoId'], 'title': html.unescape(item['snippet']['title']),
-                             'channel': html.unescape(item['snippet']['channelTitle']), 'checked': today.isoformat()}
+            searches += 2
+            if picks:
+                first = picks[0]
+                videos[k] = {'v': VERSION, 'id': first['id']['videoId'], 'alts': [p['id']['videoId'] for p in picks[1:]],
+                             'title': html.unescape(first['snippet']['title']),
+                             'channel': html.unescape(first['snippet']['channelTitle']), 'region': region,
+                             'checked': today.isoformat()}
                 found += 1
-                print(f'  {song}: {videos[k]["title"]} ({videos[k]["channel"]})')
+                print(f'  {song}: {videos[k]["title"]} ({videos[k]["channel"]}) + {len(picks) - 1} backup(s)')
             else:
-                videos[k] = {'id': None, 'checked': today.isoformat()}
+                videos[k] = {'v': VERSION, 'id': None, 'region': region, 'checked': today.isoformat()}
                 missed += 1
-                print(f'  {song}: no good match')
+                print(f'  {song}: no official video that plays in {region}')
         if json.dumps(videos, sort_keys=True) != before:
             os.makedirs(os.path.dirname(path), exist_ok=True)
             with open(path, 'w', encoding='utf-8', newline='\n') as f:

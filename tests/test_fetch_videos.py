@@ -31,34 +31,56 @@ Anime of the Year 2026,Frieren,,
 RESULTS = {
     'lulu.': [item('fanAMV00001', 'Frieren AMV - lulu. (Mrs. GREEN APPLE)', 'SomeFan'),
               item('credless001', '『葬送のフリーレン』第2期 ノンクレジットOP｜Mrs. GREEN APPLE「lulu.」', 'TOHO animation チャンネル'),
+              item('museasia001', 'Frieren Season 2 Opening | lulu. by Mrs. GREEN APPLE', 'Muse Asia'),
               item('lyrics00001', 'lulu. lyrics', 'LyricsHub')],
     'Hanakage': [item('cover000001', 'Hanakage (cover)', 'Singer'),
                  item('official001', 'Superfly 『Hanakage』Music Video', 'Superfly Official YouTube Channel')],
     'Nothing Here': [item('random00001', 'Totally unrelated video', 'Someone')],
 }
 
+# Every video plays everywhere unless listed here: (embeddable, blocked, allowed or None).
+RULES = {}
 
-def fake_search(key, q):
+
+def fake_search(key, q, region='PH'):
     for song, items in RESULTS.items():
         if q.startswith(song):
             return items
     return []
 
 
+def fake_details(key, ids):
+    return {i: RULES.get(i, (True, set(), None)) for i in ids}
+
+
+def patched():
+    return mock.patch.multiple(fv, search=fake_search, details=fake_details)
+
+
 class Scoring(unittest.TestCase):
+    def setUp(self):
+        RULES.clear()
+
     def test_creditless_beats_fan_amv_and_lyrics(self):
-        with mock.patch.object(fv, 'search', fake_search):
-            best = fv.find('k', 'lulu.', 'Mrs. GREEN APPLE', 'Frieren Season 2', 'opening')
-        self.assertEqual(best[0]['id']['videoId'], 'credless001')
+        with patched():
+            picks = fv.find('k', 'lulu.', 'Mrs. GREEN APPLE', 'Frieren Season 2', 'opening', 'PH')
+        self.assertEqual(picks[0]['id']['videoId'], 'credless001')
 
     def test_official_music_video_beats_cover(self):
-        with mock.patch.object(fv, 'search', fake_search):
-            best = fv.find('k', 'Hanakage', 'Superfly', '', 'ending')
-        self.assertEqual(best[0]['id']['videoId'], 'official001')
+        with patched():
+            picks = fv.find('k', 'Hanakage', 'Superfly', '', 'ending', 'PH')
+        self.assertEqual([p['id']['videoId'] for p in picks], ['official001'])
 
     def test_no_good_match_gives_nothing(self):
-        with mock.patch.object(fv, 'search', fake_search):
-            self.assertIsNone(fv.find('k', 'Nothing Here', 'Nobody', '', 'ending'))
+        with patched():
+            self.assertEqual(fv.find('k', 'Nothing Here', 'Nobody', '', 'ending', 'PH'), [])
+
+    def test_fan_edits_and_live_streams_score_low(self):
+        good = fv.score(item('a', 'Song - Artist (Official Music Video)', 'Artist'), 'Song', 'Artist', '', 'opening')
+        for bad in ['Song AMV', 'Song cover', 'Song nightcore', 'Song 1 hour loop', 'Song #shorts', 'Song piano',
+                    'Song Vietsub', 'Song lirik terjemahan', 'Song Sub Español', 'Song [Extended Version]']:
+            self.assertLess(fv.score(item('b', bad, 'X'), 'Song', 'Artist', '', 'opening'), good, bad)
+        self.assertLess(fv.score(item('c', 'Song official', 'Artist', live='live'), 'Song', 'Artist', '', 'opening'), good)
 
     def test_real_search_results_pick_the_studio_upload(self):
         # Titles and channels as YouTube listed them for these two songs (November 2026).
@@ -70,23 +92,70 @@ class Scoring(unittest.TestCase):
                item('Xr032EhUDPw', 'TVアニメ『呪術廻戦』第3期「死滅回游 前編」ノンクレジットOPムービー／OPテーマ：King Gnu「AIZO」', 'TOHO animation チャンネル and King Gnu official YouTube channel'),
                item('tWn_GlPZd-I', '「Creditless」Jujutsu Kaisen Season 3 OP / Opening 1「UHD 60FPS」', 'TriaxFx'),
                item('zz2a9Q2Wru0', 'King Gnu - AIZO', 'King Gnu official YouTube channel')]
-        with mock.patch.object(fv, 'search', lambda k, q: frieren):
-            self.assertEqual(fv.find('k', 'lulu.', 'Mrs. GREEN APPLE', 'Frieren Season 2', 'opening')[0]['id']['videoId'], 'C0BG3B7aksU')
-        with mock.patch.object(fv, 'search', lambda k, q: jjk):
-            self.assertEqual(fv.find('k', 'AIZO', 'King Gnu', 'Jujutsu Kaisen Season 3', 'opening')[0]['id']['videoId'], 'Xr032EhUDPw')
-
-    def test_fan_edits_and_live_streams_score_low(self):
-        good = fv.score(item('a', 'Song - Artist (Official Music Video)', 'Artist'), 'Song', 'Artist', '', 'opening')
-        for bad in ['Song AMV', 'Song cover', 'Song nightcore', 'Song 1 hour loop', 'Song #shorts', 'Song piano']:
-            self.assertLess(fv.score(item('b', bad, 'X'), 'Song', 'Artist', '', 'opening'), good, bad)
-        self.assertLess(fv.score(item('c', 'Song official', 'Artist', live='live'), 'Song', 'Artist', '', 'opening'), good)
+        with mock.patch.multiple(fv, search=lambda k, q, r: frieren, details=fake_details):
+            ids = [p['id']['videoId'] for p in fv.find('k', 'lulu.', 'Mrs. GREEN APPLE', 'Frieren Season 2', 'opening', 'PH')]
+        self.assertEqual(ids[0], 'C0BG3B7aksU')
+        self.assertNotIn('37iU_fjnjus', ids, 'fan re-upload')
+        self.assertNotIn('weGCg61AWhM', ids, 'lyrics re-upload')
+        with mock.patch.multiple(fv, search=lambda k, q, r: jjk, details=fake_details):
+            ids = [p['id']['videoId'] for p in fv.find('k', 'AIZO', 'King Gnu', 'Jujutsu Kaisen Season 3', 'opening', 'PH')]
+        self.assertEqual(ids, ['Xr032EhUDPw', 'zz2a9Q2Wru0'])
 
     def test_matching_ignores_case_and_punctuation(self):
         self.assertEqual(fv.norm('Mrs. GREEN APPLE'), fv.norm('mrs green apple'))
         self.assertIn(fv.norm('lulu.'), fv.norm('「lulu.」'))
 
 
+class OfficialOnly(unittest.TestCase):
+    def test_trusted_channels(self):
+        ok = ['TOHO animation チャンネル', 'Crunchyroll', 'Muse Asia', 'Ani-One Asia', 'Aniplex', 'TVアニメ【推しの子】公式チャンネル',
+              'Superfly Official YouTube Channel', 'Mrs. GREEN APPLE', 'Frieren Season 2 Anime']
+        for ch in ok:
+            self.assertTrue(fv.trusted(item('x', 't', ch), 'Mrs. GREEN APPLE', 'Frieren Season 2'), ch)
+        for ch in ['Zuax anime and music', 'OPEDAnimeHub', 'Lirik Jp', '7umi', 'AQUA_BLUEEE', 'Anicrad', 'Mrs. GREEN APPLE - Topic']:
+            self.assertFalse(fv.trusted(item('x', 't', ch), 'Mrs. GREEN APPLE', 'Frieren Season 2'), ch)
+
+    def test_a_good_fan_upload_is_never_picked(self):
+        fan = [item('fan00000001', 'Song Opening | "Song" by Artist (Creditless)', 'Zuax anime and music')]
+        with mock.patch.multiple(fv, search=lambda k, q, r: fan, details=fake_details):
+            self.assertEqual(fv.find('k', 'Song', 'Artist', 'Show', 'opening', 'PH'), [])
+
+
+class Region(unittest.TestCase):
+    def setUp(self):
+        RULES.clear()
+
+    def test_playable(self):
+        self.assertTrue(fv.playable((True, set(), None), 'PH'))
+        self.assertFalse(fv.playable((True, {'PH'}, None), 'PH'))
+        self.assertFalse(fv.playable((True, set(), {'US', 'CA'}), 'PH'))
+        self.assertTrue(fv.playable((True, set(), {'PH', 'SG'}), 'PH'))
+        self.assertFalse(fv.playable((False, set(), None), 'PH'))
+        self.assertFalse(fv.playable(None, 'PH'), 'a video YouTube no longer returns')
+
+    def test_a_video_blocked_in_the_philippines_is_skipped_for_the_next_official_one(self):
+        RULES['credless001'] = (True, {'PH'}, None)
+        with patched():
+            picks = fv.find('k', 'lulu.', 'Mrs. GREEN APPLE', 'Frieren Season 2', 'opening', 'PH')
+        self.assertEqual([p['id']['videoId'] for p in picks], ['museasia001'])
+
+    def test_allowed_list_without_the_philippines_is_skipped(self):
+        RULES['credless001'] = (True, set(), {'JP'})
+        RULES['museasia001'] = (True, set(), {'PH', 'SG', 'MY'})
+        with patched():
+            picks = fv.find('k', 'lulu.', 'Mrs. GREEN APPLE', 'Frieren Season 2', 'opening', 'PH')
+        self.assertEqual([p['id']['videoId'] for p in picks], ['museasia001'])
+
+    def test_keeps_up_to_three_official_videos(self):
+        many = [item(f'off{i:08d}', f'Song Opening creditless {i}', 'Crunchyroll') for i in range(6)]
+        with mock.patch.multiple(fv, search=lambda k, q, r: many, details=fake_details):
+            self.assertEqual(len(fv.find('k', 'Song', 'Artist', '', 'opening', 'PH')), fv.KEEP)
+
+
 class Run(unittest.TestCase):
+    def setUp(self):
+        RULES.clear()
+
     def run_main(self, existing=None, key='k'):
         tmp = tempfile.mkdtemp()
         os.makedirs(os.path.join(tmp, '2026', 'data'))
@@ -94,11 +163,11 @@ class Run(unittest.TestCase):
             with open(os.path.join(tmp, '2026', 'data', 'videos.json'), 'w', encoding='utf-8') as f:
                 json.dump(existing, f)
         calls = []
-        def counted(k, q):
+        def counted(k, q, r):
             calls.append(q)
-            return fake_search(k, q)
+            return fake_search(k, q, r)
         with mock.patch.object(fv, 'ROOT', tmp), mock.patch.object(fv, 'editions', lambda: iter([('2026', CSV)])), \
-                mock.patch.object(fv, 'search', counted), mock.patch.dict(os.environ, {'YOUTUBE_API_KEY': key}):
+                mock.patch.multiple(fv, search=counted, details=fake_details), mock.patch.dict(os.environ, {'YOUTUBE_API_KEY': key}):
             fv.main()
         path = os.path.join(tmp, '2026', 'data', 'videos.json')
         out = json.load(open(path, encoding='utf-8')) if os.path.exists(path) else None
@@ -108,7 +177,8 @@ class Run(unittest.TestCase):
         out, _ = self.run_main()
         self.assertEqual(sorted(out), ['Anime Ending of the Year 2026|Hanakage', 'Anime Ending of the Year 2026|Nothing Here',
                                        'Anime Opening of the Year 2026|lulu.'])
-        self.assertEqual(out['Anime Opening of the Year 2026|lulu.']['id'], 'credless001')
+        lulu = out['Anime Opening of the Year 2026|lulu.']
+        self.assertEqual((lulu['id'], lulu['alts'], lulu['region'], lulu['v']), ('credless001', ['museasia001'], 'PH', fv.VERSION))
         self.assertIsNone(out['Anime Ending of the Year 2026|Nothing Here']['id'])
 
     def test_found_songs_are_not_searched_again(self):
@@ -117,10 +187,17 @@ class Run(unittest.TestCase):
         _, calls = self.run_main(existing=found)
         self.assertTrue(all(q.startswith('Nothing Here') for q in calls), calls)
 
+    def test_picks_from_the_older_rules_are_redone_once(self):
+        old = {'Anime Opening of the Year 2026|lulu.': {'id': 'fanAMV00001', 'channel': 'SomeFan', 'checked': '2026-11-11'}}
+        out, calls = self.run_main(existing=old)
+        self.assertTrue(any(q.startswith('lulu.') for q in calls))
+        self.assertEqual(out['Anime Opening of the Year 2026|lulu.']['id'], 'credless001')
+
     def test_misses_are_retried_only_after_a_week(self):
         today = datetime.date.today()
-        recent = {'Anime Ending of the Year 2026|Nothing Here': {'id': None, 'checked': today.isoformat()}}
-        old = {'Anime Ending of the Year 2026|Nothing Here': {'id': None, 'checked': (today - datetime.timedelta(days=8)).isoformat()}}
+        k = 'Anime Ending of the Year 2026|Nothing Here'
+        recent = {k: {'v': fv.VERSION, 'id': None, 'checked': today.isoformat()}}
+        old = {k: {'v': fv.VERSION, 'id': None, 'checked': (today - datetime.timedelta(days=8)).isoformat()}}
         _, calls = self.run_main(existing=recent)
         self.assertFalse(any(q.startswith('Nothing Here') for q in calls))
         _, calls = self.run_main(existing=old)
@@ -132,7 +209,7 @@ class Run(unittest.TestCase):
         self.assertEqual(calls, [])
 
     def test_api_failure_keeps_what_was_found(self):
-        def boom(k, q):
+        def boom(k, q, r):
             raise RuntimeError('quota exceeded')
         tmp = tempfile.mkdtemp()
         os.makedirs(os.path.join(tmp, '2026', 'data'))

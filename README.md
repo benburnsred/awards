@@ -248,7 +248,7 @@ Run them before pasting a new `Code.gs` into Apps Script.
 
 Clicking an opening or ending nominee (the ▶ badge) plays its official video in theater mode, on the awards page and the ballot.
 
-- **Where the videos come from:** the **Find opening and ending videos** GitHub Action (`.github/workflows/videos.yml`, script `tools/fetch_videos.py`) runs every 6 hours. It searches YouTube for each new song in any category named Opening or Ending, preferring the studio's creditless opening/ending, then the official music video, and only videos that may play on other websites. Picks are saved in `2026/data/videos.json`.
+- **Where the videos come from:** the **Find opening and ending videos** GitHub Action (`.github/workflows/videos.yml`, script `tools/fetch_videos.py`) runs every 6 hours. It searches YouTube for each new song in any category named Opening or Ending, preferring the studio's creditless opening/ending, then the official music video. Only official channels count (studios, publishers like Muse Asia and Ani-One, labels, the artist or the anime), and only videos that may play on other websites and aren't blocked in the Philippines. Up to three are kept per song in `2026/data/videos.json`; if one won't play for a visitor, the player tries the next, then offers YouTube.
 - **Needs:** a YouTube Data API v3 key saved as the repository secret `YOUTUBE_API_KEY`. Without it the Action does nothing.
 - **Wrong video?** Paste the right YouTube link into that nominee's link in the admin dashboard (it always wins), or edit `videos.json`.
 - **Run it now:** Actions → Find opening and ending videos → Run workflow.

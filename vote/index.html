@@ -550,6 +550,12 @@ html.theater-on{overflow:hidden}
 #theater .th-frame::before{left:-8px;top:-8px;border-right:0;border-bottom:0}
 #theater .th-frame::after{right:-8px;bottom:-8px;border-left:0;border-top:0}
 #theater iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+#theater .th-player{position:absolute;inset:0;width:100%;height:100%}
+#theater .th-msg{position:absolute;inset:0;display:grid;place-content:center;gap:8px;padding:24px;text-align:center;color:#e8f5ec}
+#theater .th-msg b{font:800 18px/1.3 var(--serif,inherit)}
+#theater .th-msg span{color:#a9bcb2;font-size:14px}
+#theater .th-msg a{justify-self:center;margin-top:8px;padding:10px 18px;border:1px solid #c99a3c;color:#f6e3ad;text-decoration:none}
+#theater .th-msg a:hover{background:#c99a3c;color:#04110a}
 #theater .th-cap{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-top:14px;color:#e8f5ec;text-align:left}
 #theater .th-title{font:800 18px/1.25 var(--serif,inherit);letter-spacing:.02em}
 #theater .th-sub{color:#a9bcb2;font-size:13px;margin-top:3px}
@@ -615,6 +621,8 @@ function socialsHTML(){
 const slug = s => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 // The 11-character video id from any YouTube address (watch, youtu.be, embed, shorts), or ''.
 const ytId = u => (String(u || '').match(/(?:youtube(?:-nocookie)?\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{11})/) || [])[1] || '';
+// A YouTube link typed in the Sheet wins; otherwise the found video and its backups.
+const videoIds = (link, v) => ytId(link) ? [ytId(link)] : v && v.id ? [v.id, ...(v.alts || [])].filter(x => /^[\w-]{11}$/.test(x)) : [];
 const safeUrl = u => { u = String(u || '').trim(); return /^(https?:\/\/|\.{0,2}\/|[\w-]+\/)/i.test(u) ? u : ''; };
 
 function csvUrl(u){
@@ -668,7 +676,8 @@ async function loadData(){
       max:parseInt(r.max_picks, 10) || 3, opens:r.opens, closes:r.closes, locked:r.locked === 'TRUE'}), CATEGORIES[CATEGORIES.length - 1]);
     if (r.category_description && !c.blurb) c.blurb = r.category_description;
     if (r.nominee) c.nominees.push({id:r.nominee_id || slug(r.nominee), name:r.nominee, sub:r.subtitle, image:safeUrl(r.image), q:r.image_search, link:safeUrl(r.link),
-      video:ytId(r.link) || (videos[r.category + '|' + r.nominee] || {}).id || ''});
+      videos:videoIds(r.link, videos[r.category + '|' + r.nominee])});
+    const last = c.nominees[c.nominees.length - 1]; if (last) last.video = last.videos[0] || '';
   }
 }
 
@@ -705,7 +714,7 @@ function cardHTML(n, badge){
   const meta = String(n.sub || '').split(' · ').filter(Boolean).slice(0, 2);
   return `<div class="card${selected === n.id ? ' sel' : ''}${badge ? ' picked' : ''}" draggable="${cat().method === 'tier'}" data-id="${n.id}" title="${esc(n.name)}${n.sub ? ' — ' + esc(n.sub) : ''}">
     ${img}${badge ? `<span class="badge">${badge}</span>` : ''}<div class="txt"><div class="song">${esc(n.name)}</div>${meta.map(m => `<div class="meta">${esc(m)}</div>`).join('')}</div>
-    ${n.video ? `<a class="play" href="https://www.youtube.com/watch?v=${esc(n.video)}" target="_blank" rel="noopener" title="Watch the video" aria-label="Play ${esc(n.name)}" data-yt="${esc(n.video)}" data-yt-title="${esc(n.name)}" data-yt-sub="${esc(n.sub || '')}">▶</a>`
+    ${n.video ? `<a class="play" href="https://www.youtube.com/watch?v=${esc(n.video)}" target="_blank" rel="noopener" title="Watch the video" aria-label="Play ${esc(n.name)}" data-yt="${esc(n.videos.join(','))}" data-yt-title="${esc(n.name)}" data-yt-sub="${esc(n.sub || '')}">▶</a>`
       : n.link ? `<a class="play" href="${esc(n.link)}" target="_blank" rel="noopener" title="Watch / listen">▶</a>` : ''}</div>`;
 }
 
@@ -805,24 +814,68 @@ function togglePick(id){
   LS.set('aw.drafts', placements); render();
 }
 
-/* ===== Theater mode: play a nominee's official video over a dimmed page ===== */
-let theaterBack = null;
-function openTheater(id, title, sub){
+/* ===== Theater mode: play a nominee's official video over a dimmed page =====
+ * A nominee can have several official videos (data-yt="id1,id2,id3"). If one won't play for this visitor
+ * (blocked in their country, removed, or not allowed on other sites), the next one is tried; if none play, a
+ * message offers YouTube instead. YouTube's player script tells us when a video fails. */
+let theaterBack = null, theaterRun = 0, ytPlayer = null, ytApi = null;
+function loadYT(){
+  if (window.YT && window.YT.Player) return Promise.resolve(window.YT);
+  if (ytApi) return ytApi;
+  ytApi = new Promise((resolve, reject) => {
+    const prev = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = () => { if (prev) prev(); resolve(window.YT); };
+    const s = document.createElement('script');
+    s.src = 'https://www.youtube.com/iframe_api'; s.async = true; s.onerror = () => reject(new Error('blocked'));
+    document.head.appendChild(s);
+    setTimeout(() => reject(new Error('timeout')), 8000);
+  });
+  ytApi.catch(() => { ytApi = null; });
+  return ytApi;
+}
+function theaterPlay(ids, i, run){
+  if (run !== theaterRun) return;
+  const t = $('#theater'), frame = t.querySelector('.th-frame');
+  if (ytPlayer){ try { ytPlayer.destroy(); } catch (e){} ytPlayer = null; }
+  if (i >= ids.length){
+    frame.innerHTML = `<div class="th-msg"><b>This video isn’t available here</b><span>It may be blocked in your country or removed from YouTube.</span>
+      <a href="https://www.youtube.com/watch?v=${encodeURIComponent(ids[0])}" target="_blank" rel="noopener">Try it on YouTube ↗</a></div>`;
+    return;
+  }
+  t.querySelector('.th-yt').href = 'https://www.youtube.com/watch?v=' + ids[i];
+  frame.innerHTML = '<div class="th-player"></div>';
+  loadYT().then(YT => {
+    if (run !== theaterRun) return;
+    ytPlayer = new YT.Player(frame.querySelector('.th-player'), {
+      host: 'https://www.youtube-nocookie.com',   // privacy-enhanced: no YouTube cookies until the visitor plays
+      videoId: ids[i],
+      playerVars: {autoplay: 1, rel: 0, playsinline: 1},
+      events: {onError: () => theaterPlay(ids, i + 1, run)}
+    });
+  }).catch(() => {
+    // YouTube's player script couldn't load: show the first video directly (no automatic fallback).
+    if (run !== theaterRun) return;
+    frame.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(ids[i])}?autoplay=1&rel=0&playsinline=1" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
+  });
+}
+function openTheater(ids, title, sub){
+  ids = String(ids || '').split(',').filter(x => /^[\w-]{11}$/.test(x));
+  if (!ids.length) return;
   const t = $('#theater');
   theaterBack = document.activeElement;
   t.querySelector('.th-title').textContent = title || '';
   t.querySelector('.th-sub').textContent = sub || '';
-  t.querySelector('.th-yt').href = 'https://www.youtube.com/watch?v=' + id;
-  // youtube-nocookie: YouTube's privacy-enhanced player sets no cookies until the visitor plays.
-  t.querySelector('.th-frame').innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0&playsinline=1" title="${esc(title || 'Video')}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
   t.hidden = false;
   document.documentElement.classList.add('theater-on');
   requestAnimationFrame(() => t.classList.add('on'));
   t.querySelector('.th-close').focus();
+  theaterPlay(ids, 0, ++theaterRun);
 }
 function closeTheater(){
   const t = $('#theater');
   if (t.hidden) return;
+  theaterRun++;
+  if (ytPlayer){ try { ytPlayer.destroy(); } catch (e){} ytPlayer = null; }
   t.classList.remove('on');
   t.querySelector('.th-frame').innerHTML = '';   // removing the player stops the video
   t.hidden = true;
