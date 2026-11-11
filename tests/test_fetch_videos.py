@@ -119,6 +119,23 @@ class OfficialOnly(unittest.TestCase):
         for ch in ['Zuax anime and music', 'OPEDAnimeHub', 'Lirik Jp', '7umi', 'AQUA_BLUEEE', 'Anicrad', 'Mrs. GREEN APPLE - Topic']:
             self.assertFalse(fv.trusted(item('x', 't', ch), 'Mrs. GREEN APPLE', 'Frieren Season 2'), ch)
 
+    def test_the_artists_opening_for_another_anime_is_not_this_ending(self):
+        # Real case: searching "Otome no Honki" (an ending) found HoneyWorks' official opening of a different song.
+        wrong = [item('-7h--XTyj8A', 'TVアニメ「男女の友情は成立する？（いや、しないっ‼）」ノンクレジットOP | HoneyWorks feat.ハコニワリリィ「質問、恋って何でしょうか?」',
+                      'ハピネット【アニメ公式】')]
+        with mock.patch.multiple(fv, search=lambda k, q, r: wrong, details=fake_details):
+            self.assertEqual(fv.find('k', 'Otome no Honki', 'HoneyWorks feat. HaKoniwaLily', '', 'ending', 'PH')[0], [])
+        # A Japanese-only title of the right kind is still accepted (Serenade's official ending).
+        right = [item('serenade001', '【推しの子】第3期ノンクレジットエンディング｜なとり「セレナーデ」', 'TVアニメ【推しの子】公式チャンネル')]
+        with mock.patch.multiple(fv, search=lambda k, q, r: right, details=fake_details):
+            self.assertEqual(len(fv.find('k', 'Serenade', 'natori', '', 'ending', 'PH')[0]), 1)
+
+    def test_other_kind(self):
+        self.assertTrue(fv.other_kind('Show ノンクレジットOP', 'ending'))
+        self.assertTrue(fv.other_kind('Show Ending Theme', 'opening'))
+        self.assertFalse(fv.other_kind('Show OP / ED collection', 'ending'))
+        self.assertFalse(fv.other_kind('Song Music Video', 'ending'))
+
     def test_a_good_fan_upload_is_never_picked(self):
         fan = [item('fan00000001', 'Song Opening | "Song" by Artist (Creditless)', 'Zuax anime and music')]
         with mock.patch.multiple(fv, search=lambda k, q, r: fan, details=fake_details):

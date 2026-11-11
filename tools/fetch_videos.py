@@ -123,6 +123,16 @@ def score(item, song, artist, anime, kind):
     return s
 
 
+OPENING_WORDS = re.compile(r'opening|\bop\b|オープニング|ノンクレジットop', re.I)
+ENDING_WORDS = re.compile(r'ending|\bed\b|エンディング|ノンクレジットed', re.I)
+
+
+def other_kind(title, kind):
+    """True if the title says it's an ending while we want an opening, or the other way round."""
+    want, other = (OPENING_WORDS, ENDING_WORDS) if kind == 'opening' else (ENDING_WORDS, OPENING_WORDS)
+    return bool(other.search(title) and not want.search(title))
+
+
 def search(key, q, region):
     params = {'part': 'snippet', 'type': 'video', 'videoEmbeddable': 'true', 'maxResults': '10', 'q': q,
               'regionCode': region, 'key': key}
@@ -174,6 +184,11 @@ def find(key, song, artist, anime, kind, region):
         for item in search(key, q, region):
             vid = item['id']['videoId']
             if vid in scored or not trusted(item, artist, anime):
+                continue
+            # Official uploads often name the song only in Japanese, so the romaji title can be missing. Then the
+            # video must at least not be the other kind: an artist's opening for another anime isn't this ending.
+            title = html.unescape(item['snippet']['title'])
+            if norm(song) not in norm(title) and other_kind(title, kind):
                 continue
             sc = score(item, song, artist, anime, kind)
             if sc >= 5:   # at least the song title and one more sign
