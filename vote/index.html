@@ -408,43 +408,181 @@ document.addEventListener('contextmenu', e => { if (!(e.target.closest && e.targ
 </style>
 </head>
 <body>
-<!-- Loader: three cards deal face-down while the ballot loads, then flip to three random nominees and fade away. -->
-<div id="dealer" aria-hidden="true"><div class="dtable"><div class="dcard"><div class="dflip"><div class="dback"></div><div class="dface"><span class="dname"></span></div></div></div><div class="dcard"><div class="dflip"><div class="dback"></div><div class="dface"><span class="dname"></span></div></div></div><div class="dcard"><div class="dflip"><div class="dback"></div><div class="dface"><span class="dname"></span></div></div></div></div><div class="dcap">Dealing your ballot…</div></div>
+<!-- Loader: rune animations while the ballot loads. One of three at random; force one with ?loader=ignite, ?loader=unlock or ?loader=gather. -->
+<div id="runeld" aria-hidden="true"><div class="rbg"></div><i class="rdoor l"></i><i class="rdoor r"></i><svg class="rsvg"></svg><i class="rbeam"></i><div class="rcap"></div></div>
 <style>
 html.dealing{overflow:hidden}
-/* Every size comes from --cw, the card width: about a third of a phone's width, bigger on a computer, never taller than the window allows. */
-#dealer{--cw:clamp(100px,30vw,230px);--cw:clamp(100px,min(30vw,24vh),230px);--cw:clamp(100px,min(30vw,24svh),230px);
-  position:fixed;inset:0;z-index:9000;display:grid;place-items:center;align-content:center;gap:calc(var(--cw) * .3);
-  background:radial-gradient(60% 50% at 50% 45%,#08130e,#030806 70%);transition:opacity .45s ease}
-#dealer.gone{opacity:0;pointer-events:none}
-#dealer .dtable{position:relative;width:calc(var(--cw) * 2.9);height:calc(var(--cw) * 2.1);perspective:calc(var(--cw) * 9)}
-#dealer .dcard{position:absolute;left:50%;top:50%;width:var(--cw);height:calc(var(--cw) * 1.385);margin:calc(var(--cw) * -.69) 0 0 calc(var(--cw) * -.5);
-  transform-style:preserve-3d;opacity:0;animation:dDeal 1s cubic-bezier(.2,.8,.2,1) forwards}
-#dealer .dcard:nth-child(1){--x:calc(var(--cw) * -.88);--y:calc(var(--cw) * .08);--r:-14deg;animation-delay:.15s}
-#dealer .dcard:nth-child(2){--x:0px;--y:calc(var(--cw) * -.1);--r:0deg;animation-delay:.35s}
-#dealer .dcard:nth-child(3){--x:calc(var(--cw) * .88);--y:calc(var(--cw) * .08);--r:14deg;animation-delay:.55s}
-#dealer .dflip{position:absolute;inset:0;transform-style:preserve-3d}
-#dealer.reveal .dflip{animation:dFlip .6s cubic-bezier(.3,.7,.2,1) forwards}
-#dealer.reveal .dcard:nth-child(2) .dflip{animation-delay:.2s}
-#dealer.reveal .dcard:nth-child(3) .dflip{animation-delay:.4s}
-#dealer .dback,#dealer .dface{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border:1px solid #c99a3c;border-radius:calc(var(--cw) * .03)}
-#dealer .dback{background:
-  radial-gradient(circle at 50% 50%,transparent calc(var(--cw) * .25),rgba(233,196,106,.65) calc(var(--cw) * .26),transparent calc(var(--cw) * .275)),
-  radial-gradient(circle at 50% 50%,transparent calc(var(--cw) * .317),rgba(62,224,138,.45) calc(var(--cw) * .327),transparent calc(var(--cw) * .337)),
-  repeating-linear-gradient(45deg,rgba(233,196,106,.07) 0 calc(var(--cw) * .058),transparent calc(var(--cw) * .058) calc(var(--cw) * .115)),
-  linear-gradient(160deg,#0f2219,#06100b);
-  box-shadow:inset 0 0 0 calc(var(--cw) * .048) #06100b,inset 0 0 0 calc(var(--cw) * .058) rgba(233,196,106,.5),0 calc(var(--cw) * .17) calc(var(--cw) * .29) calc(var(--cw) * -.115) #000}
-#dealer .dface{transform:rotateY(180deg);display:grid;align-content:end;background:#050c08 center/cover no-repeat;
-  box-shadow:0 0 calc(var(--cw) * .21) calc(var(--cw) * -.058) rgba(233,196,106,.6),0 calc(var(--cw) * .17) calc(var(--cw) * .29) calc(var(--cw) * -.115) #000}
-#dealer .dface::after{content:"";position:absolute;inset:0;background:linear-gradient(transparent 55%,rgba(3,8,6,.92))}
-#dealer .dname{position:relative;z-index:1;padding:0 calc(var(--cw) * .06) calc(var(--cw) * .08);font:600 max(10px,calc(var(--cw) * .085))/1.25 Inter,sans-serif;color:#f3e6c4;text-align:center;
-  overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-#dealer .dcap{font:400 clamp(10px,calc(var(--cw) * .07),14px)/1 "Michroma",sans-serif;letter-spacing:.45em;padding-left:.45em;text-transform:uppercase;color:#c9a95a;opacity:.85}
-@keyframes dDeal{0%{transform:translate(0,calc(var(--cw) * .38)) scale(.92);opacity:0}25%{opacity:1}100%{transform:translate(var(--x),var(--y)) rotate(var(--r));opacity:1}}
-@keyframes dFlip{to{transform:rotateY(180deg)}}
-@media (prefers-reduced-motion:reduce){#dealer .dcard{animation:none;opacity:1;transform:translate(var(--x),var(--y)) rotate(var(--r))}#dealer.reveal .dflip{animation:none;transform:rotateY(180deg)}}
+#runeld{position:fixed;inset:0;z-index:9000;--S:min(76vw,48vh,420px);--S:min(76vw,48svh,420px);transition:opacity .45s ease}
+#runeld.gone{opacity:0;pointer-events:none}
+#runeld .rbg,#runeld .rdoor{position:absolute;background:radial-gradient(60% 50% at 50% 45%,#08130e,#030806 70%)}
+#runeld .rbg{inset:0;-webkit-mask-image:radial-gradient(circle at 50% 50%,transparent var(--hole,0px),#000 calc(var(--hole,0px) + 1.5px));
+  mask-image:radial-gradient(circle at 50% 50%,transparent var(--hole,0px),#000 calc(var(--hole,0px) + 1.5px))}
+#runeld .rdoor{top:0;bottom:0;width:50%;display:none}
+#runeld .rdoor.l{left:0;background:radial-gradient(120% 50% at 100% 45%,#08130e,#030806 70%)}
+#runeld .rdoor.r{right:0;background:radial-gradient(120% 50% at 0% 45%,#08130e,#030806 70%)}
+#runeld.unlock .rbg{display:none}#runeld.unlock .rdoor{display:block}
+#runeld .rsvg{position:absolute;left:50%;top:50%;width:var(--S);height:var(--S);transform:translate(-50%,-50%);overflow:visible}
+#runeld.gather .rsvg{left:0;top:0;width:100%;height:100%;transform:none}
+#runeld .rcap{position:absolute;left:0;right:0;top:calc(50% + var(--S) / 2 + 26px);text-align:center;font:400 10px/1 "Michroma",sans-serif;
+  letter-spacing:.45em;padding-left:.45em;text-transform:uppercase;color:#c9a95a;opacity:.85}
+#runeld .rbeam{position:absolute;left:50%;top:0;bottom:0;width:2px;margin-left:-1px;opacity:0;
+  background:linear-gradient(transparent,#fff6d8 30%,#fff6d8 70%,transparent);box-shadow:0 0 18px 4px rgba(233,196,106,.7)}
+#runeld .glyph{fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:2.3;stroke:#e9c46a}
+#runeld.ignite .glyph{stroke:#2c3a33;transition:stroke .25s,filter .25s}
+#runeld.ignite .glyph.lit{stroke:#e9c46a;filter:drop-shadow(0 0 3px rgba(233,196,106,.9))}
+#runeld .track{fill:none;stroke:#1b2822;stroke-width:1.4}
+#runeld .prog{fill:none;stroke:#e9c46a;stroke-width:1.6;stroke-linecap:round;transition:stroke-dashoffset .3s ease;filter:drop-shadow(0 0 4px rgba(233,196,106,.8))}
+#runeld .inner{fill:none;stroke:rgba(62,224,138,.35);stroke-width:.8}
+#runeld .band{fill:none;stroke:#3a4a42;stroke-width:.8}
+#runeld .notch{fill:#e9c46a}
+#runeld .r2 .glyph{stroke:#cfe9da;opacity:.6}
+#runeld .r3 .glyph{stroke:#3ee08a;opacity:.75}
 </style>
-<script>document.documentElement.classList.add('dealing');</script>
+<script>
+/* The rune loader. It starts at once; the ballot calls runeLoaderDone(ok) when its data is in (or failed). */
+(() => {
+  const box = document.getElementById('runeld'), svg = box.querySelector('.rsvg'), cap = box.querySelector('.rcap'), bg = box.querySelector('.rbg');
+  const html = document.documentElement; html.classList.add('dealing');
+  const MODES = ['ignite', 'unlock', 'gather'];
+  const asked = (location.search.match(/[?&]loader=(\w+)/) || [])[1];
+  const mode = MODES.includes(asked) ? asked : MODES[Math.floor(Math.random() * MODES.length)];   // a different one each visit, unless the address picks one
+  box.classList.add(mode);
+  const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // Rune glyphs as strokes in a 20 x 30 box (Elder Futhark shapes)
+  const RUNES = ['M6 0V30 M6 4L16 0 M6 12L16 8', 'M5 0V30 M5 0L15 8L5 14L15 30', 'M10 0V30 M2 6L10 14L18 6',
+    'M10 0L18 10L10 20L2 10Z M2 30L10 20L18 30', 'M4 0V30 M16 0V30 M4 0L16 16 M16 0L4 16', 'M10 0V30 M2 10L18 20',
+    'M4 0V30 M4 6L14 12L4 18', 'M2 0L18 30 M18 0L2 30', 'M4 0V30 M16 0V30 M4 10L16 20', 'M10 0V30 M10 6L18 14 M10 16L18 24',
+    'M2 30L10 0L18 30', 'M4 0V30 M4 8L16 16L4 24', 'M10 0V30', 'M4 0L16 8L4 16L16 24', 'M10 0V30 M2 30L10 22L18 30', 'M2 0V30 M18 0V30 M2 15H18'];
+  const NS = 'http://www.w3.org/2000/svg';
+  const wait = ms => new Promise(r => setTimeout(r, Math.max(0, ms)));
+  const ease = t => 1 - Math.pow(1 - t, 3);
+  const glyph = (i, k = 1) => `<path class="glyph" d="${RUNES[i % RUNES.length]}" transform="scale(${k}) translate(-10 -15)"/>`;
+  const ringOf = (n, r, k, off = 0) => Array.from({length: n}, (_, i) => `<g transform="rotate(${i / n * 360}) translate(0 ${-r})">${glyph(i + off, k)}</g>`).join('');
+  const start = performance.now();
+  const fade = () => { box.classList.add('gone'); html.classList.remove('dealing'); setTimeout(() => box.remove(), 500); };
+  let capGone = false;
+  const fadeCap = () => { if (!capGone){ capGone = true; cap.animate([{opacity: .85}, {opacity: 0}], {duration: 300, fill: 'forwards'}); } };
+  let finish = async () => fade();
+
+  if (mode === 'ignite'){
+    // One rune per category lights up as the ballot loads, then the ring flies up behind the title
+    cap.textContent = 'Reading the ballot';
+    svg.setAttribute('viewBox', '-150 -150 300 300');
+    svg.innerHTML = `<circle class="track" r="132"/><circle class="prog" r="132" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1" transform="rotate(-90)"/>
+      <circle class="inner" r="84"/>${ringOf(14, 108, .9)}`;
+    const gl = svg.querySelectorAll('.glyph'), prog = svg.querySelector('.prog'); let lit = 0;
+    const light = () => { if (lit < gl.length){ gl[lit++].classList.add('lit'); prog.style.strokeDashoffset = 1 - lit / gl.length; } };
+    const timer = setInterval(() => { if (lit < 10) light(); }, 160);   // runs ahead to about two thirds, then waits for the data
+    finish = async ok => {
+      clearInterval(timer);
+      if (!ok) return fade();
+      while (lit < gl.length){ light(); await wait(70); }
+      await wait(220);
+      svg.animate([{filter: 'brightness(1)'}, {filter: 'brightness(2.2) drop-shadow(0 0 14px #e9c46a)'}, {filter: 'brightness(1)'}], {duration: 600});
+      await wait(350);
+      const a = svg.getBoundingClientRect(), hero = document.querySelector('.hero');
+      let dx = 0, dy = -a.height, k = .6;
+      if (hero && hero.offsetParent){
+        const b = hero.getBoundingClientRect(), w = parseFloat(getComputedStyle(hero, '::before').width) || b.height;
+        dx = b.left + b.width / 2 - (a.left + a.width / 2); dy = b.top + b.height / 2 - (a.top + a.height / 2); k = w / a.width;
+      }
+      fadeCap();
+      bg.animate([{opacity: 1}, {opacity: 0}], {duration: 750, easing: 'ease', fill: 'forwards'});
+      await svg.animate([{transform: 'translate(-50%,-50%)', opacity: 1}, {transform: `translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px)) scale(${k})`, opacity: 0}],
+        {duration: 850, easing: 'cubic-bezier(.5,0,.2,1)', fill: 'forwards'}).finished;
+      fade();
+    };
+  } else if (mode === 'unlock'){
+    // Three rune rings spin like a combination lock, click into line, then the screen opens like two doors
+    cap.textContent = 'Unsealing your ballot';
+    svg.setAttribute('viewBox', '-150 -150 300 300');
+    svg.innerHTML = `<circle class="band" r="142"/><circle class="band" r="102"/><circle class="band" r="66"/><circle class="band" r="34"/>
+      <g class="r1">${ringOf(16, 122, .78)}</g><g class="r2">${ringOf(12, 84, .66, 5)}</g><g class="r3">${ringOf(8, 50, .56, 9)}</g><path class="notch" d="M0 -146 l-5 -9 h10z"/>`;
+    const rings = ['.r1', '.r2', '.r3'].map(c => svg.querySelector(c)), sp = [38, -62, 95], counts = [16, 12, 8];
+    const ang = rings.map(() => Math.random() * 360), tween = [null, null, null];
+    let last = performance.now(), running = true;
+    (function frame(now){
+      if (!running) return;
+      const dt = Math.min(50, now - last) / 1000; last = now;
+      rings.forEach((g, i) => {
+        if (tween[i]){ const p = Math.min(1, (now - tween[i].t0) / 650), e = 1 + 2.2 * Math.pow(p - 1, 3) + 1.2 * Math.pow(p - 1, 2);   // a small overshoot: a "click"
+          ang[i] = tween[i].from + (tween[i].to - tween[i].from) * e; }
+        else ang[i] += sp[i] * dt;
+        g.setAttribute('transform', `rotate(${ang[i]})`);
+      });
+      requestAnimationFrame(frame);
+    })(last);
+    finish = async ok => {
+      if (!ok){ running = false; return fade(); }
+      for (let i = 0; i < 3; i++){
+        const step = 360 / counts[i], from = ang[i];
+        const to = sp[i] > 0 ? Math.ceil((from + step * 1.5) / step) * step : Math.floor((from - step * 1.5) / step) * step;
+        tween[i] = {from, to, t0: performance.now()};
+        await wait(380);
+        rings[i].animate([{filter: 'brightness(2.4)'}, {filter: 'brightness(1)'}], {duration: 400});
+      }
+      await wait(380);
+      const beam = box.querySelector('.rbeam');
+      await beam.animate([{opacity: 0, transform: 'scaleY(0)'}, {opacity: 1, transform: 'scaleY(1)'}], {duration: 380, easing: 'ease-out', fill: 'forwards'}).finished;
+      running = false; fadeCap();
+      svg.animate([{opacity: 1, transform: 'translate(-50%,-50%) scale(1)'}, {opacity: 0, transform: 'translate(-50%,-50%) scale(1.25)'}], {duration: 700, easing: 'ease-in', fill: 'forwards'});
+      const open = {duration: 900, easing: 'cubic-bezier(.6,0,.2,1)', fill: 'forwards'};
+      box.querySelector('.rdoor.l').animate([{transform: 'none'}, {transform: 'translateX(-100%)'}], open);
+      box.querySelector('.rdoor.r').animate([{transform: 'none'}, {transform: 'translateX(100%)'}], open);
+      beam.animate([{opacity: 1}, {opacity: 0}], {duration: 700, delay: 150, fill: 'forwards'});
+      await wait(950); fade();
+    };
+  } else {
+    // Loose runes drift in the dark, gather into a circle, spin once, and the circle opens out like a portal
+    cap.textContent = 'Gathering the runes';
+    const W = innerWidth, H = innerHeight, N = 16, cx = W / 2, cy = H / 2;
+    const R = Math.min(W * .76, H * .48, 420) / 2 * .78, k = Math.max(.85, Math.min(1.35, R / 110));
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    const rs = Array.from({length: N}, (_, i) => {
+      const g = document.createElementNS(NS, 'g'); g.innerHTML = glyph(i, k); svg.appendChild(g);
+      return {g, x: Math.random() * W, y: Math.random() * H, a: Math.random() * 360,
+        vx: (Math.random() - .5) * 20, vy: -8 - Math.random() * 14, va: (Math.random() - .5) * 40, o: 0, ph: Math.random() * 6};
+    });
+    let phase = 'drift', t0 = 0, spin = 0, last = performance.now(), done = null;
+    const far = Math.hypot(W, H) / 2 + 60;
+    (function frame(now){
+      const dt = Math.min(50, now - last) / 1000; last = now;
+      if (phase === 'drift') rs.forEach(r => {
+        r.x += r.vx * dt; r.y += r.vy * dt; r.a += r.va * dt; r.o = Math.min(1, r.o + dt * .8);
+        if (r.y < -20) r.y = H + 20; if (r.x < -20) r.x = W + 20; if (r.x > W + 20) r.x = -20;
+        r.g.style.opacity = (.25 + .3 * (1 + Math.sin(now / 600 + r.ph)) / 2) * r.o;
+        r.g.setAttribute('transform', `translate(${r.x} ${r.y}) rotate(${r.a})`);
+      });
+      else {
+        const t = now - t0;
+        if (t > 1500) spin = 360 * ease(Math.min(1, (t - 1500) / 1100));   // one turn once they have all arrived
+        const q = t > 2300 ? Math.min(1, (t - 2300) / 1300) : 0, e2 = q * q * (3 - 2 * q), R2 = R + (far - R) * e2;
+        if (q > 0) bg.style.setProperty('--hole', Math.max(0, R2 - 20 * k) + 'px');
+        if (t > 1700) fadeCap();
+        rs.forEach((r, i) => {
+          if (!r.from) r.from = {x: r.x, y: r.y, a: r.a % 360, o: parseFloat(r.g.style.opacity) || .4};
+          const p = Math.max(0, Math.min(1, (t - i * 45) / 900)), e = ease(p);
+          const ta = i / N * 360 + spin, rad = (ta - 90) * Math.PI / 180;
+          const tx = cx + Math.cos(rad) * R2, ty = cy + Math.sin(rad) * R2;
+          let a0 = r.from.a, a1 = ta; while (a1 - a0 > 180) a1 -= 360; while (a0 - a1 > 180) a1 += 360;
+          r.g.setAttribute('transform', `translate(${r.from.x + (tx - r.from.x) * e} ${r.from.y + (ty - r.from.y) * e}) rotate(${a0 + (a1 - a0) * e})`);
+          r.g.style.opacity = (r.from.o + (1 - r.from.o) * e) * (1 - e2);
+          r.g.style.filter = e > .98 && !q ? 'drop-shadow(0 0 3px rgba(233,196,106,.9))' : '';
+        });
+        if (q >= 1){ fade(); if (done) done(); return; }
+      }
+      requestAnimationFrame(frame);
+    })(last);
+    finish = ok => new Promise(res => { if (!ok){ fade(); return res(); } phase = 'gather'; t0 = performance.now(); done = res; });
+  }
+
+  window.runeLoaderDone = async ok => {
+    await wait(1200 - (performance.now() - start));   // on a fast connection, still long enough to be seen
+    if (calm) return fade();
+    try { await finish(ok); } catch (e){ fade(); }
+  };
+})();
+</script>
 <div class="wrap">
   <header>
     <a class="brand" href="../"><svg viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff6d6"/><stop offset=".4" stop-color="#f0d58a"/><stop offset=".65" stop-color="#c99a3c"/><stop offset="1" stop-color="#a8761f"/></linearGradient></defs><path fill="url(#gold)" d="M18 6h28v6h10v6c0 8-6 14-13 15-2 5-6 8-9 9v6h8l2 8H20l2-8h8v-6c-3-1-7-4-9-9C14 32 8 26 8 18v-6h10V6zm-6 10v2c0 5 3 9 7 10-1-3-1-6-1-9v-3h-6zm34 0v3c0 3 0 6-1 9 4-1 7-5 7-10v-2h-6z"/></svg><span>Anime X Angas Awards</span></a>
@@ -1408,36 +1546,15 @@ $('#codeField').hidden = !USE_VOTER_CODES;
 $('.tabs').hidden = $('#seeResults').hidden = !SHOW_RESULTS_TAB;
 const old = LS.get('aw.voter', null); // name typed on an earlier visit, offered as a suggestion
 if (me || old){ $('#voterName').value = (me || old).name || ''; $('#voterCode').value = (me || old).code || ''; }
-/* ===== Loader: flip the dealt cards to three random nominees, then fade away ===== */
-const DEAL_MS = 1600;   // the deal finishes 1.6 s after the page appears
-const pageStart = performance.now();
-const wait = ms => new Promise(r => setTimeout(r, Math.max(0, ms)));
-function loadImage(src){ return new Promise(res => { const im = new Image(); im.onload = () => res(true); im.onerror = () => res(false); im.src = src; }); }
-async function revealDealer(ok){
-  const box = document.getElementById('dealer'); if (!box) return;
-  const done = () => { box.classList.add('gone'); document.documentElement.classList.remove('dealing'); setTimeout(() => box.remove(), 500); };
-  await wait(DEAL_MS - (performance.now() - pageStart));   // let the deal finish first
-  const pool = ok ? CATEGORIES.flatMap(c => c.nominees).map(n => ({name: n.name, img: n.image || covers[n.q] || n.thumb})).filter(n => n.img) : [];
-  const seen = new Set(), unique = pool.filter(n => !seen.has(n.img) && seen.add(n.img));
-  for (let i = unique.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [unique[i], unique[j]] = [unique[j], unique[i]]; }
-  const three = unique.slice(0, 3);
-  if (three.length < 3){ done(); return; }   // nothing to show (or the ballot failed to load): just fade away
-  await Promise.race([Promise.all(three.map(n => loadImage(n.img))), wait(2500)]);   // pictures ready before the flip
-  box.querySelectorAll('.dface').forEach((f, i) => { f.style.backgroundImage = `url("${three[i].img.replace(/"/g, '%22')}")`; f.querySelector('.dname').textContent = three[i].name; });
-  box.classList.add('reveal');
-  await wait(matchMedia('(prefers-reduced-motion: reduce)').matches ? 600 : 1500);   // the flips, and a moment to see them
-  done();
-}
-
 loadData().then(() => {
   if (!CATEGORIES.length) throw new Error('No categories found');
   // Start on the first category open for voting, else the first with nominees.
   const openIdx = CATEGORIES.findIndex(c => c.nominees.length && !isClosed(c));
   catIdx = openIdx >= 0 ? openIdx : Math.max(0, CATEGORIES.findIndex(c => c.nominees.length));
   show('vote'); loadCovers();
-  revealDealer(true);
+  window.runeLoaderDone && runeLoaderDone(true);
 }).catch(e => {
-  revealDealer(false);
+  window.runeLoaderDone && runeLoaderDone(false);
   const none = e.message === 'No categories found';
   $('#modeBadge').hidden = live;
   $('#catTitle').textContent = none ? 'Voting opens soon' : 'Ballot unavailable';
