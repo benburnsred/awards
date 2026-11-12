@@ -366,15 +366,22 @@
     /* ============================================================ */
     group = 'Flood limit';
 
-    test('More than 30 ballots in a minute get "Busy" and are not saved', () => {
+    test('More than 120 ballots in a minute get "Busy" and are not saved', () => {
       const w = world();
-      // 61 quick ballots: even if the clock ticks over a minute halfway, one minute still gets more than 30.
+      // 241 quick ballots: even if the clock ticks over a minute halfway, one minute still gets more than 120.
       const out = [];
-      for (let i = 0; i < 61; i++) out.push(w.ballot('Voter ' + i, {c_single: [pick('s1')]}));
+      for (let i = 0; i < 241; i++) out.push(w.ballot('Voter ' + i, {c_single: [pick('s1')]}));
       const busy = out.filter(r => !r.ok && /Busy/.test(r.error)).length;
       ok(busy >= 1, 'expected some ballots to be turned away');
-      eq(w.votes().length, 61 - busy);
-      ok(w.votes().length <= 60, 'never more than 30 a minute');
+      eq(w.votes().length, 241 - busy);
+      ok(w.votes().length <= 240, 'never more than 120 a minute');
+    });
+    test('A rush of 50 voters in one minute is not turned away', () => {
+      const w = world();
+      const out = [];
+      for (let i = 0; i < 50; i++) out.push(w.ballot('Voter ' + i, {c_single: [pick('s1')]}));
+      eq(out.filter(r => r.ok).length, 50);
+      eq(w.votes().length, 50);
     });
     test('The limit counts each kind of request separately', () => {
       const w = world();

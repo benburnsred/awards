@@ -1092,6 +1092,16 @@ async function api(payload){
   const res = await fetch(APPS_SCRIPT_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(payload)});
   return res.json();
 }
+// "Busy" means the ballot box turned the request away before saving anything, so it is safe to send it again.
+// Up to 5 retries, waiting a little longer (and a little randomly) each time, so a rush of voters spreads out.
+async function apiRetry(payload, onRetry){
+  for (let i = 0; ; i++){
+    const r = await api(payload);
+    if (r.ok || !/^Busy/.test(r.error || '') || i >= 5) return r;
+    if (onRetry) onRetry(i + 1);
+    await new Promise(res => setTimeout(res, 1500 * (i + 1) + Math.random() * 1500));
+  }
+}
 
 const NAME_TAKEN = 'This name has already voted. Votes can\'t be changed. If this is you and something is wrong, message the organisers.';
 const offline = e => e.message === 'Failed to fetch' || e.name === 'TypeError';
@@ -1107,7 +1117,7 @@ $('#startBtn').onclick = async () => {
   try {
     let taken;
     if (live){
-      const r = await api({action:'checkName', voter:name});
+      const r = await apiRetry({action:'checkName', voter:name}, () => { btn.textContent = 'Busy, retrying…'; });
       if (!r.ok) throw new Error(r.error || 'Could not check your name');
       taken = r.taken;
     } else taken = LS.get('aw.ballots', []).some(b => cleanName(b.voter).toLowerCase() === name.toLowerCase());
@@ -1151,7 +1161,7 @@ $('#confirmBtn').onclick = async () => {
   const btn = $('#confirmBtn'); btn.disabled = true; btn.textContent = 'Submitting…';
   try {
     if (live){
-      const r = await api({action:'ballot', voter:me.name, code:me.code, dc:dcPass() || undefined, ballots});
+      const r = await apiRetry({action:'ballot', voter:me.name, code:me.code, dc:dcPass() || undefined, ballots}, () => { btn.textContent = 'Busy, retrying…'; });
       if (!r.ok){
         if (r.taken){ me = null; LS.set('aw.voter2', null); show('name'); $('#nameErr').textContent = NAME_TAKEN; $('#nameErr').hidden = false; return; }
         throw new Error(r.error || 'Submission failed');

@@ -123,6 +123,7 @@
     env.globals = {
       SpreadsheetApp: {
         getActive: () => env.ss,
+        flush() {},
         openById: id => { if (!env.otherSheets[id]) throw new Error('No such spreadsheet'); return env.otherSheets[id]; }
       },
       Session: {getActiveUser: email, getEffectiveUser: email},

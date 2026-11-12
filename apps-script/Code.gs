@@ -148,10 +148,11 @@ function settingsMap() {
 
 function withLock(fn) {
   const lock = LockService.getScriptLock();
-  if (!lock.tryLock(15000)) throw new Error('Busy — please try again');
+  if (!lock.tryLock(25000)) throw new Error('Busy — please try again');
   try {
     return fn();
   } finally {
+    SpreadsheetApp.flush();   // the next voter in line must see this one's rows
     lock.releaseLock();
   }
 }
@@ -246,7 +247,8 @@ function doGet(e) {
 }
 
 // Flood limit for the public ballot: at most `max` requests of one kind per minute across the whole site.
-// Real voters never come close; a script hammering the ballot gets "Busy" instead of filling the Votes sheet.
+// Set well above a rush of real voters (load-tested with 50 at once); a script hammering the ballot gets "Busy"
+// instead of filling the Votes sheet.
 function overLimit(kind, max) {
   const cache = CacheService.getScriptCache(), key = 'rate:' + kind + ':' + Math.floor(Date.now() / 60000);
   const n = Number(cache.get(key) || 0) + 1;
@@ -287,9 +289,9 @@ function doPost(e) {
   // 'vote' was the old one-category-at-a-time ballot; a page still open from before is asked to reload.
   if (body && body.action === 'vote') return json({ok: false, error: 'This ballot page is out of date. Please reload it.'});
   if (!body || body.action !== 'ballot') return json({ok: false, error: 'Invalid request'});
-  if (overLimit('ballot', 30)) return json({ok: false, error: 'Busy — please try again'});
+  if (overLimit('ballot', 120)) return json({ok: false, error: 'Busy — please try again'});
   try {
-    return json(withLock(() => recordBallot(body)));
+    return json(recordBallot(body));
   } catch (err) {
     console.error(err);
     return json({ok: false, error: err.message === 'Busy — please try again' ? err.message : 'Something went wrong — please try again'});
@@ -345,10 +347,17 @@ function cleanVoter(name) {
   return String(name || '').replace(/\s+/g, ' ').trim().slice(0, 40);
 }
 
+// Every name that has voted, lower-cased. Only the voter column is read, which stays quick even with thousands
+// of vote rows (reading the whole Votes tab made each save slower as votes piled up).
+function voterNames() {
+  const src = votesSource(), col = src.head.indexOf(src.map.voter), last = src.sheet.getLastRow();
+  if (col < 0 || last < 2) return [];
+  return src.sheet.getRange(2, col + 1, last - 1, 1).getValues().map(r => cleanVoter(String(r[0]).replace(/^'/, '')).toLowerCase());
+}
+
 // Names are compared ignoring capitals and extra spaces, so "Ben", "ben" and " BEN " are the same voter.
 function nameTaken(voter) {
-  const key = cleanVoter(voter).toLowerCase();
-  return readVotes().some(v => cleanVoter(v.voter).toLowerCase() === key);
+  return voterNames().indexOf(cleanVoter(voter).toLowerCase()) >= 0;
 }
 
 const NAME_TAKEN = 'This name has already voted. Votes can\'t be changed. If this is you and something is wrong, message the organisers.';
@@ -356,7 +365,14 @@ const NAME_TAKEN = 'This name has already voted. Votes can\'t be changed. If thi
 // One ballot per name for the whole event: every category is sent together, once. A name that already has votes
 // is refused, so nobody can add to or change someone else's ballot. To redo a ballot, an organiser deletes that
 // name's rows in the Votes tab, which frees the name.
+// The ballot is checked first, outside the lock; only the name check and the write wait in line, so a rush of
+// voters moves through quickly.
 function recordBallot(b) {
+  const ready = checkBallot(b);
+  return ready.rows ? withLock(() => saveBallot(ready)) : ready;
+}
+
+function checkBallot(b) {
   const voter = cleanVoter(b.voter);
   let code = String(b.code || '').trim().toUpperCase().slice(0, 20);
   // "DC-…" codes mark a Discord sign-in and are only ever set here from a signed pass: a typed one is dropped,
@@ -396,6 +412,11 @@ function recordBallot(b) {
       nominee: s.nominee, value: s.value, points: s.points}));
   }
   if (!rows.length) return {ok: false, error: 'Empty ballot'};
+  return {voter: voter, code: code, discord: discord, rows: rows, now: now};
+}
+
+function saveBallot(ready) {
+  const voter = ready.voter, code = ready.code, discord = ready.discord, rows = ready.rows, now = ready.now;
   if (nameTaken(voter)) return {ok: false, error: NAME_TAKEN, taken: true};
 
   // Voter codes: if the Codes sheet lists any, a valid code that hasn't voted yet is required.
