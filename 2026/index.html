@@ -721,7 +721,24 @@ html:not(.page-ready) body{overflow:hidden}
     else setTimeout(lock, 100);
   }
   setTimeout(lock, 50);
-  const home = () => spot && {...spot};
+  // Where the portal sits right now. Once it has opened it keeps following the header ring (or the middle of the
+  // screen if there is no ring), gliding there, so maximising or resizing the window mid-opening keeps it centred.
+  const target = () => {
+    const b = ringBox();
+    return b ? {cx: b.cx, cy: b.cy, r: Math.min(b.w * .3, innerWidth * .32)}
+      : {cx: innerWidth / 2, cy: BAR + (innerHeight - BAR) / 2, r: Math.min(innerWidth, innerHeight - BAR) * .28};
+  };
+  let lastFollow = 0;
+  const home = () => {
+    if (!spot) return null;
+    const now = performance.now();
+    if (now - lastFollow > 16){
+      const t = target(), k = Math.min(1, (now - (lastFollow || now)) / 120);   // eases over about a tenth of a second
+      lastFollow = now;
+      for (const key of ['cx', 'cy', 'r']) spot[key] += (t[key] - spot[key]) * k;
+    }
+    return {...spot};
+  };
   // Bright arcs on the ring at uneven spacing, lengths and speeds, so nothing looks grouped.
   const ARCS = Array.from({length: 7}, () => ({at: Math.random() * 6.28, len: .15 + Math.random() * .6, sp: .6 + Math.random() * .9, o: .35 + Math.random() * .65}));
   const t0 = performance.now(); let last = t0, spin = 0, on = true, leave = null, sparks = [];
