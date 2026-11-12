@@ -620,6 +620,11 @@
       eq(called.filter(n => names.indexOf(n) < 0), []);
       ok(!/propos/i.test(files.admin), 'no proposals left on the admin page');
     });
+    test('Every script on the ballot page is valid JavaScript (a typo there stops the whole ballot loading)', () => {
+      const blocks = [...files.vote.matchAll(/<script(?![^>]*src)[^>]*>([\s\S]*?)<\/script>/g)].map(m => m[1]);
+      ok(blocks.length >= 2, 'found ' + blocks.length + ' scripts');
+      blocks.forEach((b, i) => { try { new Function(b); } catch (e) { throw new Error('script ' + (i + 1) + ': ' + e.message); } });
+    });
     test('The ballot page and the script use the same tier points and limits', () => {
       const page = {}, re = /\{id:'([A-Z])',\s*points:(\d+),\s*cap:(\d+)/g;
       let m;

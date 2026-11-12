@@ -879,7 +879,8 @@ function closeTheater(){
   document.documentElement.classList.remove('theater-on');
   if (theaterBack && theaterBack.focus) theaterBack.focus();
 }
-document.addEventListener('click', e => { if (e.target.id === 'theater') closeTheater();   // a tap or click outside the video }, true);
+// A tap or click outside the video closes the player.
+document.addEventListener('click', e => { if (e.target.id === 'theater') closeTheater(); }, true);
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#theater').hidden){ e.stopPropagation(); closeTheater(); } }, true);
 
 document.addEventListener('click', e => {
