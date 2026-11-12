@@ -415,7 +415,9 @@ html.dealing{overflow:hidden}
 #runeld{position:fixed;inset:0;z-index:9000;--S:min(76vw,48vh,420px);--S:min(76vw,48svh,420px);transition:opacity .45s ease}
 #runeld.gone{opacity:0;pointer-events:none}
 #runeld .rbg,#runeld .rdoor{position:absolute;background:radial-gradient(60% 50% at 50% 45%,#08130e,#030806 70%)}
-#runeld .rbg{inset:0;-webkit-mask-image:radial-gradient(circle at 50% 50%,transparent var(--hole,0px),#000 calc(var(--hole,0px) + 1.5px));
+#runeld .rbg{inset:0}
+/* The see-through hole exists only while Gather opens; at size 0 it would still leave a pixel showing the page in the middle */
+#runeld.opening .rbg{-webkit-mask-image:radial-gradient(circle at 50% 50%,transparent var(--hole,0px),#000 calc(var(--hole,0px) + 1.5px));
   mask-image:radial-gradient(circle at 50% 50%,transparent var(--hole,0px),#000 calc(var(--hole,0px) + 1.5px))}
 #runeld .rdoor{top:0;bottom:0;width:50%;display:none}
 #runeld .rdoor.l{left:0;background:radial-gradient(120% 50% at 100% 45%,#08130e,#030806 70%)}
@@ -557,7 +559,7 @@ html.dealing{overflow:hidden}
         const t = now - t0;
         if (t > 1500) spin = 360 * ease(Math.min(1, (t - 1500) / 1100));   // one turn once they have all arrived
         const q = t > 2300 ? Math.min(1, (t - 2300) / 1300) : 0, e2 = q * q * (3 - 2 * q), R2 = R + (far - R) * e2;
-        if (q > 0) bg.style.setProperty('--hole', Math.max(0, R2 - 20 * k) + 'px');
+        if (q > 0){ bg.style.setProperty('--hole', Math.max(0, R2 - 20 * k) + 'px'); box.classList.add('opening'); }
         if (t > 1700) fadeCap();
         rs.forEach((r, i) => {
           if (!r.from) r.from = {x: r.x, y: r.y, a: r.a % 360, o: parseFloat(r.g.style.opacity) || .4};
