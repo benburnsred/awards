@@ -43,6 +43,7 @@ h1{font:900 clamp(28px,5vw,52px)/1.05 var(--serif);text-transform:uppercase;lett
 .hero p{color:var(--muted);margin:0 auto;max-width:620px}
 .mode{display:inline-block;margin-top:16px;font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;padding:7px 14px;border:1px solid var(--line2);color:var(--dim)}
 .mode b{color:var(--gold)}
+.mode:empty,.mode[hidden]{display:none!important}   /* the demo-mode label: no empty box while loading or when live */
 .cats{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:0 0 22px}
 .cats button{border:1px solid var(--line2);background:transparent;padding:9px 14px;cursor:pointer;font:700 12px/1 var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
 .cats button.on{border-color:rgba(233,196,106,.6);color:var(--ink)}
@@ -407,6 +408,41 @@ document.addEventListener('contextmenu', e => { if (!(e.target.closest && e.targ
 </style>
 </head>
 <body>
+<!-- Loader: three cards deal face-down while the ballot loads, then flip to three random nominees and fade away. -->
+<div id="dealer" aria-hidden="true"><div class="dtable"><div class="dcard"><div class="dflip"><div class="dback"></div><div class="dface"><span class="dname"></span></div></div></div><div class="dcard"><div class="dflip"><div class="dback"></div><div class="dface"><span class="dname"></span></div></div></div><div class="dcard"><div class="dflip"><div class="dback"></div><div class="dface"><span class="dname"></span></div></div></div></div><div class="dcap">Dealing your ballot…</div></div>
+<style>
+html.dealing{overflow:hidden}
+#dealer{position:fixed;inset:0;z-index:9000;display:grid;place-items:center;align-content:center;gap:34px;
+  background:radial-gradient(60% 50% at 50% 45%,#08130e,#030806 70%);transition:opacity .45s ease}
+#dealer.gone{opacity:0;pointer-events:none}
+#dealer .dtable{position:relative;width:300px;height:220px;perspective:900px}
+#dealer .dcard{position:absolute;left:50%;top:50%;width:104px;height:144px;margin:-72px 0 0 -52px;transform-style:preserve-3d;opacity:0;
+  animation:dDeal 1s cubic-bezier(.2,.8,.2,1) forwards}
+#dealer .dcard:nth-child(1){--x:-92px;--y:8px;--r:-14deg;animation-delay:.15s}
+#dealer .dcard:nth-child(2){--x:0px;--y:-10px;--r:0deg;animation-delay:.35s}
+#dealer .dcard:nth-child(3){--x:92px;--y:8px;--r:14deg;animation-delay:.55s}
+#dealer .dflip{position:absolute;inset:0;transform-style:preserve-3d}
+#dealer.reveal .dflip{animation:dFlip .6s cubic-bezier(.3,.7,.2,1) forwards}
+#dealer.reveal .dcard:nth-child(2) .dflip{animation-delay:.2s}
+#dealer.reveal .dcard:nth-child(3) .dflip{animation-delay:.4s}
+#dealer .dback,#dealer .dface{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border:1px solid #c99a3c}
+#dealer .dback{background:
+  radial-gradient(circle at 50% 50%,transparent 26px,rgba(233,196,106,.65) 27px,transparent 28.5px),
+  radial-gradient(circle at 50% 50%,transparent 33px,rgba(62,224,138,.45) 34px,transparent 35px),
+  repeating-linear-gradient(45deg,rgba(233,196,106,.07) 0 6px,transparent 6px 12px),
+  linear-gradient(160deg,#0f2219,#06100b);
+  box-shadow:inset 0 0 0 5px #06100b,inset 0 0 0 6px rgba(233,196,106,.5),0 18px 30px -12px #000}
+#dealer .dface{transform:rotateY(180deg);display:grid;align-content:end;background:#050c08 center/cover no-repeat;
+  box-shadow:0 0 22px -6px rgba(233,196,106,.6),0 18px 30px -12px #000}
+#dealer .dface::after{content:"";position:absolute;inset:0;background:linear-gradient(transparent 55%,rgba(3,8,6,.92))}
+#dealer .dname{position:relative;z-index:1;padding:0 6px 8px;font:600 9px/1.25 Inter,sans-serif;color:#f3e6c4;text-align:center;
+  overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+#dealer .dcap{font:400 10px/1 "Michroma",sans-serif;letter-spacing:.45em;padding-left:.45em;text-transform:uppercase;color:#c9a95a;opacity:.85}
+@keyframes dDeal{0%{transform:translate(0,40px) scale(.92);opacity:0}25%{opacity:1}100%{transform:translate(var(--x),var(--y)) rotate(var(--r));opacity:1}}
+@keyframes dFlip{to{transform:rotateY(180deg)}}
+@media (prefers-reduced-motion:reduce){#dealer .dcard{animation:none;opacity:1;transform:translate(var(--x),var(--y)) rotate(var(--r))}#dealer.reveal .dflip{animation:none;transform:rotateY(180deg)}}
+</style>
+<script>document.documentElement.classList.add('dealing');</script>
 <div class="wrap">
   <header>
     <a class="brand" href="../"><svg viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff6d6"/><stop offset=".4" stop-color="#f0d58a"/><stop offset=".65" stop-color="#c99a3c"/><stop offset="1" stop-color="#a8761f"/></linearGradient></defs><path fill="url(#gold)" d="M18 6h28v6h10v6c0 8-6 14-13 15-2 5-6 8-9 9v6h8l2 8H20l2-8h8v-6c-3-1-7-4-9-9C14 32 8 26 8 18v-6h10V6zm-6 10v2c0 5 3 9 7 10-1-3-1-6-1-9v-3h-6zm34 0v3c0 3 0 6-1 9 4-1 7-5 7-10v-2h-6z"/></svg><span>Anime X Angas Awards</span></a>
@@ -1370,13 +1406,36 @@ $('#codeField').hidden = !USE_VOTER_CODES;
 $('.tabs').hidden = $('#seeResults').hidden = !SHOW_RESULTS_TAB;
 const old = LS.get('aw.voter', null); // name typed on an earlier visit, offered as a suggestion
 if (me || old){ $('#voterName').value = (me || old).name || ''; $('#voterCode').value = (me || old).code || ''; }
+/* ===== Loader: flip the dealt cards to three random nominees, then fade away ===== */
+const DEAL_MS = 1600;   // the deal finishes 1.6 s after the page appears
+const pageStart = performance.now();
+const wait = ms => new Promise(r => setTimeout(r, Math.max(0, ms)));
+function loadImage(src){ return new Promise(res => { const im = new Image(); im.onload = () => res(true); im.onerror = () => res(false); im.src = src; }); }
+async function revealDealer(ok){
+  const box = document.getElementById('dealer'); if (!box) return;
+  const done = () => { box.classList.add('gone'); document.documentElement.classList.remove('dealing'); setTimeout(() => box.remove(), 500); };
+  await wait(DEAL_MS - (performance.now() - pageStart));   // let the deal finish first
+  const pool = ok ? CATEGORIES.flatMap(c => c.nominees).map(n => ({name: n.name, img: n.image || covers[n.q] || n.thumb})).filter(n => n.img) : [];
+  const seen = new Set(), unique = pool.filter(n => !seen.has(n.img) && seen.add(n.img));
+  for (let i = unique.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [unique[i], unique[j]] = [unique[j], unique[i]]; }
+  const three = unique.slice(0, 3);
+  if (three.length < 3){ done(); return; }   // nothing to show (or the ballot failed to load): just fade away
+  await Promise.race([Promise.all(three.map(n => loadImage(n.img))), wait(2500)]);   // pictures ready before the flip
+  box.querySelectorAll('.dface').forEach((f, i) => { f.style.backgroundImage = `url("${three[i].img.replace(/"/g, '%22')}")`; f.querySelector('.dname').textContent = three[i].name; });
+  box.classList.add('reveal');
+  await wait(matchMedia('(prefers-reduced-motion: reduce)').matches ? 600 : 1500);   // the flips, and a moment to see them
+  done();
+}
+
 loadData().then(() => {
   if (!CATEGORIES.length) throw new Error('No categories found');
   // Start on the first category open for voting, else the first with nominees.
   const openIdx = CATEGORIES.findIndex(c => c.nominees.length && !isClosed(c));
   catIdx = openIdx >= 0 ? openIdx : Math.max(0, CATEGORIES.findIndex(c => c.nominees.length));
   show('vote'); loadCovers();
+  revealDealer(true);
 }).catch(e => {
+  revealDealer(false);
   const none = e.message === 'No categories found';
   $('#modeBadge').hidden = live;
   $('#catTitle').textContent = none ? 'Voting opens soon' : 'Ballot unavailable';
