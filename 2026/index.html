@@ -612,6 +612,16 @@ html{scroll-padding-top:128px!important}
 .rings-on .hero-ring.gold{opacity:.85}
 .hero.off .hero-ring{animation-play-state:paused}
 @media (prefers-reduced-motion:reduce){.hero-ring{animation:none!important;transition:none}}
+/* Phones and touch tablets: the header is a square box the size of the ring, with the title centred in it; the
+   voting line, countdown and buttons follow below. Pure CSS, so every browser draws it the same. */
+.hero-grid>div:first-child.ring-css{--D:min(94vw,460px,55svh);padding-top:0!important;margin-top:0!important}
+.hero.hero-css{padding-top:74px!important}   /* just under the top bar: the ring box has its own breathing room */
+.ring-css>.lockup{height:var(--D);display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto!important}
+.ring-css>.hero-ring{width:var(--D)!important;top:calc(var(--D) / 2)!important}
+.ring-css>.rule{display:none}
+.ring-css>#vstatus{margin-top:6px!important}
+.ring-css>.count{margin-top:14px!important}
+.ring-css>.ctas{margin-top:22px!important}
 </style>
 <style>
 /* No text highlighting (typing fields still work normally) */
@@ -699,7 +709,7 @@ html:not(.page-ready) body{overflow:hidden}
   // The portal opens only once the header ring's position is final (fonts and Sheet data in, countdown shown,
   // and the ring holding still), then stays at that spot. Until then the screen stays dark.
   let spot = null, prevKey = '', steady = 0;
-  const ringBox = () => { const ring = document.querySelector('.hero-ring.rune'), w = ring && parseFloat(ring.style.width);
+  const ringBox = () => { const ring = document.querySelector('.hero-ring.rune'), w = ring && (parseFloat(ring.style.width) || ring.offsetWidth);
     if (!w) return null; const b = ring.getBoundingClientRect(); return {cx: b.left + b.width / 2, cy: b.top + b.height / 2, w}; };
   function lock(){
     if (spot) return;
@@ -1532,8 +1542,17 @@ html.theater-on{overflow:hidden}
 (function(){
   const col = document.querySelector('.hero-grid>div:first-child'); if (!col) return;
   const GOLD = .86 * .43, MARGIN = 26, RUNE_EDGE = .49;
+  // iPhones and iPads (every browser there uses Safari's engine) draw SVG glow filters at low resolution, which
+  // turned the runes into blurry blobs. There the rings are drawn without the filter: crisp, without the glow.
+  const ios = /iP(hone|ad|od)/.test(navigator.userAgent) || (/Mac/.test(navigator.platform) && navigator.maxTouchPoints > 1);
+  const crisp = bg => ios ? bg.replace(/ filter=(?:\\?["']|%22|%27)url(?:\(|%28)(?:#|%23)[\w-]+(?:\)|%29)(?:\\?["']|%22|%27)/g, '') : bg;   // the image is percent-encoded: " %22, ( %28, # %23, ) %29
   const make = (cls, pseudo) => { const d = document.createElement('div'); d.className = 'hero-ring ' + cls; d.setAttribute('aria-hidden', 'true');
-    d.style.backgroundImage = getComputedStyle(col, pseudo).backgroundImage; col.prepend(d); return d; };
+    d.style.backgroundImage = crisp(getComputedStyle(col, pseudo).backgroundImage); col.prepend(d); return d; };
+  if (ios){   // the small rings above each award's title, too
+    const probe = document.createElement('div'); probe.className = 'cat-head'; probe.style.display = 'none'; document.body.appendChild(probe);
+    const bg = getComputedStyle(probe, '::before').backgroundImage; probe.remove();
+    if (bg && bg !== 'none'){ const st = document.createElement('style'); st.textContent = '.cat-head::before{background-image:' + crisp(bg) + '!important}'; document.head.appendChild(st); }
+  }
   const gold = make('gold', '::after'), rune = make('rune', '::before');
   const ctas = col.querySelector('.ctas'), count = col.querySelector('.count'), bar = document.querySelector('.top');
   const letters = e => { const r = document.createRange(); r.selectNodeContents(e); return r.getBoundingClientRect(); };
@@ -1562,6 +1581,19 @@ html.theater-on{overflow:hidden}
   const screenH = () => touch ? firstH : innerHeight;
   function place(){
     const phone = innerWidth < 600;
+    // Phones and touch tablets: the header is laid out by CSS alone (see .ring-css): a square box the size of the
+    // ring with the title centred in it, and the countdown and buttons below. Measuring and zooming gave different
+    // results in Safari's engine (gaps, odd positions), so on these screens nothing is measured.
+    const cssMode = innerWidth < 900 || (touch && innerWidth < 1200);   // phones, narrow windows and touch tablets
+    col.classList.toggle('ring-css', cssMode);
+    const hero = col.closest('.hero'); if (hero) hero.classList.toggle('hero-css', cssMode);
+    if (cssMode){
+      for (const e of [ctas, count, col.querySelector('#vstatus')]) if (e) e.style.removeProperty('margin-top');
+      col.style.removeProperty('padding-top'); col.style.removeProperty('margin-top');
+      for (const e of col.querySelectorAll(':scope>.lockup,:scope>.count,:scope>.ctas')) e.style.removeProperty('zoom');
+      for (const r of [rune, gold]){ r.style.removeProperty('width'); r.style.removeProperty('top'); }
+      return;
+    }
     for (const e of [ctas, count]) if (e) e.style.removeProperty('margin-top');
     col.style.removeProperty('padding-top'); col.style.removeProperty('margin-top');
     const content = [...col.querySelectorAll(':scope>.lockup,:scope>.count,:scope>.ctas')];
