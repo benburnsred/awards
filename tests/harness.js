@@ -128,7 +128,7 @@
       },
       Session: {getActiveUser: email, getEffectiveUser: email},
       LockService: {getScriptLock: () => ({tryLock: () => env.lockFree, releaseLock() {}})},
-      CacheService: {getScriptCache: () => ({get: k => (k in env.cache ? env.cache[k] : null), put: (k, v) => { env.cache[k] = String(v); }})},
+      CacheService: {getScriptCache: () => ({get: k => (k in env.cache ? env.cache[k] : null), put: (k, v) => { env.cache[k] = String(v); }, remove: k => { delete env.cache[k]; }})},
       PropertiesService: {getScriptProperties: () => ({
         getProperty: k => (k in env.props ? env.props[k] : null), setProperty: (k, v) => { env.props[k] = String(v); }})},
       ContentService: {

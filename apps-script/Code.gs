@@ -98,7 +98,23 @@ function sheet(name) {
   return CACHE.sheets[name];
 }
 
+// Tabs the ballot only reads are also kept in the script cache for a minute, shared by every run, so a rush of
+// voters doesn't send the same reads to the Sheet fifty times at once (the Sheet was the bottleneck in load tests).
+// Saving in the admin dashboard clears them; a hand edit in the Sheet shows up within a minute.
+const SHARED_TABLES = ['Settings', 'Categories', 'Nominees', 'VotesMapping'];
+function sharedGet(key) {
+  try { const v = CacheService.getScriptCache().get(key); return v ? JSON.parse(v) : null; } catch (e) { return null; }
+}
+function sharedPut(key, value) {
+  try { const s = JSON.stringify(value); if (s.length < 90000) CacheService.getScriptCache().put(key, s, 60); } catch (e) {}
+}
+function sharedDrop(key) {
+  try { CacheService.getScriptCache().remove(key); } catch (e) {}
+}
+
 function readTable(name) {
+  const shared = SHARED_TABLES.indexOf(name) >= 0;
+  if (!CACHE.tables[name] && shared) CACHE.tables[name] = sharedGet('table:' + name);
   if (!CACHE.tables[name]) {
     const values = sheet(name).getDataRange().getValues();
     const head = values.shift().map(String);
@@ -107,12 +123,16 @@ function readTable(name) {
       head.forEach((h, i) => o[h] = r[i] instanceof Date ? r[i].toISOString() : typeof r[i] === 'boolean' ? (r[i] ? 'TRUE' : 'FALSE') : String(r[i]));
       return o;
     });
+    if (shared) sharedPut('table:' + name, CACHE.tables[name]);
   }
   return CACHE.tables[name].map(o => Object.assign({}, o)); // copies, so callers can edit rows freely
 }
 
 function forget(name) {
   delete CACHE.tables[name];
+  if (SHARED_TABLES.indexOf(name) >= 0) sharedDrop('table:' + name);
+  if (name === 'VotesMapping' || name === 'Settings') sharedDrop('votes:head');
+  if (name === 'Codes') sharedDrop('codes:inuse');
   if (name === 'Categories' || name === 'Nominees' || name === 'VotesMapping' || name === 'Settings') CACHE.votes = null;
 }
 
@@ -178,7 +198,11 @@ function votesSource() {
   const map = {};
   VOTE_FIELDS.forEach((f, i) => map[f] = TABS.Votes[i]);
   readTable('VotesMapping').forEach(r => { if (r.field && r.column) map[r.field.trim().toLowerCase()] = r.column.trim(); });
-  const head = sh.getLastColumn() ? sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(h => String(h).trim()) : [];
+  let head = sharedGet('votes:head');
+  if (!head || !head.length) {
+    head = sh.getLastColumn() ? sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(h => String(h).trim()) : [];
+    sharedPut('votes:head', head);
+  }
   CACHE.votes = {src: {ss: ss, sheet: sh, map: map, head: head}};
   return CACHE.votes.src;
 }
@@ -415,12 +439,19 @@ function checkBallot(b) {
   return {voter: voter, code: code, discord: discord, rows: rows, now: now};
 }
 
+// Whether the Codes tab lists any voter codes, remembered for a minute so most saves skip reading it.
+function codesInUse() {
+  let v = sharedGet('codes:inuse');
+  if (v === null) { v = sheet('Codes').getLastRow() > 1; sharedPut('codes:inuse', v); }
+  return v;
+}
+
 function saveBallot(ready) {
   const voter = ready.voter, code = ready.code, discord = ready.discord, rows = ready.rows, now = ready.now;
   if (nameTaken(voter)) return {ok: false, error: NAME_TAKEN, taken: true};
 
   // Voter codes: if the Codes sheet lists any, a valid code that hasn't voted yet is required.
-  const codeRows = sheet('Codes').getDataRange().getValues().slice(1);
+  const codeRows = codesInUse() ? sheet('Codes').getDataRange().getValues().slice(1) : [];
   if (codeRows.length && !discord) {
     const mine = codeRows.filter(r => String(r[0]).toUpperCase() === code);
     if (!code || !mine.some(r => !r[1])) return {ok: false, error: 'Unknown voter code'};
