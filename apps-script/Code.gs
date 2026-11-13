@@ -696,36 +696,69 @@ function adminSaveSettings(values) {
   });
 }
 
-// Copies categories and nominees into the Site tab, which the public awards page and ballot read.
-function adminPublish() {
-  const email = requireAdmin();
-  let before = [], after = [];
-  const st = withLock(() => {
+// The Site tab's rows built from the Categories and Nominees tabs, plus the categories that publishing will lock.
+// In a locked category that already has votes, the list of nominees stays as it was published: a nominee added in
+// the Sheet waits and a removed one stays on the ballot until an admin unlocks the category, so every voter sees the
+// same ballot. Names, subtitles, pictures, links and winners still update. `held` says what was held back.
+function buildSite(cats, noms, before) {
+  const rows = [], held = [], toLock = [];
+  let voted = null;   // categories with votes, read only if needed
+  const hasVotes = id => {
+    if (!voted) { voted = {}; try { readVotes().forEach(v => voted[v.category] = true); } catch (err) { voted = null; return true; } }
+    return !!voted[id];
+  };
+  cats.filter(c => String(c.name || '').trim() && c.id).forEach(c => {
+    const base = {category: c.name, category_description: c.description, category_id: c.id, category_type: c.type,
+      method: c.method, max_picks: c.max_picks, opens: '', closes: ''};
+    let list = noms.filter(n => n.category_id === c.id && String(n.name || '').trim() && n.id).map(n => ({nominee: n.name, subtitle: n.subtitle,
+      image: n.image, image_search: n.image_search, link: n.link, winner: n.winner, nominee_id: n.id}));
+    const was = before.filter(r => r.category_id === c.id && r.nominee);
+    const sameList = was.map(r => r.nominee_id).sort().join('|') === list.map(n => n.nominee_id).sort().join('|');
+    if (c.locked === 'TRUE' && was.length && !sameList && hasVotes(c.id)) {
+      const ids = was.map(r => r.nominee_id);
+      list.filter(n => ids.indexOf(n.nominee_id) < 0).forEach(n =>
+        held.push('Not added to ' + c.name + ' because voting has started: "' + n.nominee + '". An admin can unlock the category in the dashboard to add it.'));
+      list = was.map(r => {
+        const now = list.find(n => n.nominee_id === r.nominee_id);
+        if (!now) held.push('Kept on the ballot in ' + c.name + ' because voting has started: "' + r.nominee + '" (it is no longer in the Nominees tab). An admin can unlock the category in the dashboard to remove it.');
+        return now || {nominee: r.nominee, subtitle: r.subtitle, image: r.image, image_search: r.image_search, link: r.link, winner: r.winner, nominee_id: r.nominee_id};
+      });
+    }
+    // Public-vote categories lock once they're published with nominees, so the ballot can't change mid-vote.
+    const locked = c.locked === 'TRUE' || (c.type !== 'special' && list.length > 0);
+    if (locked && c.locked !== 'TRUE') toLock.push(c.id);
+    const lockText = locked ? 'TRUE' : '';
+    if (!list.length) rows.push(Object.assign({locked: lockText}, base));
+    list.forEach(n => rows.push(Object.assign({}, base, n, {locked: lockText})));
+  });
+  return {rows: rows, held: held, toLock: toLock};
+}
+
+// Writes the Site tab (which the public awards page and ballot read), locks newly voted categories and logs it, then
+// emails and starts the video search (afterPublish). `who` is the admin's email, or AUTO for the automatic publish.
+function publishSite(who, issues) {
+  let before = [], after = [], held = [];
+  withLock(() => {
     before = sheet('Site') ? readTable('Site') : [];
     const cats = readTable('Categories').sort((a, b) => Number(a.order) - Number(b.order));
-    const noms = readTable('Nominees');
-    const rows = [];
-    cats.forEach(c => {
-      const base = {category: c.name, category_description: c.description, category_id: c.id, category_type: c.type,
-        method: c.method, max_picks: c.max_picks, opens: '', closes: ''};
-      const list = noms.filter(n => n.category_id === c.id);
-      if (!list.length) rows.push(base);
-      list.forEach(n => rows.push(Object.assign({}, base, {nominee: n.name, subtitle: n.subtitle, image: n.image,
-        image_search: n.image_search, link: n.link, winner: n.winner, nominee_id: n.id})));
-    });
-    // Lock public-vote categories that now have published nominees, so the ballot can't change mid-vote.
-    const locked = [];
-    cats.forEach(c => {
-      if (c.type !== 'special' && c.locked !== 'TRUE' && noms.some(n => n.category_id === c.id)) { c.locked = 'TRUE'; locked.push(c.name); }
-    });
-    if (locked.length) writeTable('Categories', TABS.Categories, cats);
-    rows.forEach(r => { const c = cats.find(x => x.id === r.category_id); r.locked = c ? c.locked : ''; });
-    writeTable('Site', SITE_HEADERS, rows);
-    after = rows;
-    log(email, 'publish', rows.length + ' rows' + (locked.length ? '; locked ' + locked.join(', ') : ''));
-    return adminState();
+    const built = buildSite(cats, readTable('Nominees'), before);
+    if (built.toLock.length) {
+      cats.forEach(c => { if (built.toLock.indexOf(c.id) >= 0) c.locked = 'TRUE'; });
+      writeTable('Categories', TABS.Categories, cats);
+    }
+    writeTable('Site', SITE_HEADERS, built.rows);
+    after = built.rows; held = built.held;
+    const lockedNames = cats.filter(c => built.toLock.indexOf(c.id) >= 0).map(c => c.name);
+    log(who, 'publish', built.rows.length + ' rows' + (lockedNames.length ? '; locked ' + lockedNames.join(', ') : ''));
   });
-  st.message = afterPublish(email, before, after);
+  return afterPublish(who, before, after, held.concat(issues || []));
+}
+
+function adminPublish() {
+  const email = requireAdmin();
+  const message = publishSite(email);
+  const st = adminState();
+  st.message = message;
   return st;
 }
 
@@ -787,7 +820,8 @@ function startVideoJob(props) {
 }
 
 // Runs after the Site tab is written. Never undoes or blocks the publish: problems only show in the returned message.
-function afterPublish(email, before, after) {
+function afterPublish(email, before, after, issues) {
+  issues = issues || [];
   const props = PropertiesService.getScriptProperties(), notes = ['Published'];
   const change = siteChanges(before, after);
   let videos = false;
@@ -801,10 +835,12 @@ function afterPublish(email, before, after) {
       const when = new Date().toLocaleString('en-US', {timeZone: 'Asia/Manila', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit'});
       const site = props.getProperty('SITE_URL') || DEFAULT_SITE_URL;
       const n = change.lines.length;
-      const body = [email + ' published the awards site on ' + when + ' (Philippine time).', '',
+      const body = [(email === AUTO ? 'The awards site was published automatically after the Sheet changed, on ' : email + ' published the awards site on ')
+        + when + ' (Philippine time).', '',
         n ? 'What changed since the last publish:' : 'Nothing changed in the categories or nominees (published again as it was).']
         .concat(change.lines.map(l => '  • ' + l))
         .concat(['', 'The site and the ballot show it within about 5 minutes:', '  Awards page: ' + site, '  Ballot: ' + site.replace(/\d{4}\/?$/, '') + 'vote/'])
+        .concat(issues.length ? ['', 'Needs attention:'].concat(issues.map(l => '  • ' + l)) : [])
         .concat(videos ? ['', 'New or changed songs: the opening/ending video search starts in about 6 minutes and adds any videos it finds.'] : [])
         .concat(['', 'Sent automatically by the awards admin dashboard.']).join('\n');
       MailApp.sendEmail({to: to.join(','), subject: 'Awards site published' + (n ? ': ' + n + ' change' + (n === 1 ? '' : 's') : ' (no changes)'),
@@ -813,6 +849,173 @@ function afterPublish(email, before, after) {
     } catch (err) { console.error(err); notes.push('the email could not be sent: ' + err.message); }
   }
   return notes.join(' · ');
+}
+
+/* ===== Automatic publish: the Sheet is checked every 5 minutes and published when it changed ===== */
+// Turned on with a time-driven trigger on autoPublish (Triggers → Add trigger → autoPublish → Time-driven →
+// Minutes timer → Every 5 minutes). It publishes only once nobody has changed the Sheet for QUIET_MS, so half-typed
+// edits don't go out, and sends the same "site published" email as the Publish button (PUBLISH_EMAILS).
+const AUTO = 'automatic';
+const QUIET_MS = 4 * 60 * 1000;
+
+// A short fingerprint of some text, to tell whether something changed between two checks.
+function fingerprint(text) {
+  let h = 5381;
+  for (let i = 0; i < text.length; i++) h = (h * 33 + text.charCodeAt(i)) | 0;
+  return (h >>> 0).toString(36) + ':' + text.length;
+}
+
+// Tidies rows typed straight into the Sheet: fills in missing ids, and links a nominee whose category was typed by
+// name instead of id. Writes only the cells it fixes. Returns {fixed, problems} as lines of text; rows with a
+// problem are left off the site.
+function checkSheet(dryRun) {
+  const fixed = [], problems = [];
+  const raw = name => {
+    const sh = sheet(name), values = sh.getDataRange().getValues();
+    return {sh: sh, head: (values[0] || []).map(String), rows: values.slice(1).map((r, i) => ({n: i + 2, v: r.map(x => String(x).trim())}))};
+  };
+  const get = (t, row, col) => row.v[t.head.indexOf(col)] || '';
+  const set = (t, row, col, value) => { if (!dryRun) t.sh.getRange(row.n, t.head.indexOf(col) + 1).setValue(value); row.v[t.head.indexOf(col)] = value; };
+  const C = raw('Categories'), cats = {};
+  C.rows.filter(r => r.v.some(Boolean)).forEach(r => {
+    const name = get(C, r, 'name');
+    if (!name) { problems.push('Categories tab, row ' + r.n + ': it has no name, so it is not on the site.'); return; }
+    if (!get(C, r, 'id') || cats[get(C, r, 'id')]) { set(C, r, 'id', newId()); fixed.push('gave the category "' + name + '" an id'); }
+    cats[get(C, r, 'id')] = name;
+  });
+  const N = raw('Nominees'), seen = {};
+  N.rows.filter(r => r.v.some(Boolean)).forEach(r => {
+    const name = get(N, r, 'name'), cat = get(N, r, 'category_id');
+    if (!name) { problems.push('Nominees tab, row ' + r.n + ': it has no name, so it is not on the site.'); return; }
+    if (!cats[cat]) {
+      const id = Object.keys(cats).find(k => cats[k].toLowerCase() === cat.toLowerCase());
+      if (id) { set(N, r, 'category_id', id); fixed.push('linked "' + name + '" to the category "' + cats[id] + '"'); }
+      else problems.push('Nominees tab, row ' + r.n + ': "' + name + '" has a category that doesn\'t exist ("' + cat + '"), so it is not on the site. Type the category\'s exact name in its category_id cell.');
+    }
+    if (!get(N, r, 'id') || seen[get(N, r, 'id')]) { set(N, r, 'id', newId()); fixed.push('gave the nominee "' + name + '" an id'); }
+    seen[get(N, r, 'id')] = true;
+  });
+  forget('Categories'); forget('Nominees');
+  return {fixed: fixed, problems: problems};
+}
+
+// Shows what the next publish would change, without writing anything (run it from the Apps Script editor and read
+// the execution log). Rows the checker would tidy are listed but not counted in the changes.
+function previewPublish() {
+  forget('Categories'); forget('Nominees');
+  const check = checkSheet(true);
+  const before = sheet('Site') ? readTable('Site') : [];
+  const cats = readTable('Categories').sort((a, b) => Number(a.order) - Number(b.order));
+  const built = buildSite(cats, readTable('Nominees'), before);
+  const out = {changes: siteChanges(before, built.rows).lines, needsAttention: check.problems.concat(built.held), checkerWouldTidy: check.fixed};
+  console.log(JSON.stringify(out, null, 2));
+  return out;
+}
+
+// Emails PUBLISH_EMAILS. False if there's no list or it couldn't send.
+function mailCommittee(subject, lines) {
+  const to = String(PropertiesService.getScriptProperties().getProperty('PUBLISH_EMAILS') || '').split(/[,;\s]+/).filter(x => /@/.test(x));
+  if (!to.length) return false;
+  try { MailApp.sendEmail({to: to.join(','), subject: subject, body: lines.join('\n'), name: 'Anime X Angas Awards'}); return true; }
+  catch (err) { console.error(err); return false; }
+}
+
+// Runs every 5 minutes (time-driven trigger). Publishes when what the site would show differs from the Site tab and
+// has stayed the same for QUIET_MS. Problems in the Sheet that keep a row off the site are emailed once, not every
+// 5 minutes. Returns what it did, for the execution log.
+function autoPublish() {
+  const props = PropertiesService.getScriptProperties();
+  const check = checkSheet();   // also makes the next reads come from the Sheet itself, not the one-minute copy
+  const before = sheet('Site') ? readTable('Site') : [];
+  const cats = readTable('Categories').sort((a, b) => Number(a.order) - Number(b.order));
+  const built = buildSite(cats, readTable('Nominees'), before);
+  const flat = rows => JSON.stringify(rows.map(r => SITE_HEADERS.map(h => String(r[h] === undefined ? '' : r[h]))));
+  const issues = check.problems.concat(built.held), issuesSig = fingerprint(issues.join('\n'));
+  // Fixes are made as soon as they're found, and listed in the next publish email
+  const fixed = String(props.getProperty('AUTO_FIXED') || '').split('\n').filter(Boolean).concat(check.fixed);
+  props.setProperty('AUTO_FIXED', fixed.join('\n').slice(0, 8000));
+  if (flat(built.rows) === flat(before)) {
+    props.setProperty('AUTO_PENDING', '');
+    props.setProperty('AUTO_FIXED', '');
+    if (issues.length && props.getProperty('AUTO_ISSUES') !== issuesSig) {
+      mailCommittee('Awards Sheet: ' + issues.length + ' thing' + (issues.length === 1 ? '' : 's') + ' to fix',
+        ['The awards Sheet checker found rows that are not on the site:', ''].concat(issues.map(l => '  • ' + l))
+          .concat(['', 'You get this email again only if the list changes.', '', 'Sent automatically by the awards Sheet checker.']));
+    }
+    props.setProperty('AUTO_ISSUES', issues.length ? issuesSig : '');
+    return 'Up to date' + (issues.length ? ' (' + issues.length + ' to fix)' : '');
+  }
+  const sig = fingerprint(flat(built.rows)), now = Date.now();
+  const pending = String(props.getProperty('AUTO_PENDING') || '').split('@');
+  if (pending[0] !== sig) { props.setProperty('AUTO_PENDING', sig + '@' + now); return 'Changed: waiting for edits to settle'; }
+  if (now - Number(pending[1]) < QUIET_MS) return 'Changed: waiting for edits to settle';
+  props.setProperty('AUTO_PENDING', '');
+  props.setProperty('AUTO_ISSUES', issues.length ? issuesSig : '');
+  props.setProperty('AUTO_FIXED', '');
+  return publishSite(AUTO, check.problems.concat(fixed.length ? ['Tidied by the checker: ' + fixed.join('; ') + '.'] : []));
+}
+
+/* ===== Site check: every hour, make sure the site, the official copy and the GitHub jobs are fine ===== */
+// Turned on with a time-driven trigger on healthCheck (Hour timer → Every hour). Emails PUBLISH_EMAILS when the list
+// of problems changes (and once when everything is fine again); nothing while nothing changes.
+//   MIRROR_REPO — optional, default animexangas/awards (the official copy)
+//   SITE_CSV    — optional, the published Site tab the pages read (default: the one in 2026/index.html)
+const DEFAULT_SITE_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT3drRB6t5qgQb6EKA2cZwP7eNJpywJvxW_z9jskSucv6jBLtzgA3g93ZaRmCcaw_roiKJry41ADMf-/pub?gid=636394&single=true&output=csv';
+const MIRROR_GRACE_MS = 3 * 60 * 60 * 1000;   // how long the official copy may lag before it counts as stuck
+
+function siteProblems() {
+  const props = PropertiesService.getScriptProperties(), problems = [], token = props.getProperty('GITHUB_TOKEN');
+  const fetch = (url, github) => {
+    try {
+      const r = UrlFetchApp.fetch(url, {muteHttpExceptions: true, followRedirects: true,
+        headers: github && token ? {Authorization: 'Bearer ' + token, Accept: 'application/vnd.github+json'} : {}});
+      return {code: r.getResponseCode(), text: r.getContentText()};
+    } catch (err) { return {code: 0, text: String((err && err.message) || err)}; }
+  };
+  // GitHub answers; null when GitHub itself can't be reached (then that part is skipped, not reported)
+  const gh = path => { const r = fetch('https://api.github.com/' + path, true); try { return r.code === 200 ? JSON.parse(r.text) : null; } catch (e) { return null; } };
+  const site = props.getProperty('SITE_URL') || DEFAULT_SITE_URL, ballot = site.replace(/\d{4}\/?$/, '') + 'vote/';
+  [['The awards page', site], ['The ballot', ballot]].forEach(([what, url]) => {
+    const r = fetch(url);
+    if (r.code !== 200) problems.push(what + ' is not loading (' + (r.code || r.text) + '): ' + url);
+  });
+  const csv = fetch(props.getProperty('SITE_CSV') || DEFAULT_SITE_CSV);
+  if (csv.code !== 200 || !/^category,/.test(csv.text)) {
+    problems.push('The published Sheet that the site reads is not loading. In the Sheet: File → Share → Publish to web, and check that the Site tab is still published.');
+  }
+  // The official copy keeps up with this repository
+  const repo = props.getProperty('GITHUB_REPO') || 'benburnsred/awards', mirror = props.getProperty('MIRROR_REPO') || 'animexangas/awards';
+  const up = gh('repos/' + repo + '/commits/main'), copy = gh('repos/' + mirror + '/commits/main');
+  if (up && copy && up.sha !== copy.sha) {
+    const since = new Date(((up.commit || {}).committer || {}).date || 0).getTime();
+    const cmp = gh('repos/' + repo + '/compare/' + copy.sha + '...' + up.sha);
+    if (cmp && cmp.status === 'ahead' && Date.now() - since > MIRROR_GRACE_MS) {
+      problems.push('The official site (' + mirror + ') stopped updating and is ' + cmp.ahead_by + ' change' + (cmp.ahead_by === 1 ? '' : 's') +
+        ' behind. animexangas needs to open https://github.com/' + mirror + ' and click Sync fork → Update branch.');
+    }
+  }
+  // The last finished run of each GitHub job that keeps the site going
+  [[repo, 'pages.yml', 'publishing the site'], [repo, 'videos.yml', 'finding opening/ending videos'],
+    [mirror, 'pages.yml', 'publishing the official site'], [mirror, 'mirror.yml', 'copying updates to the official site']].forEach(([r, wf, what]) => {
+    const runs = gh('repos/' + r + '/actions/workflows/' + wf + '/runs?per_page=5&status=completed');
+    const last = runs && (runs.workflow_runs || []).find(x => x.conclusion !== 'skipped' && x.conclusion !== 'cancelled');
+    if (last && last.conclusion === 'failure') problems.push('The GitHub job for ' + what + ' failed (' + r + '): ' + last.html_url);
+  });
+  return problems;
+}
+
+function healthCheck() {
+  const props = PropertiesService.getScriptProperties(), problems = siteProblems();
+  const sig = problems.length ? fingerprint(problems.join('\n')) : '', was = props.getProperty('HEALTH_LAST') || '';
+  if (sig === was) return problems;
+  const site = props.getProperty('SITE_URL') || DEFAULT_SITE_URL;
+  const sent = problems.length
+    ? mailCommittee('Awards site check: ' + problems.length + ' problem' + (problems.length === 1 ? '' : 's'),
+      ['The hourly check of the awards site found:', ''].concat(problems.map(l => '  • ' + l))
+        .concat(['', 'You get this email again only when the list changes.', 'Awards page: ' + site, '', 'Sent automatically by the awards site check.']))
+    : mailCommittee('Awards site check: all fine again', ['Everything the hourly check looks at is working again.', 'Awards page: ' + site, '', 'Sent automatically by the awards site check.']);
+  if (sent) props.setProperty('HEALTH_LAST', sig);
+  return problems;
 }
 
 function adminUnlockCategory(id) {

@@ -638,6 +638,165 @@
     });
 
     /* ============================================================ */
+    group = 'Automatic publish';
+
+    const auto = w => { w.newRequest(); return w.api.autoPublish(); };
+    const settle = w => { w.env.props.AUTO_PENDING = String(w.env.props.AUTO_PENDING).replace(/@\d+$/, '@0'); };   // pretend the quiet time has passed
+    const nomRow = (w, id) => w.sheet('Nominees').rows.find(r => r[0] === id);
+    const siteNames = (w, cat) => w.sheet('Site').rows.slice(1).filter(r => r[12] === cat).map(r => r[3]);
+
+    test('A change typed into the Sheet is published by itself once the edits settle', () => {
+      const w = mailWorld();
+      w.admin('adminPublish'); w.env.mails = [];
+      nomRow(w, 's1')[2] = 'Renamed by hand';
+      eq(auto(w), 'Changed: waiting for edits to settle');
+      eq(auto(w), 'Changed: waiting for edits to settle', 'still inside the quiet time');
+      eq(siteNames(w, 'c_single'), ['Nominee s1', 'Nominee s2', 'Nominee s3'], 'nothing published yet');
+      settle(w);
+      ok(/^Published · emailed 3 people/.test(auto(w)));
+      eq(siteNames(w, 'c_single'), ['Renamed by hand', 'Nominee s2', 'Nominee s3']);
+      eq(w.env.mails.length, 1);
+      ok(/^The awards site was published automatically after the Sheet changed/.test(w.env.mails[0].body), w.env.mails[0].body);
+      ok(w.env.mails[0].body.indexOf('Nominee renamed in Single: "Nominee s1" → "Renamed by hand"') >= 0);
+      eq(w.sheet('Log').rows.slice(-1)[0].slice(1, 3), ['automatic', 'publish']);
+      eq(auto(w), 'Up to date');
+      eq(w.env.mails.length, 1, 'no second email');
+    });
+    test('While someone keeps editing, it keeps waiting', () => {
+      const w = mailWorld();
+      w.admin('adminPublish');
+      nomRow(w, 's1')[2] = 'Typing';
+      auto(w); settle(w);
+      nomRow(w, 's1')[2] = 'Typing more';
+      eq(auto(w), 'Changed: waiting for edits to settle');
+      eq(siteNames(w, 'c_single')[0], 'Nominee s1');
+    });
+    test('Rows typed by hand get an id, and a category typed by name is linked', () => {
+      const w = mailWorld();
+      w.sheet('Nominees').appendRow(['', '  single ', 'Hand typed', '', '', '', '', '']);
+      auto(w); settle(w); auto(w);
+      const row = w.sheet('Nominees').rows.find(r => r[2] === 'Hand typed');
+      ok(/^[0-9a-f]{8}$/.test(row[0]), 'got an id: ' + row[0]);
+      eq(row[1], 'c_single');
+      ok(siteNames(w, 'c_single').indexOf('Hand typed') >= 0);
+      ok(/Tidied by the checker: .*linked "Hand typed" to the category "Single"/.test(w.env.mails[0].body), w.env.mails[0].body);
+      ok(/Tidied by the checker: .*gave the nominee "Hand typed" an id/.test(w.env.mails[0].body));
+    });
+    test('A row that can\'t go on the site is left off and reported once', () => {
+      const w = mailWorld();
+      w.admin('adminPublish'); w.env.mails = [];
+      w.sheet('Nominees').appendRow(['', 'Nope', 'Lost', '', '', '', '', '']);
+      w.sheet('Nominees').appendRow(['', 'c_single', '', 'a subtitle but no name', '', '', '', '']);
+      eq(auto(w), 'Up to date (2 to fix)');
+      eq(w.env.mails.length, 1);
+      eq(w.env.mails[0].subject, 'Awards Sheet: 2 things to fix');
+      ok(/row \d+: "Lost" has a category that doesn't exist \("Nope"\)/.test(w.env.mails[0].body), w.env.mails[0].body);
+      ok(/Nominees tab, row \d+: it has no name/.test(w.env.mails[0].body));
+      eq(auto(w), 'Up to date (2 to fix)');
+      eq(w.env.mails.length, 1, 'not emailed again');
+      ok(siteNames(w, 'c_single').indexOf('Lost') < 0);
+    });
+    test('The preview lists what would change and writes nothing', () => {
+      const w = mailWorld();
+      w.admin('adminPublish');
+      nomRow(w, 's1')[2] = 'Renamed';
+      w.sheet('Nominees').appendRow(['', 'Single', 'No id yet', '', '', '', '', '']);
+      const before = JSON.stringify(w.env.ss.sheets), props = JSON.stringify(w.env.props), mails = w.env.mails.length;
+      w.newRequest();
+      const p = w.api.previewPublish();
+      eq(p.changes, ['Nominee renamed in Single: "Nominee s1" → "Renamed"']);
+      ok(p.checkerWouldTidy.length === 2, JSON.stringify(p.checkerWouldTidy));
+      eq(JSON.stringify(w.env.ss.sheets), before, 'the Sheet is unchanged');
+      eq(JSON.stringify(w.env.props), props);
+      eq(w.env.mails.length, mails);
+    });
+    test('Before anyone votes, nominees can be added and deleted in the Sheet', () => {
+      const w = mailWorld();
+      w.admin('adminPublish');
+      w.ballot('Ben', {c_tier: [{nominee: 't1', tier: 'S'}]});   // votes elsewhere don't matter
+      w.sheet('Nominees').appendRow(['nx', 'c_single', 'Late entry', '', '', '', '', '']);
+      w.sheet('Nominees').rows = w.sheet('Nominees').rows.filter(r => r[0] !== 's2');
+      auto(w); settle(w); auto(w);
+      eq(siteNames(w, 'c_single'), ['Nominee s1', 'Nominee s3', 'Late entry']);
+    });
+    test('Once a category has votes, nominees added or deleted in the Sheet don\'t change its ballot', () => {
+      const w = mailWorld();
+      w.admin('adminPublish'); w.env.mails = [];
+      w.ballot('Ben', {c_single: [pick('s1')]});
+      w.sheet('Nominees').appendRow(['nx', 'c_single', 'Late entry', '', '', '', '', '']);
+      w.sheet('Nominees').rows = w.sheet('Nominees').rows.filter(r => r[0] !== 's2');
+      nomRow(w, 's1')[4] = 'https://img.example/new.jpg';
+      auto(w); settle(w); auto(w);
+      eq(siteNames(w, 'c_single'), ['Nominee s1', 'Nominee s2', 'Nominee s3'], 'same nominees, in the same order');
+      ok(w.sheet('Site').rows.some(r => r[5] === 'https://img.example/new.jpg'), 'the new picture is published');
+      const body = w.env.mails[0].body;
+      ok(body.indexOf('Not added to Single because voting has started: "Late entry"') >= 0, body);
+      ok(body.indexOf('Kept on the ballot in Single because voting has started: "Nominee s2"') >= 0, body);
+      w.admin('adminUnlockCategory', 'c_single');
+      auto(w); settle(w); auto(w);
+      eq(siteNames(w, 'c_single'), ['Nominee s1', 'Nominee s3', 'Late entry'], 'after unlocking, the Sheet wins');
+    });
+
+    /* ============================================================ */
+    group = 'Hourly site check';
+
+    // The internet as the site check sees it. opts: page (HTTP status of the pages), behind (the official copy is
+    // behind), fresh (the newest change is only minutes old), failed (a workflow file whose last run failed).
+    const internet = (w, opts) => {
+      opts = opts || {};
+      w.env.fetch = url => {
+        if (/github\.io/.test(url)) return {__status: opts.page || 200, body: '<html></html>'};
+        if (/docs\.google\.com/.test(url)) return 'category,category_description\nTier,';
+        if (/benburnsred\/awards\/commits\/main$/.test(url)) return {sha: 'new', commit: {committer: {date: opts.fresh ? new Date().toISOString() : '2026-11-01T00:00:00Z'}}};
+        if (/animexangas\/awards\/commits\/main$/.test(url)) return {sha: opts.behind ? 'old' : 'new'};
+        if (/\/compare\//.test(url)) return {status: 'ahead', ahead_by: 4};
+        if (/\/runs\?/.test(url)) return {workflow_runs: [{conclusion: 'skipped'}, {conclusion: opts.failed && url.indexOf('/' + opts.failed + '/') >= 0 ? 'failure' : 'success', html_url: 'https://github.com/run/1'}]};
+        return {__status: 404, body: ''};
+      };
+    };
+    const health = w => { w.newRequest(); return w.api.healthCheck(); };
+
+    test('When everything works, nothing is sent', () => {
+      const w = mailWorld(); internet(w);
+      eq(health(w), []);
+      eq(w.env.mails.length, 0);
+    });
+    test('An official site that stopped updating is reported once, then "all fine" once it catches up', () => {
+      const w = mailWorld(); internet(w, {behind: true});
+      const p = health(w);
+      eq(p.length, 1);
+      ok(/official site \(animexangas\/awards\) stopped updating and is 4 changes behind.*Sync fork/.test(p[0]), p[0]);
+      eq(w.env.mails.length, 1);
+      eq(w.env.mails[0].subject, 'Awards site check: 1 problem');
+      health(w);
+      eq(w.env.mails.length, 1, 'not again while nothing changes');
+      internet(w);
+      health(w);
+      eq(w.env.mails[1].subject, 'Awards site check: all fine again');
+      health(w);
+      eq(w.env.mails.length, 2);
+    });
+    test('A change made in the last few hours is not "stopped updating" yet', () => {
+      const w = mailWorld(); internet(w, {behind: true, fresh: true});
+      eq(health(w), []);
+    });
+    test('Pages that don\'t load and failed GitHub jobs are reported', () => {
+      const w = mailWorld(); internet(w, {page: 503, failed: 'mirror.yml'});
+      const p = health(w);
+      eq(p.length, 3, p.join(' | '));
+      ok(/^The awards page is not loading \(503\)/.test(p[0]));
+      ok(/^The ballot is not loading \(503\): https:\/\/animexangas\.github\.io\/awards\/vote\/$/.test(p[1]), p[1]);
+      ok(/copying updates to the official site failed \(animexangas\/awards\): https:\/\/github\.com\/run\/1/.test(p[2]), p[2]);
+    });
+    test('If GitHub can\'t be reached, the check skips that part instead of crying wolf', () => {
+      const w = mailWorld();
+      internet(w);
+      const real = w.env.fetch;
+      w.env.fetch = url => /api\.github\.com/.test(url) ? {__status: 403, body: {message: 'rate limit'}} : real(url);
+      eq(health(w), []);
+    });
+
+    /* ============================================================ */
     group = 'Data check';
 
     // Writes ballots straight into the Votes tab with chosen times (minutes after a fixed start).

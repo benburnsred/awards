@@ -154,9 +154,10 @@
       },
       UrlFetchApp: {fetch: (url, opts) => {
         env.fetches.push({url: url, opts: opts || {}});
-        const res = env.fetch(url, opts || {});
+        let res = env.fetch(url, opts || {}), code = env.fetchCode;
+        if (res && typeof res === 'object' && '__status' in res) { code = res.__status; res = res.body === undefined ? '' : res.body; }   // {__status, body}: a chosen HTTP status
         const text = typeof res === 'string' ? res : JSON.stringify(res);
-        return {getContentText: () => text, getResponseCode: () => env.fetchCode};
+        return {getContentText: () => text, getResponseCode: () => code};
       }},
       MailApp: {sendEmail: msg => { if (env.mailError) throw new Error(env.mailError); env.mails.push(msg); }},
       console: {log() {}, warn() {}, error: e => { env.errors.push(e); }}

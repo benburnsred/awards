@@ -244,6 +244,14 @@ To move the Sheet:
 
 Run them before pasting a new `Code.gs` into Apps Script.
 
+# Automatic publish and site check
+
+Two time-driven triggers in the Apps Script project (Triggers, the alarm-clock icon) keep the site going without anyone clicking Publish:
+
+- **`autoPublish`, every 5 minutes:** compares what the site would show (Categories and Nominees tabs) with the Site tab. When they differ and nobody has edited for about 5 minutes, it publishes and sends the publish email. Before that, it tidies rows typed straight into the Sheet: it fills in missing ids, and links a nominee whose `category_id` holds the category's name. Rows it can't place (no name, unknown category) stay off the site and are emailed once. In a locked category that already has votes, nominees added or removed in the Sheet wait until an admin unlocks the category; renames, pictures, subtitles, links and winners still go through.
+- **`healthCheck`, every hour:** checks that the awards page and the ballot load, that the published Sheet loads, that the official copy (animexangas/awards) isn't stuck more than 3 hours behind, and that the last GitHub jobs didn't fail. It emails `PUBLISH_EMAILS` only when the list of problems changes, and once when everything is fine again.
+- **`previewPublish`:** run it from the editor to see what the next publish would change, without writing anything.
+
 # Publish email
 
 Every Publish in the admin dashboard emails the people in the Apps Script Script property `PUBLISH_EMAILS` (addresses separated by commas) with who published and what changed since the last publish: categories and nominees added, removed, renamed or edited, and winners. The addresses live only in Script properties, never in this public repository. The email is sent from the Google account of the admin who clicks Publish; the first time, Google asks that admin to allow it. A failed email never stops the publish: the dashboard says so instead.
