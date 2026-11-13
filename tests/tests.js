@@ -640,8 +640,9 @@
     /* ============================================================ */
     group = 'Automatic publish';
 
-    const auto = w => { w.newRequest(); return w.api.autoPublish(); };
-    const settle = w => { w.env.props.AUTO_PENDING = String(w.env.props.AUTO_PENDING).replace(/@\d+$/, '@0'); };   // pretend the quiet time has passed
+    const T = (h, m, d) => Date.UTC(2026, 10, d || 14, h - 8, m);   // a Philippine time on Nov 14, 2026 (or day d)
+    const auto = w => { w.newRequest(); return w.api.autoPublishAt(w.clock || (w.clock = T(12, 1))); };
+    const settle = w => { w.clock = (w.clock || T(12, 1)) + 5 * 60000; };   // five quiet minutes later
     const nomRow = (w, id) => w.sheet('Nominees').rows.find(r => r[0] === id);
     const siteNames = (w, cat) => w.sheet('Site').rows.slice(1).filter(r => r[12] === cat).map(r => r[3]);
 
@@ -659,8 +660,47 @@
       ok(/^The awards site was published automatically after the Sheet changed/.test(w.env.mails[0].body), w.env.mails[0].body);
       ok(w.env.mails[0].body.indexOf('Nominee renamed in Single: "Nominee s1" → "Renamed by hand"') >= 0);
       eq(w.sheet('Log').rows.slice(-1)[0].slice(1, 3), ['automatic', 'publish']);
-      eq(auto(w), 'Up to date');
+      eq(auto(w), 'Done for 2026-11-14 12:00 (Philippine time)');
       eq(w.env.mails.length, 1, 'no second email');
+    });
+    test('Publish times are midnight, noon, 3 PM, 6 PM and 9 PM, Philippine time', () => {
+      const w = world(), slot = (h, m, d) => w.api.lastPublishSlot(T(h, m, d));
+      eq(slot(0, 30), '2026-11-14 0:00');
+      eq(slot(11, 59), '2026-11-14 0:00');
+      eq(slot(12, 0), '2026-11-14 12:00');
+      eq(slot(14, 59), '2026-11-14 12:00');
+      eq(slot(15, 0), '2026-11-14 15:00');
+      eq(slot(20, 10), '2026-11-14 18:00');
+      eq(slot(23, 59), '2026-11-14 21:00');
+      eq(slot(0, 0, 15), '2026-11-15 0:00');
+    });
+    test('Between publish times a change waits; with no changes nothing happens', () => {
+      const w = mailWorld();
+      w.admin('adminPublish'); w.env.mails = [];
+      eq(auto(w), 'Up to date', 'noon: nothing changed');
+      eq(w.env.mails.length, 0, 'no email when nothing changed');
+      nomRow(w, 's1')[2] = 'Edited at 1 PM';
+      w.clock = T(13, 0);
+      eq(auto(w), 'Done for 2026-11-14 12:00 (Philippine time)');
+      w.clock = T(14, 59);
+      auto(w);
+      eq(siteNames(w, 'c_single')[0], 'Nominee s1', 'not before 3 PM');
+      w.clock = T(15, 0);
+      eq(auto(w), 'Changed: waiting for edits to settle');
+      settle(w);
+      ok(/^Published/.test(auto(w)));
+      eq(siteNames(w, 'c_single')[0], 'Edited at 1 PM');
+      eq(w.env.mails.length, 1);
+    });
+    test('A publish time missed while someone was still editing happens as soon as they stop', () => {
+      const w = mailWorld();
+      w.admin('adminPublish');
+      w.clock = T(15, 0);
+      nomRow(w, 's1')[2] = 'Busy';
+      auto(w);
+      w.clock = T(16, 30); nomRow(w, 's1')[2] = 'Busy editing';
+      auto(w); settle(w);
+      ok(/^Published/.test(auto(w)), 'published at 4:35 PM for the 3 PM time');
     });
     test('While someone keeps editing, it keeps waiting', () => {
       const w = mailWorld();
@@ -692,6 +732,8 @@
       eq(w.env.mails[0].subject, 'Awards Sheet: 2 things to fix');
       ok(/row \d+: "Lost" has a category that doesn't exist \("Nope"\)/.test(w.env.mails[0].body), w.env.mails[0].body);
       ok(/Nominees tab, row \d+: it has no name/.test(w.env.mails[0].body));
+      eq(auto(w), 'Done for 2026-11-14 12:00 (Philippine time)');
+      w.clock = T(15, 1);
       eq(auto(w), 'Up to date (2 to fix)');
       eq(w.env.mails.length, 1, 'not emailed again');
       ok(siteNames(w, 'c_single').indexOf('Lost') < 0);
@@ -733,6 +775,7 @@
       ok(body.indexOf('Not added to Single because voting has started: "Late entry"') >= 0, body);
       ok(body.indexOf('Kept on the ballot in Single because voting has started: "Nominee s2"') >= 0, body);
       w.admin('adminUnlockCategory', 'c_single');
+      w.clock = T(15, 1);
       auto(w); settle(w); auto(w);
       eq(siteNames(w, 'c_single'), ['Nominee s1', 'Nominee s3', 'Late entry'], 'after unlocking, the Sheet wins');
     });

@@ -851,12 +851,22 @@ function afterPublish(email, before, after, issues) {
   return notes.join(' · ');
 }
 
-/* ===== Automatic publish: the Sheet is checked every 5 minutes and published when it changed ===== */
+/* ===== Automatic publish: at set times of day, the Sheet is published if it changed ===== */
 // Turned on with a time-driven trigger on autoPublish (Triggers → Add trigger → autoPublish → Time-driven →
-// Minutes timer → Every 5 minutes). It publishes only once nobody has changed the Sheet for QUIET_MS, so half-typed
-// edits don't go out, and sends the same "site published" email as the Publish button (PUBLISH_EMAILS).
+// Minutes timer → Every 5 minutes). At each of PUBLISH_HOURS (Philippine time) it publishes if the Categories or
+// Nominees tabs changed, waiting first until nobody has edited for QUIET_MS so half-typed edits don't go out, and sends
+// the same "site published" email as the Publish button (PUBLISH_EMAILS). Between those times it does nothing.
 const AUTO = 'automatic';
 const QUIET_MS = 4 * 60 * 1000;
+const PUBLISH_HOURS = [0, 12, 15, 18, 21];   // midnight, noon, 3 PM, 6 PM, 9 PM
+const MANILA_MS = 8 * 60 * 60 * 1000;        // Philippine time is UTC+8 all year
+
+// The most recent publish time at or before `now`, as 'YYYY-MM-DD H:00' in Philippine time.
+function lastPublishSlot(now) {
+  const m = new Date(now + MANILA_MS), today = PUBLISH_HOURS.filter(h => h <= m.getUTCHours());
+  const day = new Date(Date.UTC(m.getUTCFullYear(), m.getUTCMonth(), m.getUTCDate() - (today.length ? 0 : 1)));
+  return day.toISOString().slice(0, 10) + ' ' + Math.max.apply(null, today.length ? today : PUBLISH_HOURS) + ':00';
+}
 
 // A short fingerprint of some text, to tell whether something changed between two checks.
 function fingerprint(text) {
@@ -920,11 +930,16 @@ function mailCommittee(subject, lines) {
   catch (err) { console.error(err); return false; }
 }
 
-// Runs every 5 minutes (time-driven trigger). Publishes when what the site would show differs from the Site tab and
-// has stayed the same for QUIET_MS. Problems in the Sheet that keep a row off the site are emailed once, not every
-// 5 minutes. Returns what it did, for the execution log.
+// Runs every 5 minutes (time-driven trigger). Once per publish time: publishes when what the site would show differs
+// from the Site tab and has stayed the same for QUIET_MS; with no changes it does nothing. Problems in the Sheet that
+// keep a row off the site are emailed once, not every time. Returns what it did, for the execution log.
 function autoPublish() {
-  const props = PropertiesService.getScriptProperties();
+  return autoPublishAt(Date.now());
+}
+
+function autoPublishAt(now) {
+  const props = PropertiesService.getScriptProperties(), slot = lastPublishSlot(now);
+  if (props.getProperty('AUTO_SLOT') === slot) return 'Done for ' + slot + ' (Philippine time)';
   const check = checkSheet();   // also makes the next reads come from the Sheet itself, not the one-minute copy
   const before = sheet('Site') ? readTable('Site') : [];
   const cats = readTable('Categories').sort((a, b) => Number(a.order) - Number(b.order));
@@ -943,15 +958,17 @@ function autoPublish() {
           .concat(['', 'You get this email again only if the list changes.', '', 'Sent automatically by the awards Sheet checker.']));
     }
     props.setProperty('AUTO_ISSUES', issues.length ? issuesSig : '');
+    props.setProperty('AUTO_SLOT', slot);
     return 'Up to date' + (issues.length ? ' (' + issues.length + ' to fix)' : '');
   }
-  const sig = fingerprint(flat(built.rows)), now = Date.now();
+  const sig = fingerprint(flat(built.rows));
   const pending = String(props.getProperty('AUTO_PENDING') || '').split('@');
   if (pending[0] !== sig) { props.setProperty('AUTO_PENDING', sig + '@' + now); return 'Changed: waiting for edits to settle'; }
   if (now - Number(pending[1]) < QUIET_MS) return 'Changed: waiting for edits to settle';
   props.setProperty('AUTO_PENDING', '');
   props.setProperty('AUTO_ISSUES', issues.length ? issuesSig : '');
   props.setProperty('AUTO_FIXED', '');
+  props.setProperty('AUTO_SLOT', slot);
   return publishSite(AUTO, check.problems.concat(fixed.length ? ['Tidied by the checker: ' + fixed.join('; ') + '.'] : []));
 }
 
