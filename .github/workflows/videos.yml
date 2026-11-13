@@ -5,10 +5,18 @@ name: Find opening and ending videos
 # was added. Needs the repository secret YOUTUBE_API_KEY (a YouTube Data API v3 key); without it, nothing happens.
 # Runs only in benburnsred/awards: the official copy picks up videos.json with everything else.
 
+# Publishing in the admin dashboard also starts it (apps-script/Code.gs, startVideoJob) with wait=360, because
+# Google takes a few minutes to update the published Sheet this job reads.
+
 on:
   schedule:
     - cron: "17 */6 * * *"
   workflow_dispatch:
+    inputs:
+      wait:
+        description: Seconds to wait before looking (0 to 900)
+        required: false
+        default: "0"
 
 permissions:
   contents: write
@@ -23,6 +31,14 @@ jobs:
     if: github.repository == 'benburnsred/awards'
     runs-on: ubuntu-latest
     steps:
+      - name: Wait for the published Sheet to catch up
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          WAIT: ${{ inputs.wait }}
+        run: |
+          case "$WAIT" in ''|*[!0-9]*) WAIT=0 ;; esac
+          if [ "$WAIT" -gt 900 ]; then WAIT=900; fi
+          sleep "$WAIT"
       - uses: actions/checkout@v4
       - name: Find videos
         env:

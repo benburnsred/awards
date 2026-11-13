@@ -244,11 +244,16 @@ To move the Sheet:
 
 Run them before pasting a new `Code.gs` into Apps Script.
 
+# Publish email
+
+Every Publish in the admin dashboard emails the people in the Apps Script Script property `PUBLISH_EMAILS` (addresses separated by commas) with who published and what changed since the last publish: categories and nominees added, removed, renamed or edited, and winners. The addresses live only in Script properties, never in this public repository. The email is sent from the Google account of the admin who clicks Publish; the first time, Google asks that admin to allow it. A failed email never stops the publish: the dashboard says so instead.
+
 # Opening and ending videos
 
 Clicking an opening or ending nominee (the ▶ badge) plays its official video in theater mode, on the awards page and the ballot.
 
 - **Where the videos come from:** the **Find opening and ending videos** GitHub Action (`.github/workflows/videos.yml`, script `tools/fetch_videos.py`) runs every 6 hours. It searches YouTube for each new song in any category named Opening or Ending, preferring the studio's creditless opening/ending, then the official music video. Only official channels count (studios, publishers like Muse Asia and Ani-One, labels, the artist or the anime), and only videos that may play on other websites and aren't blocked in the Philippines. Up to three are kept per song in `2026/data/videos.json`; if one won't play for a visitor, the player tries the next, then offers YouTube.
 - **Needs:** a YouTube Data API v3 key saved as the repository secret `YOUTUBE_API_KEY`. Without it the Action does nothing.
+- **Right after a publish:** when a Publish in the admin dashboard adds or changes a song in an Opening or Ending category, the script starts this Action itself (it waits 6 minutes for the published Sheet to catch up). Needs the Apps Script Script property `GITHUB_TOKEN`: a fine-grained GitHub token for this repository only, with the single permission Actions: Read and write.
 - **Wrong video?** Paste the right YouTube link into that nominee's link in the admin dashboard (it always wins), or edit `videos.json`.
 - **Run it now:** Actions → Find opening and ending videos → Run workflow.

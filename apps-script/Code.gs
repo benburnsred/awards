@@ -699,7 +699,9 @@ function adminSaveSettings(values) {
 // Copies categories and nominees into the Site tab, which the public awards page and ballot read.
 function adminPublish() {
   const email = requireAdmin();
-  return withLock(() => {
+  let before = [], after = [];
+  const st = withLock(() => {
+    before = sheet('Site') ? readTable('Site') : [];
     const cats = readTable('Categories').sort((a, b) => Number(a.order) - Number(b.order));
     const noms = readTable('Nominees');
     const rows = [];
@@ -719,9 +721,98 @@ function adminPublish() {
     if (locked.length) writeTable('Categories', TABS.Categories, cats);
     rows.forEach(r => { const c = cats.find(x => x.id === r.category_id); r.locked = c ? c.locked : ''; });
     writeTable('Site', SITE_HEADERS, rows);
+    after = rows;
     log(email, 'publish', rows.length + ' rows' + (locked.length ? '; locked ' + locked.join(', ') : ''));
     return adminState();
   });
+  st.message = afterPublish(email, before, after);
+  return st;
+}
+
+/* ===== After a publish: email the committee what changed, and look up videos for new songs ===== */
+// Script properties (Project Settings → Script properties; kept out of this file because the repository is public):
+//   PUBLISH_EMAILS — who gets the "site published" email, separated by commas
+//   GITHUB_TOKEN   — a fine-grained GitHub token allowed only to run Actions on GITHUB_REPO; starts the video search
+//   GITHUB_REPO    — optional, default benburnsred/awards
+//   SITE_URL       — optional, default the official awards page
+const DEFAULT_SITE_URL = 'https://animexangas.github.io/awards/2026/';
+const VIDEO_CATEGORY = /opening|ending/i;   // must match the categories tools/fetch_videos.py looks at
+
+// What changed between two copies of the Site tab, as {lines: [text], songs: true if an Opening/Ending changed}.
+function siteChanges(before, after) {
+  const lines = [], q = s => '"' + s + '"';
+  let songs = false;
+  const catsOf = rows => { const m = {}; rows.forEach(r => { const id = r.category_id || r.category; if (id && !m[id]) m[id] = r; }); return m; };
+  const nomsOf = rows => { const m = {}; rows.forEach(r => { if (r.nominee) m[r.nominee_id || (r.category_id || r.category) + '|' + r.nominee] = r; }); return m; };
+  const oc = catsOf(before), nc = catsOf(after), on = nomsOf(before), nn = nomsOf(after);
+  const song = r => { if (VIDEO_CATEGORY.test(r.category)) songs = true; };
+  Object.keys(nc).forEach(id => {
+    const a = nc[id], b = oc[id];
+    if (!b) lines.push('New category: ' + q(a.category) + (a.category_type === 'special' ? ' (special award)' : ''));
+    else {
+      if (b.category !== a.category) { lines.push('Category renamed: ' + q(b.category) + ' → ' + q(a.category)); song(a); }
+      if ((b.category_description || '') !== (a.category_description || '')) lines.push('Description changed: ' + q(a.category));
+      if ((b.method || '') !== (a.method || '') || (b.max_picks || '') !== (a.max_picks || '')) lines.push('Voting method changed: ' + q(a.category));
+    }
+  });
+  Object.keys(oc).forEach(id => { if (!nc[id]) lines.push('Category removed: ' + q(oc[id].category)); });
+  const fields = [['subtitle', 'subtitle'], ['image', 'picture'], ['link', 'link']];
+  Object.keys(nn).forEach(id => {
+    const a = nn[id], b = on[id];
+    if (!b) { lines.push('Nominee added to ' + a.category + ': ' + q(a.nominee)); song(a); return; }
+    if (b.category !== a.category && (b.category_id || '') !== (a.category_id || '')) { lines.push('Nominee moved: ' + q(a.nominee) + ' from ' + b.category + ' to ' + a.category); song(a); }
+    if (b.nominee !== a.nominee) { lines.push('Nominee renamed in ' + a.category + ': ' + q(b.nominee) + ' → ' + q(a.nominee)); song(a); }
+    const changed = fields.filter(f => (b[f[0]] || '') !== (a[f[0]] || '')).map(f => f[1]);
+    if (changed.length) { lines.push('Nominee updated in ' + a.category + ': ' + q(a.nominee) + ' (' + changed.join(', ') + ')'); if (changed.indexOf('link') >= 0) song(a); }
+    if ((b.winner === 'TRUE') !== (a.winner === 'TRUE')) lines.push((a.winner === 'TRUE' ? 'Winner set in ' : 'Winner cleared in ') + a.category + ': ' + q(a.nominee));
+  });
+  Object.keys(on).forEach(id => { if (!nn[id]) lines.push('Nominee removed from ' + on[id].category + ': ' + q(on[id].nominee)); });
+  return {lines: lines, songs: songs};
+}
+
+// Starts the "Find opening and ending videos" job on GitHub. It waits 6 minutes first, because Google takes a few
+// minutes to update the published copy of the Sheet that the job reads. True if GitHub accepted it.
+function startVideoJob(props) {
+  const token = props.getProperty('GITHUB_TOKEN');
+  if (!token) return false;
+  const repo = props.getProperty('GITHUB_REPO') || 'benburnsred/awards';
+  const res = UrlFetchApp.fetch('https://api.github.com/repos/' + repo + '/actions/workflows/videos.yml/dispatches', {
+    method: 'post', contentType: 'application/json', muteHttpExceptions: true,
+    headers: {Authorization: 'Bearer ' + token, Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28'},
+    payload: JSON.stringify({ref: 'main', inputs: {wait: '360'}})
+  });
+  const code = res.getResponseCode();
+  if (code !== 204 && code !== 200) throw new Error('GitHub answered ' + code + ': ' + String(res.getContentText()).slice(0, 200));
+  return true;
+}
+
+// Runs after the Site tab is written. Never undoes or blocks the publish: problems only show in the returned message.
+function afterPublish(email, before, after) {
+  const props = PropertiesService.getScriptProperties(), notes = ['Published'];
+  const change = siteChanges(before, after);
+  let videos = false;
+  if (change.songs) {
+    try { videos = startVideoJob(props); if (videos) notes.push('looking up videos for new songs (about 10 minutes)'); }
+    catch (err) { console.error(err); notes.push('the video search could not start: ' + err.message); }
+  }
+  const to = String(props.getProperty('PUBLISH_EMAILS') || '').split(/[,;\s]+/).filter(x => /@/.test(x));
+  if (to.length) {
+    try {
+      const when = new Date().toLocaleString('en-US', {timeZone: 'Asia/Manila', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit'});
+      const site = props.getProperty('SITE_URL') || DEFAULT_SITE_URL;
+      const n = change.lines.length;
+      const body = [email + ' published the awards site on ' + when + ' (Philippine time).', '',
+        n ? 'What changed since the last publish:' : 'Nothing changed in the categories or nominees (published again as it was).']
+        .concat(change.lines.map(l => '  • ' + l))
+        .concat(['', 'The site and the ballot show it within about 5 minutes:', '  Awards page: ' + site, '  Ballot: ' + site.replace(/\d{4}\/?$/, '') + 'vote/'])
+        .concat(videos ? ['', 'New or changed songs: the opening/ending video search starts in about 6 minutes and adds any videos it finds.'] : [])
+        .concat(['', 'Sent automatically by the awards admin dashboard.']).join('\n');
+      MailApp.sendEmail({to: to.join(','), subject: 'Awards site published' + (n ? ': ' + n + ' change' + (n === 1 ? '' : 's') : ' (no changes)'),
+        body: body, name: 'Anime X Angas Awards'});
+      notes.push('emailed ' + to.length + (to.length === 1 ? ' person' : ' people'));
+    } catch (err) { console.error(err); notes.push('the email could not be sent: ' + err.message); }
+  }
+  return notes.join(' · ');
 }
 
 function adminUnlockCategory(id) {

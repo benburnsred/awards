@@ -115,6 +115,9 @@
       cache: {},                       // CacheService
       lockFree: true,                  // false = another request holds the lock
       fetches: [],                     // every UrlFetchApp call made
+      fetchCode: 200,                  // the HTTP status UrlFetchApp reports
+      mails: [],                       // every MailApp.sendEmail call
+      mailError: null,                 // set to make MailApp.sendEmail fail
       fetch: () => { throw new Error('No internet in tests: ' + 'set env.fetch'); },
       errors: [],                      // console.error calls
       uuid: 0
@@ -153,8 +156,9 @@
         env.fetches.push({url: url, opts: opts || {}});
         const res = env.fetch(url, opts || {});
         const text = typeof res === 'string' ? res : JSON.stringify(res);
-        return {getContentText: () => text, getResponseCode: () => 200};
+        return {getContentText: () => text, getResponseCode: () => env.fetchCode};
       }},
+      MailApp: {sendEmail: msg => { if (env.mailError) throw new Error(env.mailError); env.mails.push(msg); }},
       console: {log() {}, warn() {}, error: e => { env.errors.push(e); }}
     };
     return env;

@@ -543,6 +543,101 @@
     });
 
     /* ============================================================ */
+    group = 'After publishing';
+
+    const mailWorld = () => {
+      const w = world();
+      w.env.props.PUBLISH_EMAILS = 'one@example.com, two@example.com;three@example.com';
+      return w;
+    };
+    test('Publishing emails everyone listed, with what changed since the last publish', () => {
+      const w = mailWorld();
+      w.admin('adminPublish');
+      w.env.mails = [];
+      w.admin('adminUnlockCategory', 'c_single');
+      w.admin('adminSaveNominee', {category_id: 'c_single', name: 'Late entry'});
+      w.admin('adminSaveNominee', {id: 's1', category_id: 'c_single', name: 'Renamed'});
+      w.admin('adminDeleteNominee', 's2');
+      w.admin('adminSaveCategory', {name: 'Brand new', type: 'special', method: 'single'});
+      const st = w.admin('adminPublish');
+      eq(w.env.mails.length, 1);
+      const m = w.env.mails[0];
+      eq(m.to, 'one@example.com,two@example.com,three@example.com');
+      eq(m.subject, 'Awards site published: 4 changes');
+      ok(/^admin@example\.com published the awards site on /.test(m.body), m.body);
+      ['New category: "Brand new" (special award)', 'Nominee added to Single: "Late entry"',
+        'Nominee renamed in Single: "Nominee s1" → "Renamed"', 'Nominee removed from Single: "Nominee s2"',
+        'https://animexangas.github.io/awards/2026/', 'https://animexangas.github.io/awards/vote/']
+        .forEach(t => ok(m.body.indexOf(t) >= 0, 'missing "' + t + '" in:\n' + m.body));
+      eq(st.message, 'Published · emailed 3 people');
+    });
+    test('The first publish lists everything; publishing again unchanged says so', () => {
+      const w = mailWorld();
+      w.admin('adminPublish');
+      ok(/: \d+ changes$/.test(w.env.mails[0].subject) && w.env.mails[0].body.indexOf('New category: "Tier"') >= 0);
+      w.admin('adminPublish');
+      eq(w.env.mails[1].subject, 'Awards site published (no changes)');
+      ok(w.env.mails[1].body.indexOf('Nothing changed') >= 0);
+    });
+    test('Winners show in the email', () => {
+      const w = mailWorld();
+      w.admin('adminPublish');
+      w.admin('adminSetWinners', 'c_single', ['s3']);
+      w.admin('adminPublish');
+      ok(w.env.mails[1].body.indexOf('Winner set in Single: "Nominee s3"') >= 0, w.env.mails[1].body);
+    });
+    test('No email list: publishing works and nothing is sent', () => {
+      const w = world();
+      eq(w.admin('adminPublish').message, 'Published');
+      eq(w.env.mails.length, 0);
+    });
+    test('A failed email never stops the publish', () => {
+      const w = mailWorld();
+      w.env.mailError = 'Service invoked too many times';
+      const st = w.admin('adminPublish');
+      eq(w.sheet('Site').rows.length - 1, 18, 'the Site tab is still written');
+      ok(/the email could not be sent: Service invoked too many times/.test(st.message), st.message);
+    });
+    test('A new or changed song starts the video search on GitHub, waiting for the Sheet to catch up', () => {
+      const w = mailWorld();
+      w.env.props.GITHUB_TOKEN = 'secret-token';
+      w.env.fetchCode = 204;
+      w.env.fetch = () => '';
+      w.admin('adminPublish');
+      eq(w.env.fetches.length, 0, 'no opening or ending category: no search');
+      w.admin('adminSaveCategory', {name: 'Anime Opening of the Year', type: 'vote', method: 'single'});
+      const id = w.sheet('Categories').rows.slice(1).find(r => r[1] === 'Anime Opening of the Year')[0];
+      w.admin('adminSaveNominee', {category_id: id, name: 'New song'});
+      const st = w.admin('adminPublish');
+      eq(w.env.fetches.length, 1);
+      const f = w.env.fetches[0];
+      eq(f.url, 'https://api.github.com/repos/benburnsred/awards/actions/workflows/videos.yml/dispatches');
+      eq(f.opts.headers.Authorization, 'Bearer secret-token');
+      eq(JSON.parse(f.opts.payload), {ref: 'main', inputs: {wait: '360'}});
+      ok(/looking up videos/.test(st.message), st.message);
+      ok(w.env.mails[1].body.indexOf('video search starts') >= 0);
+      w.admin('adminPublish');
+      eq(w.env.fetches.length, 1, 'nothing changed: no new search');
+    });
+    test('Without a GitHub token, or if GitHub refuses, the publish still goes through', () => {
+      const w = world();
+      w.admin('adminSaveCategory', {name: 'Ending', type: 'vote', method: 'single'});
+      eq(w.admin('adminPublish').message, 'Published', 'no token: nothing is tried');
+      eq(w.env.fetches.length, 0);
+      w.env.props.GITHUB_TOKEN = 'bad';
+      w.env.fetchCode = 401; w.env.fetch = () => ({message: 'Bad credentials'});
+      const id = w.sheet('Categories').rows.slice(1).find(r => r[1] === 'Ending')[0];
+      w.admin('adminSaveNominee', {category_id: id, name: 'Song'});
+      const st = w.admin('adminPublish');
+      ok(/the video search could not start: GitHub answered 401/.test(st.message), st.message);
+      ok(w.sheet('Site').rows.some(r => r.indexOf('Song') >= 0));
+    });
+    test('The email addresses and the GitHub token are not written in the code', () => {
+      ok(!/@gmail\.com/i.test(files.code), 'no personal email addresses in Code.gs');
+      ok(!/gh[pousr]_[A-Za-z0-9]{20,}|github_pat_/.test(files.code), 'no GitHub token in Code.gs');
+    });
+
+    /* ============================================================ */
     group = 'Data check';
 
     // Writes ballots straight into the Votes tab with chosen times (minutes after a fixed start).

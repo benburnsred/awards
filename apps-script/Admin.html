@@ -332,7 +332,7 @@ document.addEventListener('click', e => {
   if (t.dataset.editnom){ EDIT_NOM = t.dataset.editnom; render(); return; }
   if (t.dataset.delnom){ if (confirm('Delete this nominee?')) call('adminDeleteNominee', t.dataset.delnom); return; }
   if (t.dataset.delcat){ if (confirm('Delete this category and all its nominees?')){ OPEN = null; call('adminDeleteCategory', t.dataset.delcat); } return; }
-  if (t.id === 'publish'){ if (confirm('Publish categories, nominees and winners to the public site? Public-vote categories with nominees will be locked.')) call('adminPublish').then(s => s && toast('Published. The site updates within a few minutes.')); return; }
+  if (t.id === 'publish'){ if (confirm('Publish categories, nominees and winners to the public site? Public-vote categories with nominees will be locked.')) call('adminPublish').then(s => s && toast((s.message || 'Published') + '. The site updates within a few minutes.')); return; }
   if (t.dataset.open && !e.target.closest('button')){ OPEN = OPEN === t.dataset.open ? null : t.dataset.open; EDIT_NOM = null; render(); }
 });
 
