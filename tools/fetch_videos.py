@@ -104,7 +104,8 @@ def score(item, song, artist, anime, kind):
     s = 0
     if norm(song) and norm(song) in t:
         s += 4
-    if norm(artist) and (norm(artist) in t or norm(artist) in c):
+    lead = main_artist(artist)
+    if norm(lead) and (norm(lead) in t or norm(lead) in c):
         s += 2
     if norm(anime) and (norm(anime) in t or norm(anime) in c):
         s += 1
@@ -163,6 +164,11 @@ def playable(info, region):
     return embeddable and region not in blocked and (allowed is None or region in allowed)
 
 
+def main_artist(artist):
+    """The lead artist: "Tatsuya Kitani feat. BABYMETAL" -> "Tatsuya Kitani", so their own channel is recognised."""
+    return re.split(r'\s+(?:feat\.?|ft\.|featuring)\s*|\s+(?:with|×)\s+', artist or '', maxsplit=1, flags=re.I)[0].strip()
+
+
 def trusted(item, artist, anime):
     """Official sources only: studio, publisher or label channels, channels that call themselves official,
     the artist's own channel, or the anime's own channel. Fan re-uploads are never used."""
@@ -170,7 +176,8 @@ def trusted(item, artist, anime):
     c = norm(channel)
     if STUDIO.search(channel) or OFFICIAL_CHANNEL.search(channel):
         return True
-    if len(norm(artist)) >= 3 and norm(artist) in c and not re.search(r'\btopic\b', channel, re.I):
+    lead = main_artist(artist)
+    if len(norm(lead)) >= 3 and norm(lead) in c and not re.search(r'\btopic\b', channel, re.I):
         return True
     return bool(len(norm(anime)) >= 4 and norm(anime) in c)
 

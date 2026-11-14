@@ -119,6 +119,15 @@ class OfficialOnly(unittest.TestCase):
         for ch in ['Zuax anime and music', 'OPEDAnimeHub', 'Lirik Jp', '7umi', 'AQUA_BLUEEE', 'Anicrad', 'Mrs. GREEN APPLE - Topic']:
             self.assertFalse(fv.trusted(item('x', 't', ch), 'Mrs. GREEN APPLE', 'Frieren Season 2'), ch)
 
+    def test_featured_artists_still_match_the_lead_artists_channel(self):
+        self.assertEqual(fv.main_artist('Tatsuya Kitani feat. BABYMETAL'), 'Tatsuya Kitani')
+        self.assertEqual(fv.main_artist('HoneyWorks feat.HaKoniwaLily'), 'HoneyWorks')
+        self.assertEqual(fv.main_artist('MYTH & ROID'), 'MYTH & ROID')
+        self.assertEqual(fv.main_artist('Eve'), 'Eve')
+        lead_channel = item('x', 'Kasuka na Hana (A Faint Flower) / Tatsuya Kitani feat. BABYMETAL', 'キタニタツヤ / Tatsuya Kitani')
+        self.assertTrue(fv.trusted(lead_channel, 'Tatsuya Kitani feat. BABYMETAL', "Hell's Paradise Season 2"))
+        self.assertTrue(fv.trusted(item('x', 't', 'MARUMOCHI from HoneyWorks'), 'HoneyWorks feat. HaKoniwaLily', ''))
+
     def test_the_artists_opening_for_another_anime_is_not_this_ending(self):
         # Real case: searching "Otome no Honki" (an ending) found HoneyWorks' official opening of a different song.
         wrong = [item('-7h--XTyj8A', 'TVアニメ「男女の友情は成立する？（いや、しないっ‼）」ノンクレジットOP | HoneyWorks feat.ハコニワリリィ「質問、恋って何でしょうか?」',
