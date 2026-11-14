@@ -934,7 +934,23 @@ function mailCommittee(subject, lines) {
 // from the Site tab and has stayed the same for QUIET_MS; with no changes it does nothing. Problems in the Sheet that
 // keep a row off the site are emailed once, not every time. Returns what it did, for the execution log.
 function autoPublish() {
-  return autoPublishAt(Date.now());
+  const props = PropertiesService.getScriptProperties();
+  try {
+    const result = autoPublishAt(Date.now());
+    if (props.getProperty('AUTO_ERROR')) {
+      props.setProperty('AUTO_ERROR', '');
+      mailCommittee('Awards site: automatic publishing works again', ['The automatic publish ran fine again. Changes in the Sheet go live at the usual times.', '', 'Sent automatically by the awards Sheet checker.']);
+    }
+    return result;
+  } catch (err) {
+    // Nobody may be watching the script's own error emails, so tell the committee once per kind of error.
+    const text = String((err && err.message) || err), sig = fingerprint(text);
+    if (props.getProperty('AUTO_ERROR') !== sig && mailCommittee('Awards site: automatic publishing failed',
+      ['The automatic publish could not run, so changes in the Sheet are not reaching the site.', '', 'Error: ' + text, '',
+        'It keeps trying every 5 minutes. If this doesn\'t clear up by itself, an admin can open the admin dashboard and click Publish to site.', '',
+        'Sent automatically by the awards Sheet checker.'])) props.setProperty('AUTO_ERROR', sig);
+    throw err;
+  }
 }
 
 function autoPublishAt(now) {

@@ -702,6 +702,19 @@
       auto(w); settle(w);
       ok(/^Published/.test(auto(w)), 'published at 4:35 PM for the 3 PM time');
     });
+    test('If the automatic publish breaks, the committee is told once, and again when it works', () => {
+      const w = mailWorld();
+      w.admin('adminPublish'); w.env.mails = [];
+      const nominees = w.env.ss.sheets.Nominees;
+      delete w.env.ss.sheets.Nominees;   // break it: someone deletes the Nominees tab
+      w.newRequest(); throws(() => w.api.autoPublish());
+      w.newRequest(); throws(() => w.api.autoPublish());
+      eq(w.env.mails.map(m => m.subject), ['Awards site: automatic publishing failed'], 'emailed once');
+      ok(/Error: /.test(w.env.mails[0].body));
+      w.env.ss.sheets.Nominees = nominees;   // the tab is restored
+      w.newRequest(); w.api.autoPublish();
+      eq(w.env.mails[1].subject, 'Awards site: automatic publishing works again');
+    });
     test('While someone keeps editing, it keeps waiting', () => {
       const w = mailWorld();
       w.admin('adminPublish');
