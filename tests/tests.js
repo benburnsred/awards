@@ -919,6 +919,17 @@
       throws(() => w.admin('adminRemoveBallot', 'Ben'), /not found/);
       throws(() => w.admin('adminRemoveBallot', ''), /No ballot chosen/);
     });
+    test('The very last ballot can be removed too (Google Sheets won\'t delete the last row, so it is emptied)', () => {
+      const w = world();
+      w.ballot('Ben', {c_single: [pick('s1')], c_tier: [tier('t1', 'S')]});
+      w.ballot('Maria', {c_single: [pick('s2')]});
+      w.admin('adminRemoveBallot', 'Ben');
+      w.admin('adminRemoveBallot', 'Maria');
+      eq(w.votes().filter(v => v.voter), [], 'no votes left');
+      eq(w.post({action: 'checkName', voter: 'Maria'}).taken, false);
+      eq(w.ballot('Maria', {c_single: [pick('s3')]}).ok, true, 'voting still works afterwards');
+      eq(w.votes().filter(v => v.voter).map(v => v.nominee), ['s3']);
+    });
 
     /* ============================================================ */
     group = 'Pages and script agree';

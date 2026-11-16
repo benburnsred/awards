@@ -61,7 +61,10 @@
     appendRow(r) { this.rows.push(r.map(stored)); }
     getLastRow() { return this.rows.length; }
     getLastColumn() { return this.rows.reduce((m, r) => Math.max(m, r.length), 0); }
-    deleteRow(n) { this.rows.splice(n - 1, 1); }
+    deleteRow(n) {   // like Google Sheets: the last row under the header can't be deleted
+      if (this.rows.length <= 2) throw new Error('Sorry, it is not possible to delete all non-frozen rows.');
+      this.rows.splice(n - 1, 1);
+    }
     getDataRange() { return this.getRange(1, 1, Math.max(1, this.rows.length), Math.max(1, this.getLastColumn())); }
     getRange(r, c, nr, nc) {
       const sh = this; nr = nr || 1; nc = nc || 1;

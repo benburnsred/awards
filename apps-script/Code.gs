@@ -1121,6 +1121,12 @@ function adminDataCheck() {
 
 // Removes every vote row of one ballot (matched by voter name, ignoring capitals and spaces), frees a voter code it
 // used, and logs who removed it. The name can then vote again.
+// Deletes one row. Google Sheets refuses to delete the last row under the header, so that one is emptied instead.
+function removeRow(sh, row) {
+  if (sh.getLastRow() <= 2) sh.getRange(row, 1, 1, Math.max(1, sh.getLastColumn())).clearContent();
+  else sh.deleteRow(row);
+}
+
 function adminRemoveBallot(key) {
   const email = requireAdmin();
   key = cleanVoter(key).toLowerCase();
@@ -1132,10 +1138,10 @@ function adminRemoveBallot(key) {
     const rows = [];
     for (let i = values.length - 1; i >= 1; i--) if (cleanVoter(String(values[i][col]).replace(/^'/, '')).toLowerCase() === key) rows.push(i + 1);
     if (!rows.length) throw new Error('That ballot was not found (it may already be removed)');
-    rows.forEach(r => src.sheet.deleteRow(r));   // bottom to top, so row numbers stay valid
+    rows.forEach(r => removeRow(src.sheet, r));   // bottom to top, so row numbers stay valid
     CACHE.votes = null;
     const codes = sheet('Codes'), cv = codes.getDataRange().getValues();
-    for (let i = cv.length - 1; i >= 1; i--) if (cleanVoter(cv[i][2]).toLowerCase() === key) codes.deleteRow(i + 1);
+    for (let i = cv.length - 1; i >= 1; i--) if (cleanVoter(cv[i][2]).toLowerCase() === key) removeRow(codes, i + 1);
     forget('Codes');
     log(email, 'remove ballot', key + ' (' + rows.length + ' vote rows)');
     return Object.assign(adminState(), {dataCheck: dataCheck()});
